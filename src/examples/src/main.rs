@@ -1,14 +1,10 @@
 use slack_morphism_models as slack;
-use slack::blocks::block_text::{SlackBlockPlainText, SlackBlockText};
-use slack_morphism_models::blocks::block_text::SlackBlockMarkDownText;
-
+//use slack::blocks::block_text::*;
+use slack::blocks::kit::*;
 
 fn main() {
-    let bpt : SlackBlockPlainText = SlackBlockPlainText::from("hey");
-    let btpt : SlackBlockText = SlackBlockPlainText::new(&String::from("hey")).as_block_text();
-
-    let btmd = SlackBlockMarkDownText::from("hey").as_block_text();
-
-    println!("{:?} {:?}", bpt, btpt);
-    println!("{:?}", btmd);
+    let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
+    let sb_ser = serde_json::to_string_pretty(&sb).unwrap();
+    let sb_des: SlackSectionBlock = serde_json::from_str(&sb_ser).unwrap();
+    println!("{} {:?}", sb_ser, sb_des);
 }
