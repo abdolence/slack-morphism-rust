@@ -27,7 +27,7 @@ pub enum SlackBlock {
     #[serde(rename = "file")]
     File(SlackFileBlock),
     #[serde(rename = "rich_text")]
-    RichText
+    RichText,
 }
 
 #[skip_serializing_none]
@@ -47,8 +47,8 @@ impl From<SlackSectionBlock> for SlackBlock {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackDividerBlock{
-    pub block_id: Option<SlackBlockId>
+pub struct SlackDividerBlock {
+    pub block_id: Option<SlackBlockId>,
 }
 
 impl From<SlackDividerBlock> for SlackBlock {
@@ -63,7 +63,7 @@ pub struct SlackImageBlock {
     pub block_id: Option<SlackBlockId>,
     pub image_url: String,
     pub alt_text: String,
-    pub title: Option<SlackBlockPlainText>
+    pub title: Option<SlackBlockPlainText>,
 }
 
 impl From<SlackImageBlock> for SlackBlock {
@@ -76,7 +76,7 @@ impl From<SlackImageBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackActionsBlock {
     pub block_id: Option<SlackBlockId>,
-    pub elements: Vec<SlackActionBlockElement>
+    pub elements: Vec<SlackActionBlockElement>,
 }
 
 impl From<SlackActionsBlock> for SlackBlock {
@@ -89,7 +89,7 @@ impl From<SlackActionsBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackContextBlock {
     pub block_id: Option<SlackBlockId>,
-    pub elements: Vec<SlackContextBlockElement>
+    pub elements: Vec<SlackContextBlockElement>,
 }
 
 impl From<SlackContextBlock> for SlackBlock {
@@ -167,7 +167,7 @@ pub enum SlackSectionBlockElement {
     #[serde(rename = "radio_buttons")]
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
-    Checkboxes(SlackBlockCheckboxesElement)
+    Checkboxes(SlackBlockCheckboxesElement),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -184,7 +184,7 @@ pub enum SlackActionBlockElement {
     #[serde(rename = "radio_buttons")]
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
-    Checkboxes(SlackBlockCheckboxesElement)
+    Checkboxes(SlackBlockCheckboxesElement),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -272,7 +272,6 @@ impl From<SlackBlockButtonElement> for SlackActionBlockElement {
         SlackActionBlockElement::Button(element)
     }
 }
-
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -577,7 +576,7 @@ pub struct SlackBlockPlainTextInputElement {
     pub initial_value: Option<String>,
     pub multiline: Option<bool>,
     pub min_length: Option<u64>,
-    pub max_length: Option<u64>
+    pub max_length: Option<u64>,
 }
 
 impl From<SlackBlockPlainTextInputElement> for SlackSectionBlockElement {
@@ -624,7 +623,6 @@ impl From<SlackBlockRadioButtonsElement> for SlackActionBlockElement {
         SlackActionBlockElement::RadioButtons(element)
     }
 }
-
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -728,8 +726,8 @@ impl From<&str> for SlackBlockMarkDownText {
     }
 }
 
-impl From<&SlackBlockPlainText> for SlackBlockPlainTextOnly {
-    fn from(pt: &SlackBlockPlainText) -> Self {
+impl From<SlackBlockPlainText> for SlackBlockPlainTextOnly {
+    fn from(pt: SlackBlockPlainText) -> Self {
         SlackBlockPlainTextOnly { value: pt.clone() }
     }
 }
@@ -767,13 +765,15 @@ impl From<SlackBlockPlainTextOnly> for SlackBlockText {
 impl From<String> for SlackBlockPlainTextOnly {
     fn from(value: String) -> Self {
         SlackBlockPlainTextOnly {
-            value: value.into()
+            value: value.into(),
         }
     }
 }
 
 impl From<&str> for SlackBlockPlainTextOnly {
     fn from(value: &str) -> Self {
-        SlackBlockPlainTextOnly { value : value.into() }
+        SlackBlockPlainTextOnly {
+            value: value.into(),
+        }
     }
 }

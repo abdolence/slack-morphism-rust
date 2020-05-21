@@ -1,33 +1,5 @@
 #![macro_use]
 
-// use crate::blocks::block_text::*;
-// use crate::blocks::kit::*;
-// use crate::common::*;
-
-#[macro_export]
-macro_rules! slack_blocks {
-
-    (block $e:expr) => {
-        Some(SlackBlock::from($e))
-    };
-
-    (optionally ($pred:expr => $item:expr)) => {{
-        if $pred {
-            slack_blocks! (block($item))
-        }
-        else {
-            None
-        }
-    }};
-
-    (blocks [$($pred : tt($item:expr $(=> $item_r:expr)?)),*]) => {{
-        let items : Vec<Option<SlackBlock>> = vec![
-            $(slack_blocks! ($pred($item $(=> $item_r)?))),*
-        ];
-        items.into_iter().flatten().collect()
-    }};
-}
-
 #[macro_export]
 macro_rules! md {
     ($e : expr) => {
@@ -55,6 +27,21 @@ macro_rules! slack_optional_item {
     (optionally ($pred:expr => $item:expr)) => {{
         if $pred {
             Some($item)
+        } else {
+            None
+        }
+    }};
+
+    (some $item:expr) => {{
+        Some($item)
+    }};
+}
+
+#[macro_export]
+macro_rules! slack_optional_item_into {
+    (optionally ($pred:expr => $item:expr)) => {{
+        if $pred {
+            slack_optional_item_into! (some $item)
         }
         else {
             None
@@ -62,7 +49,19 @@ macro_rules! slack_optional_item {
     }};
 
     (some $item:expr) => {{
-        Some($item)
+        Some($item.into())
+    }};
+}
+
+#[macro_export]
+macro_rules! slack_blocks {
+
+    () => { vec![] };
+
+    ($($pred : tt($item:expr $(=> $item_r:expr)?)),+) => {{
+        vec![
+            $(slack_optional_item_into! ($pred($item $(=> $item_r)?))),*
+        ].into_iter().flatten().collect()
     }};
 }
 

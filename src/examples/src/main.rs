@@ -1,6 +1,6 @@
-use slack_morphism_models as slack;
-use slack::*;
 use slack::blocks::kit::*;
+use slack::*;
+use slack_morphism_models as slack;
 
 fn main() {
     let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
@@ -9,23 +9,28 @@ fn main() {
     println!("{} {:?}", sb_ser, sb_des);
 
     let section_block = SlackSectionBlock::new()
-        .with_text( md!("hey, {}", 10) )
-        .with_fields(
-            slack_items! [
-                some(md!("hey1")),
-                some(pt!("hey2")),
-                optionally( sb_ser.is_empty() => md!("hey"))
-            ]
+        .with_text(md!("hey, {}", 10))
+        .with_fields(slack_items! [
+            some(md!("hey1")),
+            some(pt!("hey2")),
+            optionally( sb_ser.is_empty() => md!("hey"))
+        ])
+        .with_accessory(
+            SlackBlockButtonElement::from(SlackBlockButtonElementInit {
+                action_id: "-".into(),
+                text: pt!("ddd"),
+            })
+            .into(),
         );
 
-    let blocks : Vec<SlackBlock> =
-        slack_blocks! {
-            blocks [
-               block(section_block.clone()),
-               optionally( sb_ser.is_empty() => section_block.clone())
-            ]
-        };
+    let context_block: SlackContextBlock = SlackContextBlock::new(slack_blocks![some(
+        SlackBlockImageElement::new("http://example.net/img".into(), "text".into())
+    )]);
 
-    println!("{:#?}",blocks);
+    let blocks: Vec<SlackBlock> = slack_blocks! [
+           some ( section_block ),
+           optionally( !sb_ser.is_empty() => context_block)
+    ];
 
+    println!("{:#?}", blocks);
 }
