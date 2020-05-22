@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::common::*;
+use crate::messages::*;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -31,7 +32,7 @@ pub struct SlackAppRateLimitedEvent {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct  SlackEventCallback {
+pub struct SlackEventCallback {
     pub team_id: SlackTeamId,
     pub api_app_id: SlackAppId,
     pub event: SlackEventCallbackBody,
@@ -43,5 +44,38 @@ pub struct  SlackEventCallback {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackEventCallbackBody {
+    #[serde(rename = "message")]
+    Message(SlackMessageEvent)
+}
 
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageEvent {
+    #[serde(flatten)]
+    pub origin : SlackMessageOrigin,
+    #[serde(flatten)]
+    pub content : SlackMessageContent,
+    pub subtype : Option<SlackMessageEventType>,
+    pub hidden: Option<bool>
+}
+
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum SlackMessageEventType {
+    #[serde(rename="bot_message")]
+    BotMessage,
+    #[serde(rename="me_message")]
+    MeMessage,
+    #[serde(rename="channel_join")]
+    ChannelJoin,
+    #[serde(rename="bot_add")]
+    BotAdd,
+    #[serde(rename="bot_remove")]
+    BotRemove,
+    #[serde(rename="channel_topic")]
+    ChannelTopic,
+    #[serde(rename="channel_purpose")]
+    ChannelPurpose,
+    #[serde(rename="channel_name")]
+    ChannelName
 }

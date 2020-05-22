@@ -16,6 +16,6 @@ pub struct SlackMessageOrigin {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageContent {
-    pub text: String,
+    pub text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
 }

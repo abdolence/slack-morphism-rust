@@ -23,14 +23,18 @@ fn main() {
             .into(),
         );
 
-    let context_block: SlackContextBlock = SlackContextBlock::new(slack_blocks![some(
-        SlackBlockImageElement::new("http://example.net/img".into(), "text".into())
-    )]);
+    let context_block: SlackContextBlock = SlackContextBlock::new(
+        slack_blocks! [
+            some(SlackBlockImageElement::new("http://example.net/img1".into(), "text 1".into())),
+            some(SlackBlockImageElement::new("http://example.net/img2".into(), "text 2".into()))
+        ]
+    );
 
-    let blocks: Vec<SlackBlock> = slack_blocks! [
+    let blocks: Vec<SlackBlock> =
+        slack_blocks! [
            some ( section_block ),
            optionally( !sb_ser.is_empty() => context_block)
-    ];
+        ];
 
     println!("{:#?}", blocks);
 }
