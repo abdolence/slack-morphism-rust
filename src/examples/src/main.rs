@@ -1,6 +1,10 @@
-use slack::blocks::kit::*;
-use slack::*;
-use slack_morphism_models as slack;
+use slack_morphism_client as slack_client;
+use slack_morphism_models as slack_models;
+
+use futures::executor::block_on;
+use slack_client::*;
+use slack_models::blocks::kit::*;
+use slack_models::*;
 
 fn main() {
     let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
@@ -23,18 +27,29 @@ fn main() {
             .into(),
         );
 
-    let context_block: SlackContextBlock = SlackContextBlock::new(
-        slack_blocks! [
-            some(SlackBlockImageElement::new("http://example.net/img1".into(), "text 1".into())),
-            some(SlackBlockImageElement::new("http://example.net/img2".into(), "text 2".into()))
-        ]
-    );
+    let context_block: SlackContextBlock = SlackContextBlock::new(slack_blocks![
+        some(SlackBlockImageElement::new(
+            "http://example.net/img1".into(),
+            "text 1".into()
+        )),
+        some(SlackBlockImageElement::new(
+            "http://example.net/img2".into(),
+            "text 2".into()
+        ))
+    ]);
 
-    let blocks: Vec<SlackBlock> =
-        slack_blocks! [
-           some ( section_block ),
-           optionally( !sb_ser.is_empty() => context_block)
-        ];
+    let blocks: Vec<SlackBlock> = slack_blocks! [
+       some ( section_block ),
+       optionally( !sb_ser.is_empty() => context_block)
+    ];
 
     println!("{:#?}", blocks);
+
+    let client = SlackClient::new();
+    let token: SlackApiToken = SlackApiToken::new("test".into());
+    let session = client.open_session(&token);
+    println!("{:#?}", session);
+
+    let test: slack_client::ClientResult<String> =
+        block_on(session.get("", vec![].into_iter())).unwrap();
 }

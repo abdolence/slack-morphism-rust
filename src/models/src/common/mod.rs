@@ -1,15 +1,15 @@
+use chrono::serde::ts_milliseconds;
+use chrono::{DateTime, TimeZone, Utc};
 use rvs_derive::ValueStruct;
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc, TimeZone};
-use chrono::serde::ts_milliseconds;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTs(pub String);
 
 impl SlackTs {
-    pub fn to_date_time(&self) -> Result<DateTime<Utc>,std::num::ParseIntError> {
-        let parts : Vec<&str> = self.value().split('.').collect();
-        let ts_int : i64 = parts[0].parse()?;
+    pub fn to_date_time(&self) -> Result<DateTime<Utc>, std::num::ParseIntError> {
+        let parts: Vec<&str> = self.value().split('.').collect();
+        let ts_int: i64 = parts[0].parse()?;
         Ok(Utc.timestamp_millis(ts_int))
     }
 }

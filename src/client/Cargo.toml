@@ -1,13 +1,22 @@
 [package]
-name = "slack-morphism-examples"
+name = "slack-morphism-client"
 version = "0.1.0"
 authors = ["Abdulla Abdurakhmanov <abdulla@latestbit.com>"]
 edition = "2018"
 
+[lib]
+name = "slack_morphism_client"
+path = "src/lib.rs"
+
 [dependencies]
 slack-morphism-models = { path = "../models", version = "0.1.0" }
-slack-morphism-client = { path = "../client", version = "0.1.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_with = "1.4"
+rvs_derive = "0.1"
+rsb_derive = "0.2"
+hyper = "0.13"
+tokio = { version = "0.2", features = ["full"] }
+url = "2.1"
 futures = "0.3"
+bytes = "0.5"

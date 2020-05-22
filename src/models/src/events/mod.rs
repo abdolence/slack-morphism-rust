@@ -13,13 +13,13 @@ pub enum SlackPushEvent {
     #[serde(rename = "event_callback")]
     EventCallback(SlackEventCallback),
     #[serde(rename = "app_rate_limited")]
-    AppRateLimited(SlackAppRateLimitedEvent)
+    AppRateLimited(SlackAppRateLimitedEvent),
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackUrlVerificationEvent {
-    pub challenge: String
+    pub challenge: String,
 }
 
 #[skip_serializing_none]
@@ -27,7 +27,7 @@ pub struct SlackUrlVerificationEvent {
 pub struct SlackAppRateLimitedEvent {
     pub team_id: String,
     pub minute_rate_limited: SlackDateTime,
-    pub api_app_id: String
+    pub api_app_id: String,
 }
 
 #[skip_serializing_none]
@@ -38,44 +38,43 @@ pub struct SlackEventCallback {
     pub event: SlackEventCallbackBody,
     pub event_id: SlackEventId,
     pub event_time: SlackDateTime,
-    pub authed_users: Option<Vec<SlackUserId>>
+    pub authed_users: Option<Vec<SlackUserId>>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackEventCallbackBody {
     #[serde(rename = "message")]
-    Message(SlackMessageEvent)
+    Message(SlackMessageEvent),
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageEvent {
     #[serde(flatten)]
-    pub origin : SlackMessageOrigin,
+    pub origin: SlackMessageOrigin,
     #[serde(flatten)]
-    pub content : SlackMessageContent,
-    pub subtype : Option<SlackMessageEventType>,
-    pub hidden: Option<bool>
+    pub content: SlackMessageContent,
+    pub subtype: Option<SlackMessageEventType>,
+    pub hidden: Option<bool>,
 }
-
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum SlackMessageEventType {
-    #[serde(rename="bot_message")]
+    #[serde(rename = "bot_message")]
     BotMessage,
-    #[serde(rename="me_message")]
+    #[serde(rename = "me_message")]
     MeMessage,
-    #[serde(rename="channel_join")]
+    #[serde(rename = "channel_join")]
     ChannelJoin,
-    #[serde(rename="bot_add")]
+    #[serde(rename = "bot_add")]
     BotAdd,
-    #[serde(rename="bot_remove")]
+    #[serde(rename = "bot_remove")]
     BotRemove,
-    #[serde(rename="channel_topic")]
+    #[serde(rename = "channel_topic")]
     ChannelTopic,
-    #[serde(rename="channel_purpose")]
+    #[serde(rename = "channel_purpose")]
     ChannelPurpose,
-    #[serde(rename="channel_name")]
-    ChannelName
+    #[serde(rename = "channel_name")]
+    ChannelName,
 }
