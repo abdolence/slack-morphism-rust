@@ -29,13 +29,10 @@ impl<'a> SlackClientSession<'a> {
         self.http_get(
             "users.list",
             vec![
+                ("cursor", req.cursor.as_ref().map(|c| c.value().into())),
+                ("limit", req.limit.map(|v| v.to_string()).clone()),
                 (
-                    "cursor".into(),
-                    req.cursor.as_ref().map(|c| c.value().into()),
-                ),
-                ("limit".into(), req.limit.map(|v| v.to_string()).clone()),
-                (
-                    "include_locale".into(),
+                    "include_locale",
                     req.include_locale.map(|v| v.to_string()).clone(),
                 ),
             ],
