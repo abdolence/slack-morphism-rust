@@ -7,11 +7,11 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiTestRequest {
     pub error: Option<String>,
-    pub foo: Option<String>
+    pub foo: Option<String>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiTestResponse {
-    args : Option<Vec<HashMap<String,String>>>
+    args: Option<Vec<HashMap<String, String>>>,
 }

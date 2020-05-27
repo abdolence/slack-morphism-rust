@@ -1,15 +1,15 @@
-pub mod errors;
 pub mod chat;
+pub mod errors;
 pub mod test;
 
 use bytes::buf::BufExt as _;
 use hyper::client::*;
+use hyper::http::StatusCode;
 use hyper::{Body, Request, Uri};
 use hyper_tls::HttpsConnector;
 use rsb_derive::Builder;
-use url::Url;
-use hyper::http::StatusCode;
 use std::io::Read;
+use url::Url;
 
 use serde::{Deserialize, Serialize};
 
@@ -35,8 +35,8 @@ pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Se
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 struct SlackEnvelopeMessage {
-    ok : bool,
-    error : Option<String>
+    ok: bool,
+    error: Option<String>,
 }
 
 impl SlackClient {
@@ -88,26 +88,22 @@ impl SlackClient {
 
         match http_status {
             StatusCode::OK => {
-                let slack_message : SlackEnvelopeMessage = serde_json::from_str(http_body_str.as_str())?;
+                let slack_message: SlackEnvelopeMessage =
+                    serde_json::from_str(http_body_str.as_str())?;
                 if slack_message.error.is_none() {
                     let decoded_body = serde_json::from_str(http_body_str.as_str())?;
                     Ok(decoded_body)
-                }
-                else {
+                } else {
                     Err(Box::new(errors::SlackClientError::ApiError(
-                        errors::SlackClientApiError::new(slack_message.error.unwrap())
+                        errors::SlackClientApiError::new(slack_message.error.unwrap()),
                     )))
                 }
             }
-            _ => {
-                Err(Box::new(errors::SlackClientError::HttpError(
-                    errors::SlackClientHttpError::new(http_status)
-                        .with_http_response_body(http_body_str)))
-                )
-            }
+            _ => Err(Box::new(errors::SlackClientError::HttpError(
+                errors::SlackClientHttpError::new(http_status)
+                    .with_http_response_body(http_body_str),
+            ))),
         }
-
-
     }
 
     pub fn open_session(&self, token: &SlackApiToken) -> SlackClientSession {

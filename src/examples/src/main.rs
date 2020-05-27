@@ -51,10 +51,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let session = client.open_session(&token);
     println!("{:#?}", session);
 
-    let empty_params : Vec<(String, Option<String>)> = vec![];
+    let empty_params: Vec<(String, Option<String>)> = vec![];
 
-    let test : SlackApiTestResponse =
-        session.get("api.test", empty_params.into_iter()).await?;
+    let test: SlackApiTestResponse = session.get("api.test", empty_params.into_iter()).await?;
 
     println!("{:#?}", test);
 
