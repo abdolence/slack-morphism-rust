@@ -122,7 +122,7 @@ impl SlackClient {
         }
     }
 
-    pub async fn get<RS, PT, TS>(&self, method_relative_uri: &str, params: PT) -> ClientResult<RS>
+    pub async fn get<'a, RS, PT, TS>(&self, method_relative_uri: &str, params: PT, session : Option<&SlackClientSession<'a>>) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
         PT: std::iter::IntoIterator<Item = (TS, Option<TS>)>,
@@ -133,15 +133,62 @@ impl SlackClient {
             params,
         );
 
+        let base_request = SlackClient::create_http_request(full_uri);
+
+        let request =
+            if session.is_none() {
+                base_request
+            }
+            else {
+                session.unwrap().setup_token_auth_header(base_request)
+            };
+
         let body = self
-            .send_webapi_request(SlackClient::create_http_request(full_uri).body(Body::empty())?)
+            .send_webapi_request(request.body(Body::empty())?)
             .await?;
 
         Ok(body)
     }
+
+    pub async fn post<'a, RQ, RS>(
+        &self,
+        method_relative_uri: &str,
+        request: RQ,
+        session : Option<&SlackClientSession<'a>>
+    ) -> ClientResult<RS>
+        where
+            RQ: serde::ser::Serialize,
+            RS: for<'de> serde::de::Deserialize<'de>
+    {
+        let full_uri =
+            SlackClient::create_url(&SlackClient::create_method_uri_path(&method_relative_uri));
+
+        let post_json = serde_json::to_string(&request)?;
+
+        let base_request = SlackClient::create_http_request(full_uri)
+            .header("content-type", "application/json; charset=utf-8");
+
+        let request =
+            if session.is_none() {
+                base_request
+            }
+            else {
+                session.unwrap().setup_token_auth_header(base_request)
+            };
+
+        let response_body = self
+            .send_webapi_request(
+                request.body(Body::from(post_json))?,
+            )
+            .await?;
+
+        Ok(response_body)
+    }
+
 }
 
 impl<'a> SlackClientSession<'_> {
+
     fn setup_token_auth_header(
         &self,
         request_builder: hyper::http::request::Builder,
@@ -156,47 +203,18 @@ impl<'a> SlackClientSession<'_> {
         PT: std::iter::IntoIterator<Item = (TS, Option<TS>)>,
         TS: std::string::ToString,
     {
-        let full_uri = SlackClient::create_url_with_params(
-            &SlackClient::create_method_uri_path(&method_relative_uri),
-            params,
-        );
-
-        let body = self
-            .client
-            .send_webapi_request(
-                self.setup_token_auth_header(SlackClient::create_http_request(full_uri))
-                    .body(Body::empty())?,
-            )
-            .await?;
-
-        Ok(body)
+        self.client.get(&method_relative_uri, params, Some(self)).await
     }
 
-    pub async fn post<RQ, RS, PT, TS>(
+    pub async fn post<RQ, RS>(
         &self,
         method_relative_uri: &str,
         request: RQ,
     ) -> ClientResult<RS>
     where
         RQ: serde::ser::Serialize,
-        RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (TS, Option<TS>)>,
-        TS: std::string::ToString,
+        RS: for<'de> serde::de::Deserialize<'de>
     {
-        let full_uri =
-            SlackClient::create_url(&SlackClient::create_method_uri_path(&method_relative_uri));
-
-        let post_json = serde_json::to_string(&request)?;
-
-        let response_body = self
-            .client
-            .send_webapi_request(
-                self.setup_token_auth_header(SlackClient::create_http_request(full_uri))
-                    .header("content-type", "application/json; charset=utf-8")
-                    .body(Body::from(post_json))?,
-            )
-            .await?;
-
-        Ok(response_body)
+        self.client.post(&method_relative_uri, request, Some(self)).await
     }
 }
