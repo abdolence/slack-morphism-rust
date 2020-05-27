@@ -1,10 +1,12 @@
 use slack_morphism_client as slack_client;
 use slack_morphism_models as slack_models;
 
+use slack_client::test::*;
+use slack_client::users::*;
 use slack_client::*;
+
 use slack_models::blocks::kit::*;
 use slack_models::*;
-use slack_morphism_client::test::{SlackApiTestRequest, SlackApiTestResponse};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -57,6 +59,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .await?;
 
     println!("{:#?}", test);
+
+    let users: SlackApiUsersListResponse = session
+        .users_list(&SlackApiUsersListRequest::new().with_limit(1))
+        .await?;
+
+    println!("{:#?}", users);
 
     Ok(())
 }

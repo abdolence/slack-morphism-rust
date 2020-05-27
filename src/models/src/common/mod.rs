@@ -46,6 +46,15 @@ pub struct SlackDateTime(#[serde(with = "ts_milliseconds")] pub DateTime<Utc>);
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackLocale(pub String);
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackCursorId(pub String);
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackResponseMetadata {
+    pub next_cursor: Option<SlackCursorId>,
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackUser {
@@ -61,7 +70,7 @@ pub struct SlackUser {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackUserProfile {
-    pub display_name: String,
+    pub display_name: Option<String>,
     pub real_name: Option<String>,
     pub real_name_normalized: Option<String>,
 }

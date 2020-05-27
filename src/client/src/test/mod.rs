@@ -25,8 +25,8 @@ impl<'a> SlackClientSession<'a> {
         let full_uri = SlackClient::create_url_with_params(
             &SlackClient::create_method_uri_path("api.test"),
             vec![
-                ("foo".to_string(), req.foo.clone()),
-                ("error".to_string(), req.error.clone()),
+                ("foo".into(), req.foo.clone()),
+                ("error".into(), req.error.clone()),
             ],
         );
         self.http_post_uri(full_uri, &req).await
