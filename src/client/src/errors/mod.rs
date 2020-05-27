@@ -10,6 +10,17 @@ pub enum SlackClientError {
     HttpError(SlackClientHttpError),
 }
 
+impl SlackClientError {
+    fn option_to_string<T: ToString>(value: &Option<T>) -> String {
+        format!(
+            "{}",
+            value
+                .as_ref()
+                .map_or_else(|| "-".to_string(), |v| v.to_string())
+        )
+    }
+}
+
 impl Display for SlackClientError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match *self {
@@ -37,7 +48,12 @@ pub struct SlackClientApiError {
 
 impl Display for SlackClientApiError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "Slack API error: {}", self)
+        write!(
+            f,
+            "Slack API error: {}\nBody: '{}'",
+            self.code,
+            SlackClientError::option_to_string(&self.http_response_body)
+        )
     }
 }
 
