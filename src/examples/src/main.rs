@@ -1,12 +1,13 @@
 use slack_morphism_client as slack_client;
 use slack_morphism_models as slack_models;
 
-use futures::executor::block_on;
 use slack_client::*;
 use slack_models::blocks::kit::*;
 use slack_models::*;
+use slack_morphism_client::test::SlackApiTestResponse;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
     let sb_ser = serde_json::to_string_pretty(&sb).unwrap();
     let sb_des: SlackSectionBlock = serde_json::from_str(&sb_ser).unwrap();
@@ -50,6 +51,12 @@ fn main() {
     let session = client.open_session(&token);
     println!("{:#?}", session);
 
-    let test: slack_client::ClientResult<String> =
-        block_on(session.get("", vec![].into_iter())).unwrap();
+    let empty_params : Vec<(String, Option<String>)> = vec![];
+
+    let test : SlackApiTestResponse =
+        session.get("api.test", empty_params.into_iter()).await?;
+
+    println!("{:#?}", test);
+
+    Ok(())
 }

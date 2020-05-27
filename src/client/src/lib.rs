@@ -1,10 +1,17 @@
+pub mod errors;
 pub mod chat;
+pub mod test;
 
 use bytes::buf::BufExt as _;
 use hyper::client::*;
 use hyper::{Body, Request, Uri};
+use hyper_tls::HttpsConnector;
 use rsb_derive::Builder;
 use url::Url;
+use hyper::http::StatusCode;
+use std::io::Read;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiToken {
@@ -15,7 +22,7 @@ pub struct SlackApiToken {
 
 #[derive(Debug)]
 pub struct SlackClient {
-    connector: Client<HttpConnector>,
+    connector: Client<HttpsConnector<HttpConnector>>,
 }
 
 #[derive(Debug)]
@@ -24,7 +31,13 @@ pub struct SlackClientSession<'a> {
     token: SlackApiToken,
 }
 
-pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+struct SlackEnvelopeMessage {
+    ok : bool,
+    error : Option<String>
+}
 
 impl SlackClient {
     const SLACK_API_URI_STR: &'static str = "https://slack.com/api";
@@ -56,8 +69,9 @@ impl SlackClient {
     }
 
     pub fn new() -> Self {
+        let https_connector = HttpsConnector::new();
         SlackClient {
-            connector: Client::new(),
+            connector: Client::builder().build(https_connector),
         }
     }
 
@@ -66,11 +80,34 @@ impl SlackClient {
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let http_res = self.connector.request(request).await?;
-        //let http_status = http_res.status();
+        let http_status = http_res.status();
         let http_body = hyper::body::aggregate(http_res).await?;
-        let http_reader = http_body.reader();
-        let decoded_body = serde_json::from_reader(http_reader)?;
-        Ok(decoded_body)
+        let mut http_reader = http_body.reader();
+        let mut http_body_str = String::new();
+        http_reader.read_to_string(&mut http_body_str)?;
+
+        match http_status {
+            StatusCode::OK => {
+                let slack_message : SlackEnvelopeMessage = serde_json::from_str(http_body_str.as_str())?;
+                if slack_message.error.is_none() {
+                    let decoded_body = serde_json::from_str(http_body_str.as_str())?;
+                    Ok(decoded_body)
+                }
+                else {
+                    Err(Box::new(errors::SlackClientError::ApiError(
+                        errors::SlackClientApiError::new(slack_message.error.unwrap())
+                    )))
+                }
+            }
+            _ => {
+                Err(Box::new(errors::SlackClientError::HttpError(
+                    errors::SlackClientHttpError::new(http_status)
+                        .with_http_response_body(http_body_str)))
+                )
+            }
+        }
+
+
     }
 
     pub fn open_session(&self, token: &SlackApiToken) -> SlackClientSession {

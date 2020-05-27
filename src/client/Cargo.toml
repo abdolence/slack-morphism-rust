@@ -17,6 +17,7 @@ rvs_derive = "0.1"
 rsb_derive = "0.2"
 hyper = "0.13"
 tokio = { version = "0.2", features = ["full"] }
+hyper-tls = "0.4"
 url = "2.1"
 futures = "0.3"
 bytes = "0.5"
