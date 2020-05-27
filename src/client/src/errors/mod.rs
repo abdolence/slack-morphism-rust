@@ -31,6 +31,8 @@ impl Error for SlackClientError {
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackClientApiError {
     pub code: String,
+    pub warnings: Option<Vec<String>>,
+    pub http_response_body: Option<String>,
 }
 
 impl Display for SlackClientApiError {

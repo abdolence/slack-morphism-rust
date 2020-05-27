@@ -37,6 +37,7 @@ pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Se
 struct SlackEnvelopeMessage {
     ok: bool,
     error: Option<String>,
+    warnings: Option<Vec<String>>,
 }
 
 impl SlackClient {
@@ -75,6 +76,10 @@ impl SlackClient {
         }
     }
 
+    fn create_http_request(uri: Uri) -> hyper::http::request::Builder {
+        Request::get(uri).header("accept-charset", "utf-8")
+    }
+
     pub async fn send_webapi_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
@@ -94,15 +99,19 @@ impl SlackClient {
                     let decoded_body = serde_json::from_str(http_body_str.as_str())?;
                     Ok(decoded_body)
                 } else {
-                    Err(Box::new(errors::SlackClientError::ApiError(
-                        errors::SlackClientApiError::new(slack_message.error.unwrap()),
-                    )))
+                    Err(errors::SlackClientError::ApiError(
+                        errors::SlackClientApiError::new(slack_message.error.unwrap())
+                            .opt_warnings(slack_message.warnings)
+                            .with_http_response_body(http_body_str),
+                    )
+                    .into())
                 }
             }
-            _ => Err(Box::new(errors::SlackClientError::HttpError(
+            _ => Err(errors::SlackClientError::HttpError(
                 errors::SlackClientHttpError::new(http_status)
                     .with_http_response_body(http_body_str),
-            ))),
+            )
+            .into()),
         }
     }
 
@@ -125,7 +134,7 @@ impl SlackClient {
         );
 
         let body = self
-            .send_webapi_request(Request::get(full_uri).body(Body::empty())?)
+            .send_webapi_request(SlackClient::create_http_request(full_uri).body(Body::empty())?)
             .await?;
 
         Ok(body)
@@ -155,7 +164,7 @@ impl<'a> SlackClientSession<'_> {
         let body = self
             .client
             .send_webapi_request(
-                self.setup_token_auth_header(Request::get(full_uri))
+                self.setup_token_auth_header(SlackClient::create_http_request(full_uri))
                     .body(Body::empty())?,
             )
             .await?;
@@ -182,8 +191,8 @@ impl<'a> SlackClientSession<'_> {
         let response_body = self
             .client
             .send_webapi_request(
-                self.setup_token_auth_header(Request::get(full_uri))
-                    .header("content-type", "application/json")
+                self.setup_token_auth_header(SlackClient::create_http_request(full_uri))
+                    .header("content-type", "application/json; charset=utf-8")
                     .body(Body::from(post_json))?,
             )
             .await?;
