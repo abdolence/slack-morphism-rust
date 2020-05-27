@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let session = client.open_session(&token);
     println!("{:#?}", session);
 
-    let test: SlackApiTestResponse = session.api_test(SlackApiTestRequest::new()).await?;
+    let test: SlackApiTestResponse = session.api_test(&SlackApiTestRequest::new()).await?;
 
     println!("{:#?}", test);
 

@@ -153,7 +153,7 @@ impl SlackClient {
     pub async fn post<'a, RQ, RS>(
         &self,
         method_relative_uri: &str,
-        request: RQ,
+        request: &RQ,
         session : Option<&SlackClientSession<'a>>
     ) -> ClientResult<RS>
         where
@@ -209,12 +209,12 @@ impl<'a> SlackClientSession<'_> {
     pub async fn post<RQ, RS>(
         &self,
         method_relative_uri: &str,
-        request: RQ,
+        request: &RQ,
     ) -> ClientResult<RS>
     where
         RQ: serde::ser::Serialize,
         RS: for<'de> serde::de::Deserialize<'de>
     {
-        self.client.post(&method_relative_uri, request, Some(self)).await
+        self.client.post(&method_relative_uri, &request, Some(self)).await
     }
 }

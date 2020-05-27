@@ -21,10 +21,10 @@ pub struct SlackApiTestResponse {
 
 impl <'a> SlackClientSession<'a> {
 
-    pub async fn api_test(&self, req : SlackApiTestRequest) -> ClientResult<SlackApiTestResponse> {
+    pub async fn api_test(&self, req : &SlackApiTestRequest) -> ClientResult<SlackApiTestResponse> {
         self.post(
             "api.test",
-            req
+            &req
         ).await
     }
 
