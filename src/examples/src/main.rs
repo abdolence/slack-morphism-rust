@@ -4,7 +4,7 @@ use slack_morphism_models as slack_models;
 use slack_client::*;
 use slack_models::blocks::kit::*;
 use slack_models::*;
-use slack_morphism_client::test::{SlackApiTestResponse, SlackApiTestRequest};
+use slack_morphism_client::test::{SlackApiTestRequest, SlackApiTestResponse};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -47,17 +47,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", blocks);
 
     let client = SlackClient::new();
-    let token_value : String = std::env::var("SLACK_TEST_TOKEN")?;
+    let token_value: String = std::env::var("SLACK_TEST_TOKEN")?;
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
     println!("{:#?}", session);
 
-    let test: SlackApiTestResponse =
-        session
-            .api_test(
-                &SlackApiTestRequest::new()
-                    .with_foo("Test".into())
-            ).await?;
+    let test: SlackApiTestResponse = session
+        .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
+        .await?;
 
     println!("{:#?}", test);
 
