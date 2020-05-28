@@ -1,12 +1,9 @@
-use slack_morphism_client as slack_client;
-use slack_morphism_models as slack_models;
+use slack_morphism_client::api::test::*;
+use slack_morphism_client::api::users::*;
+use slack_morphism_client::*;
 
-use slack_client::test::*;
-use slack_client::users::*;
-use slack_client::*;
-
-use slack_models::blocks::kit::*;
-use slack_models::*;
+use slack_morphism_models::blocks::kit::*;
+use slack_morphism_models::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

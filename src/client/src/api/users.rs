@@ -22,6 +22,7 @@ pub struct SlackApiUsersListResponse {
 }
 
 impl<'a> SlackClientSession<'a> {
+
     pub async fn users_list(
         &self,
         req: &SlackApiUsersListRequest,
@@ -39,4 +40,11 @@ impl<'a> SlackClientSession<'a> {
         )
         .await
     }
+
+    pub async fn users_list_scroller(&self,
+                                   req: &SlackApiUsersListRequest,
+    ) -> ClientResult<SlackApiUsersListResponse> {
+        unimplemented!("{:#?}",req)
+    }
+
 }

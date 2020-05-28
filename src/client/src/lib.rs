@@ -1,7 +1,6 @@
-pub mod chat;
+pub mod api;
 pub mod errors;
-pub mod test;
-pub mod users;
+pub mod scroller;
 
 use bytes::buf::BufExt as _;
 use hyper::client::*;
