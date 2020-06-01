@@ -45,7 +45,7 @@ impl<'a> SlackClientSession<'a> {
 
 }
 
-impl<'a> SlackApiResponseScrollerFactory for SlackApiUsersListRequest {
+impl SlackApiResponseScrollerFactory for SlackApiUsersListRequest {
     type ResponseType = SlackApiUsersListResponse;
     type CursorType = SlackCursorId;
 

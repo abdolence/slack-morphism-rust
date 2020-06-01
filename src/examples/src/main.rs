@@ -6,6 +6,7 @@ use slack_morphism_client::api::users::*;
 use slack_morphism_models::blocks::kit::*;
 use slack_morphism_models::*;
 use slack_morphism_models::common::SlackCursorId;
+use futures::stream::BoxStream;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -75,6 +76,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             res
         }.await?;
     }
+
+    let scroller_stream : Box<dyn SlackApiResponseScroller<ResponseType=SlackApiUsersListResponse, CursorType=SlackCursorId>>
+        = SlackApiUsersListRequest::new().with_limit(1).scroller();
+
+    //let resp_stream : BoxStream<SlackApiUsersListResponse> = scroller_stream.to_stream(&session);
 
     Ok(())
 }
