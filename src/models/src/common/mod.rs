@@ -4,6 +4,7 @@ use rsb_derive::Builder;
 use rvs_derive::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use serde_with::rust::string_empty_as_none;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTs(pub String);
@@ -52,6 +53,7 @@ pub struct SlackCursorId(pub String);
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackResponseMetadata {
+    #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub next_cursor: Option<SlackCursorId>,
 }
 
