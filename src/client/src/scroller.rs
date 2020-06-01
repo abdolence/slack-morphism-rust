@@ -10,7 +10,8 @@ pub trait SlackApiResponseScroller {
 
     fn has_next(&self) -> bool;
 
-    fn next<'a, 's>(&'a mut self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,ClientResult<Self::ResponseType>>;
+    fn next_mut<'a, 's>(&'a mut self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,ClientResult<Self::ResponseType>>;
+    fn next<'a, 's>(&'a self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,(Self,ClientResult<Self::ResponseType>)> where  Self : std::marker::Sized;
 }
 
 pub trait SlackApiScrollableRequest {
@@ -69,7 +70,7 @@ impl<RQ, RS, CT> SlackApiResponseScroller for SlackApiResponseScrollerState<RQ, 
         self.last_response.is_none() || (self.last_response.is_some() && self.last_cursor.is_some())
     }
 
-    fn next<'a, 's>(&'a mut self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,ClientResult<Self::ResponseType>> {
+    fn next_mut<'a, 's>(&'a mut self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,ClientResult<Self::ResponseType>> {
 
         let cursor = &self.last_cursor;
 
@@ -93,5 +94,41 @@ impl<RQ, RS, CT> SlackApiResponseScroller for SlackApiResponseScrollerState<RQ, 
             }.boxed()
         }
 
+    }
+
+    fn next<'a, 's>(&'a self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,(Self,ClientResult<Self::ResponseType>)> {
+
+        let self_clone = self.clone();
+
+        if !&self.has_next() {
+            async {
+                ( self_clone, Err(Box::new(SlackClientError::EndOfStream(SlackClientEndOfStreamError::new())).into()) )
+            }.boxed()
+        }
+        else {
+            let cursor = &self.last_cursor;
+            let updated_request = self.request.with_new_cursor(cursor.as_ref());
+
+            async move {
+                updated_request
+                    .scroll(&session)
+                    .map(|res| {
+                        let updated_self =
+                            match &res {
+                                Ok(ok_resp) => {
+                                    Self {
+                                        last_response : Some(ok_resp.clone()),
+                                        last_cursor : ok_resp.next_cursor().cloned(),
+                                        .. self_clone
+                                    }
+                                }
+                                Err(_) => self_clone
+                            };
+
+                        (updated_self,res)
+                    })
+                    .await
+            }.boxed()
+        }
     }
 }

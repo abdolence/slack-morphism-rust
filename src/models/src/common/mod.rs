@@ -4,7 +4,6 @@ use rsb_derive::Builder;
 use rvs_derive::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use serde_with::rust::string_empty_as_none;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTs(pub String);
