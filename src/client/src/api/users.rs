@@ -58,8 +58,7 @@ impl SlackApiScrollableRequest for SlackApiUsersListRequest {
         &'a self,
         session: &'a SlackClientSession<'s>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        let async_res = async move { session.users_list(&self).await };
-        async_res.boxed()
+        async move { session.users_list(&self).await }.boxed()
     }
 }
 

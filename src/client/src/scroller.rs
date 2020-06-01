@@ -26,16 +26,20 @@ pub trait SlackApiScrollableRequest {
     type ResponseType;
     type CursorType;
 
-    fn scroller<'a,'b>(
+    fn scroller<'a, 'b>(
         &'a self,
     ) -> Box<
         dyn SlackApiResponseScroller<
-            ResponseType = Self::ResponseType,
-            CursorType = Self::CursorType,
-        > +'b
-    > where Self : Send + Clone + Sync  +'b,
-             Self::ResponseType : Send + Clone + Sync + SlackApiScrollableResponse<CursorType = Self::CursorType>  +'b,
-             Self::CursorType : Send + Clone + Sync  +'b {
+                ResponseType = Self::ResponseType,
+                CursorType = Self::CursorType,
+            > + 'b,
+    >
+    where
+        Self: Send + Clone + Sync + 'b,
+        Self::ResponseType:
+            Send + Clone + Sync + SlackApiScrollableResponse<CursorType = Self::CursorType> + 'b,
+        Self::CursorType: Send + Clone + Sync + 'b,
+    {
         Box::new(SlackApiResponseScrollerState::new(self))
     }
 
