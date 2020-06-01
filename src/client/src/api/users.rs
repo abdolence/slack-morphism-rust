@@ -5,8 +5,8 @@ use serde_with::skip_serializing_none;
 use crate::scroller::*;
 use crate::ClientResult;
 use crate::SlackClientSession;
+use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::common::*;
-use futures::future::{FutureExt, BoxFuture};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -24,7 +24,6 @@ pub struct SlackApiUsersListResponse {
 }
 
 impl<'a> SlackClientSession<'a> {
-
     pub async fn users_list(
         &self,
         req: &SlackApiUsersListRequest,
@@ -42,27 +41,6 @@ impl<'a> SlackClientSession<'a> {
         )
         .await
     }
-
-}
-
-impl SlackApiResponseScrollerFactory for SlackApiUsersListRequest {
-    type ResponseType = SlackApiUsersListResponse;
-    type CursorType = SlackCursorId;
-
-    fn scroller(
-        &self,
-    ) -> Box<
-        dyn SlackApiResponseScroller<
-            ResponseType = Self::ResponseType,
-            CursorType = Self::CursorType,
-        >,
-    > {
-        Box::new(SlackApiResponseScrollerState {
-            request: self.clone(),
-            last_cursor: None,
-            last_response: None,
-        })
-    }
 }
 
 impl SlackApiScrollableRequest for SlackApiUsersListRequest {
@@ -76,13 +54,11 @@ impl SlackApiScrollableRequest for SlackApiUsersListRequest {
         }
     }
 
-    fn scroll<'a,'s>(
+    fn scroll<'a, 's>(
         &'a self,
         session: &'a SlackClientSession<'s>,
-    ) -> BoxFuture<'a,ClientResult<Self::ResponseType>> {
-        let async_res = async move {
-            session.users_list(&self).await
-        };
+    ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
+        let async_res = async move { session.users_list(&self).await };
         async_res.boxed()
     }
 }

@@ -1,13 +1,13 @@
-use slack_morphism_client::*;
-use slack_morphism_client::scroller::*;
 use slack_morphism_client::api::test::*;
 use slack_morphism_client::api::users::*;
+use slack_morphism_client::scroller::*;
+use slack_morphism_client::*;
 
-use slack_morphism_models::blocks::kit::*;
-use slack_morphism_models::*;
-use slack_morphism_models::common::SlackCursorId;
 use futures::stream::BoxStream;
 use futures::TryStreamExt;
+use slack_morphism_models::blocks::kit::*;
+use slack_morphism_models::common::SlackCursorId;
+use slack_morphism_models::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -67,24 +67,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("{:#?}", users);
 
-    let mut scroller : Box<dyn SlackApiResponseScroller<ResponseType=SlackApiUsersListResponse, CursorType=SlackCursorId>>
-        = SlackApiUsersListRequest::new().with_limit(1).scroller();
+    let mut scroller: Box<
+        dyn SlackApiResponseScroller<
+            ResponseType = SlackApiUsersListResponse,
+            CursorType = SlackCursorId,
+        >,
+    > = SlackApiUsersListRequest::new().with_limit(1).scroller();
 
     while scroller.has_next() {
         async {
             let res = scroller.next_mut(&session).await;
-            println!("res: {:#?}",res);
+            println!("res: {:#?}", res);
             res
-        }.await?;
+        }
+        .await?;
     }
 
-    let scroller_stream : Box<dyn SlackApiResponseScroller<ResponseType=SlackApiUsersListResponse, CursorType=SlackCursorId>>
-        = SlackApiUsersListRequest::new().with_limit(1).scroller();
+    let scroller_stream: Box<
+        dyn SlackApiResponseScroller<
+            ResponseType = SlackApiUsersListResponse,
+            CursorType = SlackCursorId,
+        >,
+    > = SlackApiUsersListRequest::new().with_limit(1).scroller();
 
-    let mut resp_stream : BoxStream<ClientResult<SlackApiUsersListResponse>> = scroller_stream.to_stream(&session);
+    let mut resp_stream: BoxStream<ClientResult<SlackApiUsersListResponse>> =
+        scroller_stream.to_stream(&session);
 
     while let Some(item) = resp_stream.try_next().await? {
-        println!("res: {:#?}",item);
+        println!("res: {:#?}", item);
     }
 
     Ok(())

@@ -8,7 +8,7 @@ use std::fmt::Formatter;
 pub enum SlackClientError {
     ApiError(SlackClientApiError),
     HttpError(SlackClientHttpError),
-    EndOfStream(SlackClientEndOfStreamError)
+    EndOfStream(SlackClientEndOfStreamError),
 }
 
 impl SlackClientError {
@@ -76,10 +76,8 @@ impl Display for SlackClientHttpError {
 
 impl std::error::Error for SlackClientHttpError {}
 
-
 #[derive(Debug, PartialEq, Clone, Builder)]
-pub struct SlackClientEndOfStreamError {
-}
+pub struct SlackClientEndOfStreamError {}
 
 impl Display for SlackClientEndOfStreamError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
@@ -88,4 +86,3 @@ impl Display for SlackClientEndOfStreamError {
 }
 
 impl std::error::Error for SlackClientEndOfStreamError {}
-
