@@ -61,28 +61,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("{:#?}", test);
 
-    let users: SlackApiUsersListResponse = session
-        .users_list(&SlackApiUsersListRequest::new().with_limit(1))
-        .await?;
-
-    println!("{:#?}", users);
-
-    let mut scroller: Box<
-        dyn SlackApiResponseScroller<
-            ResponseType = SlackApiUsersListResponse,
-            CursorType = SlackCursorId,
-        >,
-    > = SlackApiUsersListRequest::new().with_limit(1).scroller();
-
-    while scroller.has_next() {
-        async {
-            let res = scroller.next_mut(&session).await;
-            println!("res: {:#?}", res);
-            res
-        }
-        .await?;
-    }
-
     let scroller_stream: Box<
         dyn SlackApiResponseScroller<
             ResponseType = SlackApiUsersListResponse,
