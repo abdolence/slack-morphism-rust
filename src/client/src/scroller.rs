@@ -12,10 +12,8 @@ pub trait SlackApiResponseScroller {
     fn has_next(&self) -> bool;
 
     fn next_mut<'a, 's>(&'a mut self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,ClientResult<Self::ResponseType>>;
-    fn next<'a, 's>(&'a self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,(ClientResult<Self::ResponseType>, Self)>
-        where Self : std::marker::Sized;
 
-    fn to_stream<'a,'s>(&'a self, session: &'a SlackClientSession<'s>) -> BoxStream<'a,ClientResult<Self::ResponseType>> where Self : std::marker::Sized;
+    fn to_stream<'a,'s>(&'a self, session: &'a SlackClientSession<'s>) -> BoxStream<'a,ClientResult<Self::ResponseType>>;
 }
 
 pub trait SlackApiScrollableRequest {
@@ -100,48 +98,13 @@ impl<RQ, RS, CT> SlackApiResponseScroller for SlackApiResponseScrollerState<RQ, 
 
     }
 
-    fn next<'a, 's>(&'a self, session: &'a SlackClientSession<'s>) -> BoxFuture<'a,(ClientResult<Self::ResponseType>,Self)> {
-
-        let self_clone = self.clone();
-
-        if !&self.has_next() {
-            async {
-                ( Err(Box::new(SlackClientError::EndOfStream(SlackClientEndOfStreamError::new())).into()), self_clone )
-            }.boxed()
-        }
-        else {
-            let cursor = &self.last_cursor;
-            let updated_request = self.request.with_new_cursor(cursor.as_ref());
-
-            async move {
-                updated_request
-                    .scroll(&session)
-                    .map(|res| {
-                        let updated_self =
-                            match &res {
-                                Ok(ok_resp) => {
-                                    Self {
-                                        last_response : Some(ok_resp.clone()),
-                                        last_cursor : ok_resp.next_cursor().cloned(),
-                                        .. self_clone
-                                    }
-                                }
-                                Err(_) => self_clone
-                            };
-
-                        (res, updated_self)
-                    })
-                    .await
-            }.boxed()
-        }
-    }
-
     fn to_stream<'a,'s>(&'a self, session: &'a SlackClientSession<'s>) -> BoxStream<'a,ClientResult<Self::ResponseType>> where Self : std::marker::Sized {
 
-        let stream = futures_util::stream::unfold(self.clone(), move |state| async move {
+        let init_state = self.clone();
+        let stream = futures_util::stream::unfold(init_state, move |mut state| async move {
             if state.has_next() {
-                let (res,updated_state) = state.next(session).await;
-                Some( (res, updated_state) )
+                let res = state.next_mut(session).await;
+                Some( (res, state) )
             }
             else {
                 None
