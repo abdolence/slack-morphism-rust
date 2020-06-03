@@ -10,7 +10,7 @@ use std::collections::HashMap;
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiBotsInfoRequest {
-    pub bot : Option<String>
+    pub bot: Option<String>,
 }
 
 #[skip_serializing_none]
@@ -22,22 +22,15 @@ pub struct SlackApiBotsInfoResponse {
     pub updated: Option<SlackDateTime>,
     pub app_id: String,
     pub user_id: String,
-    pub icons: Option<HashMap<String, String>>
+    pub icons: Option<HashMap<String, String>>,
 }
 
 impl<'a> SlackClientSession<'a> {
-
     pub async fn bots_info(
         &self,
         req: &SlackApiBotsInfoRequest,
     ) -> ClientResult<SlackApiBotsInfoResponse> {
-        self.http_get(
-            "bots.info",
-            vec![
-                ("bot", req.bot.as_ref())
-            ],
-        )
-        .await
+        self.http_get("bots.info", vec![("bot", req.bot.as_ref())])
+            .await
     }
-
 }

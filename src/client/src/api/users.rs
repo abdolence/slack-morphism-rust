@@ -24,7 +24,6 @@ pub struct SlackApiUsersListResponse {
 }
 
 impl<'a> SlackClientSession<'a> {
-
     pub async fn users_list(
         &self,
         req: &SlackApiUsersListRequest,
@@ -34,15 +33,11 @@ impl<'a> SlackClientSession<'a> {
             vec![
                 ("cursor", req.cursor.as_ref().map(|c| c.value().into())),
                 ("limit", req.limit.map(|v| v.to_string())),
-                (
-                    "include_locale",
-                    req.include_locale.map(|v| v.to_string()),
-                ),
+                ("include_locale", req.include_locale.map(|v| v.to_string())),
             ],
         )
         .await
     }
-
 }
 
 impl SlackApiScrollableRequest for SlackApiUsersListRequest {
