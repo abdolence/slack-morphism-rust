@@ -45,10 +45,7 @@ impl SlackApiScrollableRequest for SlackApiUsersListRequest {
     type CursorType = SlackCursorId;
 
     fn with_new_cursor(&self, new_cursor: Option<&Self::CursorType>) -> Self {
-        Self {
-            cursor: new_cursor.cloned(),
-            ..*self
-        }
+        self.clone().opt_cursor(new_cursor.cloned())
     }
 
     fn scroll<'a, 's>(
