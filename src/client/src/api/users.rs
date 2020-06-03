@@ -11,19 +11,20 @@ use slack_morphism_models::common::*;
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUsersListRequest {
-    cursor: Option<SlackCursorId>,
-    include_locale: Option<bool>,
-    limit: Option<u16>,
+    pub cursor: Option<SlackCursorId>,
+    pub include_locale: Option<bool>,
+    pub limit: Option<u16>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUsersListResponse {
-    members: Vec<SlackUser>,
-    response_metadata: Option<SlackResponseMetadata>,
+    pub members: Vec<SlackUser>,
+    pub response_metadata: Option<SlackResponseMetadata>,
 }
 
 impl<'a> SlackClientSession<'a> {
+
     pub async fn users_list(
         &self,
         req: &SlackApiUsersListRequest,
@@ -41,6 +42,7 @@ impl<'a> SlackClientSession<'a> {
         )
         .await
     }
+
 }
 
 impl SlackApiScrollableRequest for SlackApiUsersListRequest {
