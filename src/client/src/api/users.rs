@@ -68,7 +68,7 @@ impl SlackApiScrollableResponse for SlackApiUsersListResponse {
             .flatten()
     }
 
-    fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = Self::ResponseItemType> +'a> {
-        Box::new(self.members.clone().into_iter())
+    fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {
+        Box::new(self.members.iter())
     }
 }

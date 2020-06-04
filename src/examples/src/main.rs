@@ -8,6 +8,7 @@ use futures::TryStreamExt;
 use slack_morphism_models::blocks::kit::*;
 use slack_morphism_models::common::*;
 use slack_morphism_models::*;
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -61,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("{:#?}", test);
 
-    let scroller_req : SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
+    let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
     let scroller_stream = scroller_req.scroller();
 
     let mut resp_stream: BoxStream<ClientResult<SlackApiUsersListResponse>> =
@@ -71,13 +72,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!("res: {:#?}", item.members);
     }
 
-    let collected_members : Vec<SlackUser> =
-        scroller_stream
-            .to_stream(&session)
-            .map_ok(|rs| rs.scrollable_items().collect() )
-            .try_concat()
-            .await?;
+    let collected_members: Vec<SlackUser> = scroller_stream
+        .collect_items_stream(&session, Duration::from_millis(1000))
+        .await?;
     println!("collected res: {:#?}", collected_members);
+
+    let mut items_stream = scroller_stream.to_items_stream(&session);
+    while let Some(items) = items_stream.try_next().await? {
+        println!("res: {:#?}", items);
+    }
 
     Ok(())
 }
