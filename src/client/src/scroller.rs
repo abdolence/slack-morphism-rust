@@ -132,8 +132,6 @@ where
         &'a self,
         session: &'a SlackClientSession<'s>,
     ) -> BoxStream<'a, ClientResult<Self::ResponseType>>
-    where
-        Self: std::marker::Sized,
     {
         let init_state = self.clone();
         let stream = futures_util::stream::unfold(init_state, move |mut state| async move {
