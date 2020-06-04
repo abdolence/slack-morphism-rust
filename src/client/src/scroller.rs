@@ -8,6 +8,7 @@ use futures::{FutureExt, StreamExt, TryFutureExt};
 pub trait SlackApiResponseScroller {
     type ResponseType;
     type CursorType;
+    type ResponseItemType;
 
     fn has_next(&self) -> bool;
 
@@ -25,6 +26,7 @@ pub trait SlackApiResponseScroller {
 pub trait SlackApiScrollableRequest {
     type ResponseType;
     type CursorType;
+    type ResponseItemType;
 
     fn scroller<'a, 'b>(
         &'a self,
@@ -32,13 +34,15 @@ pub trait SlackApiScrollableRequest {
         dyn SlackApiResponseScroller<
                 ResponseType = Self::ResponseType,
                 CursorType = Self::CursorType,
+                ResponseItemType = Self::ResponseItemType
             > + 'b,
     >
     where
         Self: Send + Clone + Sync + 'b,
         Self::ResponseType:
-            Send + Clone + Sync + SlackApiScrollableResponse<CursorType = Self::CursorType> + 'b,
+            Send + Clone + Sync + SlackApiScrollableResponse<CursorType = Self::CursorType, ResponseItemType = Self::ResponseItemType> + 'b,
         Self::CursorType: Send + Clone + Sync + 'b,
+        Self::ResponseItemType: Send + Clone + Sync + 'b,
     {
         Box::new(SlackApiResponseScrollerState::new(self))
     }
@@ -53,27 +57,31 @@ pub trait SlackApiScrollableRequest {
 
 pub trait SlackApiScrollableResponse {
     type CursorType;
+    type ResponseItemType;
 
     fn next_cursor(&self) -> Option<&Self::CursorType>;
+    fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = Self::ResponseItemType> +'a>;
 }
 
 #[derive(Debug, Clone)]
-pub struct SlackApiResponseScrollerState<RQ, RS, CT>
+pub struct SlackApiResponseScrollerState<RQ, RS, CT, RIT>
 where
-    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT> + Send + Sync + Clone,
-    RS: SlackApiScrollableResponse<CursorType = CT> + Send + Sync + Clone,
+    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
+    RS: SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
     CT: Send + Sync + Clone,
+    RIT: Send + Sync + Clone
 {
     pub request: RQ,
     pub last_response: Option<RS>,
     pub last_cursor: Option<CT>,
 }
 
-impl<RQ, RS, CT> SlackApiResponseScrollerState<RQ, RS, CT>
+impl<RQ, RS, CT, RIT> SlackApiResponseScrollerState<RQ, RS, CT, RIT>
 where
-    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT> + Send + Sync + Clone,
-    RS: SlackApiScrollableResponse<CursorType = CT> + Send + Sync + Clone,
+    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
+    RS: SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
     CT: Send + Sync + Clone,
+    RIT: Send + Sync + Clone
 {
     pub fn new(request: &RQ) -> Self {
         Self {
@@ -84,14 +92,16 @@ where
     }
 }
 
-impl<RQ, RS, CT> SlackApiResponseScroller for SlackApiResponseScrollerState<RQ, RS, CT>
+impl<RQ, RS, CT, RIT> SlackApiResponseScroller for SlackApiResponseScrollerState<RQ, RS, CT, RIT>
 where
-    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT> + Send + Sync + Clone,
-    RS: SlackApiScrollableResponse<CursorType = CT> + Send + Sync + Clone,
+    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
+    RS: SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
     CT: Send + Sync + Clone,
+    RIT: Send + Sync + Clone
 {
     type ResponseType = RS;
     type CursorType = CT;
+    type ResponseItemType = RIT;
 
     fn has_next(&self) -> bool {
         self.last_response.is_none() || (self.last_response.is_some() && self.last_cursor.is_some())

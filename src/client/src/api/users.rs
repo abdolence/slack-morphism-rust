@@ -43,6 +43,7 @@ impl<'a> SlackClientSession<'a> {
 impl SlackApiScrollableRequest for SlackApiUsersListRequest {
     type ResponseType = SlackApiUsersListResponse;
     type CursorType = SlackCursorId;
+    type ResponseItemType = SlackUser;
 
     fn with_new_cursor(&self, new_cursor: Option<&Self::CursorType>) -> Self {
         self.clone().opt_cursor(new_cursor.cloned())
@@ -58,11 +59,16 @@ impl SlackApiScrollableRequest for SlackApiUsersListRequest {
 
 impl SlackApiScrollableResponse for SlackApiUsersListResponse {
     type CursorType = SlackCursorId;
+    type ResponseItemType = SlackUser;
 
     fn next_cursor(&self) -> Option<&Self::CursorType> {
         self.response_metadata
             .as_ref()
             .map(|rm| rm.next_cursor.as_ref())
             .flatten()
+    }
+
+    fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = Self::ResponseItemType> +'a> {
+        Box::new(self.members.clone().into_iter())
     }
 }

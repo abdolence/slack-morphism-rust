@@ -6,7 +6,7 @@ use slack_morphism_client::*;
 use futures::stream::BoxStream;
 use futures::TryStreamExt;
 use slack_morphism_models::blocks::kit::*;
-use slack_morphism_models::common::SlackCursorId;
+use slack_morphism_models::common::*;
 use slack_morphism_models::*;
 
 #[tokio::main]
@@ -61,19 +61,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("{:#?}", test);
 
-    let scroller_stream: Box<
-        dyn SlackApiResponseScroller<
-            ResponseType = SlackApiUsersListResponse,
-            CursorType = SlackCursorId,
-        >,
-    > = SlackApiUsersListRequest::new().with_limit(1).scroller();
+    let scroller_req : SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
+    let scroller_stream = scroller_req.scroller();
 
     let mut resp_stream: BoxStream<ClientResult<SlackApiUsersListResponse>> =
         scroller_stream.to_stream(&session);
 
     while let Some(item) = resp_stream.try_next().await? {
-        println!("res: {:#?}", item);
+        println!("res: {:#?}", item.members);
     }
+
+    let collected_members : Vec<SlackUser> =
+        scroller_stream
+            .to_stream(&session)
+            .map_ok(|rs| rs.scrollable_items().collect() )
+            .try_concat()
+            .await?;
+    println!("collected res: {:#?}", collected_members);
 
     Ok(())
 }
