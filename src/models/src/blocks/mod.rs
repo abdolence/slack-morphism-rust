@@ -1,2 +1,2 @@
-pub mod kit;
 pub mod dsl;
+pub mod kit;

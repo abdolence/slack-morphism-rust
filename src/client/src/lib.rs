@@ -69,11 +69,16 @@ impl SlackClient {
             .unwrap()
     }
 
-    pub fn new() -> Self {
-        let https_connector = HttpsConnector::new();
-        SlackClient {
-            connector: Client::builder().build(https_connector),
-        }
+    fn setup_basic_auth_header(
+        request_builder: hyper::http::request::Builder,
+        username: &String,
+        password: &String,
+    ) -> hyper::http::request::Builder {
+        let header_value = format!(
+            "Basic {}",
+            base64::encode(format!("{}:{}", username, password))
+        );
+        request_builder.header(hyper::header::AUTHORIZATION, header_value)
     }
 
     fn create_http_request(uri: Uri, method: hyper::http::Method) -> hyper::http::request::Builder {
@@ -115,6 +120,13 @@ impl SlackClient {
                     .with_http_response_body(http_body_str),
             )
             .into()),
+        }
+    }
+
+    pub fn new() -> Self {
+        let https_connector = HttpsConnector::new();
+        SlackClient {
+            connector: Client::builder().build(https_connector),
         }
     }
 
@@ -247,7 +259,7 @@ impl<'a> SlackClientSession<'_> {
         request_builder: hyper::http::request::Builder,
     ) -> hyper::http::request::Builder {
         let token_header_value = format!("Bearer {}", self.token.value);
-        request_builder.header("Authorization", token_header_value)
+        request_builder.header(hyper::header::AUTHORIZATION, token_header_value)
     }
 
     pub async fn http_get_uri<RS, PT, TS>(&self, full_uri: Uri) -> ClientResult<RS>
