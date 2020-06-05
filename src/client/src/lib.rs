@@ -2,6 +2,8 @@ pub mod api;
 pub mod errors;
 pub mod scroller;
 
+use serde::{Deserialize, Serialize};
+
 use bytes::buf::BufExt as _;
 use hyper::client::*;
 use hyper::http::StatusCode;
@@ -10,8 +12,6 @@ use hyper_tls::HttpsConnector;
 use rsb_derive::Builder;
 use std::io::Read;
 use url::Url;
-
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiToken {
@@ -22,14 +22,20 @@ pub struct SlackApiToken {
 
 #[derive(Debug)]
 pub struct SlackClient {
+    pub http_api : SlackClientHttpApi
+}
+
+#[derive(Debug)]
+pub struct SlackClientHttpApi {
     connector: Client<HttpsConnector<HttpConnector>>,
 }
 
 #[derive(Debug)]
 pub struct SlackClientSession<'a> {
     client: &'a SlackClient,
-    token: SlackApiToken,
+    token: SlackApiToken
 }
+
 
 pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -40,18 +46,26 @@ struct SlackEnvelopeMessage {
     warnings: Option<Vec<String>>,
 }
 
-impl SlackClient {
+impl SlackClientHttpApi {
+
     const SLACK_API_URI_STR: &'static str = "https://slack.com/api";
 
+    fn new() -> Self {
+        let https_connector = HttpsConnector::new();
+        Self{
+            connector: Client::builder().build(https_connector),
+        }
+    }
+
     fn create_method_uri_path(method_relative_uri: &str) -> String {
-        format!("{}/{}", SlackClient::SLACK_API_URI_STR, method_relative_uri)
+        format!("{}/{}", SlackClientHttpApi::SLACK_API_URI_STR, method_relative_uri)
     }
 
     fn create_url(url_str: &String) -> Uri {
         url_str.parse().unwrap()
     }
 
-    pub fn create_url_with_params<'p, PT, TS>(url_str: &String, params: PT) -> Uri
+    fn create_url_with_params<'p, PT, TS>(url_str: &String, params: PT) -> Uri
     where
         PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)>,
         TS: std::string::ToString,
@@ -123,20 +137,6 @@ impl SlackClient {
         }
     }
 
-    pub fn new() -> Self {
-        let https_connector = HttpsConnector::new();
-        SlackClient {
-            connector: Client::builder().build(https_connector),
-        }
-    }
-
-    pub fn open_session(&self, token: &SlackApiToken) -> SlackClientSession {
-        SlackClientSession {
-            client: &self,
-            token: token.clone(),
-        }
-    }
-
     pub async fn http_get_uri<'a, RS>(
         &self,
         full_uri: Uri,
@@ -146,7 +146,7 @@ impl SlackClient {
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let base_http_request =
-            SlackClient::create_http_request(full_uri, hyper::http::Method::GET);
+            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::GET);
 
         let http_request = if session.is_none() {
             base_http_request
@@ -172,8 +172,8 @@ impl SlackClient {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)>,
         TS: std::string::ToString,
     {
-        let full_uri = SlackClient::create_url_with_params(
-            &SlackClient::create_method_uri_path(&method_relative_uri),
+        let full_uri = SlackClientHttpApi::create_url_with_params(
+            &SlackClientHttpApi::create_method_uri_path(&method_relative_uri),
             params,
         );
 
@@ -207,7 +207,7 @@ impl SlackClient {
         let post_json = serde_json::to_string(&request_body)?;
 
         let base_http_request =
-            SlackClient::create_http_request(full_uri, hyper::http::Method::POST)
+            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::POST)
                 .header("content-type", "application/json; charset=utf-8");
 
         let http_request = if session.is_none() {
@@ -234,7 +234,7 @@ impl SlackClient {
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let full_uri =
-            SlackClient::create_url(&SlackClient::create_method_uri_path(&method_relative_uri));
+            SlackClientHttpApi::create_url(&SlackClientHttpApi::create_method_uri_path(&method_relative_uri));
 
         self.http_post_uri(full_uri, &request, session).await
     }
@@ -253,7 +253,23 @@ impl SlackClient {
     }
 }
 
-impl<'a> SlackClientSession<'_> {
+impl SlackClient {
+    pub fn new() -> Self {
+        Self {
+            http_api : SlackClientHttpApi::new()
+        }
+    }
+
+    pub fn open_session(&self, token: &SlackApiToken) -> SlackClientSession {
+        SlackClientSession {
+            client: &self,
+            token: token.clone()
+        }
+    }
+}
+
+impl<'a> SlackClientSession<'a> {
+
     fn setup_token_auth_header(
         &self,
         request_builder: hyper::http::request::Builder,
@@ -266,7 +282,7 @@ impl<'a> SlackClientSession<'_> {
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
-        self.client.http_get_uri(full_uri, Some(self)).await
+        self.client.http_api.http_get_uri(full_uri, Some(self)).await
     }
 
     pub async fn http_get<'p, RS, PT, TS>(
@@ -280,7 +296,7 @@ impl<'a> SlackClientSession<'_> {
         TS: std::string::ToString,
     {
         self.client
-            .http_get_session(&method_relative_uri, params, Some(self))
+            .http_api.http_get_session(&method_relative_uri, params, Some(self))
             .await
     }
 
@@ -294,7 +310,7 @@ impl<'a> SlackClientSession<'_> {
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         self.client
-            .http_post_session(&method_relative_uri, &request, Some(self))
+            .http_api.http_post_session(&method_relative_uri, &request, Some(self))
             .await
     }
 
@@ -304,7 +320,8 @@ impl<'a> SlackClientSession<'_> {
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         self.client
-            .http_post_uri(full_uri, &request, Some(self))
+            .http_api.http_post_uri(full_uri, &request, Some(self))
             .await
     }
 }
+

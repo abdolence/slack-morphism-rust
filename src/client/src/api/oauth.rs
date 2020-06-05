@@ -2,10 +2,9 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::{ClientResult, SlackClient};
+use crate::{ClientResult, SlackClient, SlackClientHttpApi};
 use hyper::Body;
 use slack_morphism_models::common::*;
-use std::collections::HashMap;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -19,35 +18,56 @@ pub struct SlackOAuthV2AccessTokenRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackOAuthV2AccessTokenResponse {
-    pub id: String,
-    pub deleted: Option<bool>,
-    pub name: String,
-    pub updated: Option<SlackDateTime>,
+    pub access_token: String,
+    pub token_type: String,
+    pub scope: String,
+    pub bot_user_id: Option<String>,
     pub app_id: String,
-    pub user_id: String,
-    pub icons: Option<HashMap<String, String>>,
+    pub team: SlackTeamInfo,
+    pub authed_user: SlackOAuthV2AuthedUser,
+    pub incoming_webhook: Option<SlackOAuthIncomingWebHook>
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackOAuthV2AuthedUser {
+    pub id: String,
+    pub scope: Option<String>,
+    pub access_token: Option<String>,
+    pub token_type: Option<String>
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackOAuthIncomingWebHook {
+    pub channel: String,
+    pub channel_id: SlackChannelId,
+    pub configuration_url: String,
+    pub url: String
 }
 
 impl SlackClient {
+
     pub async fn oauth2_access(
         &self,
         req: &SlackOAuthV2AccessTokenRequest,
     ) -> ClientResult<SlackOAuthV2AccessTokenResponse> {
-        let full_uri = SlackClient::create_url_with_params(
-            &SlackClient::create_method_uri_path("oauth.v2.access"),
+        let full_uri = SlackClientHttpApi::create_url_with_params(
+            &SlackClientHttpApi::create_method_uri_path("oauth.v2.access"),
             vec![
                 ("code", Some(req.code.clone())),
                 ("redirect_uri", req.redirect_uri.clone()),
             ],
         );
 
-        let http_request = SlackClient::setup_basic_auth_header(
-            SlackClient::create_http_request(full_uri, hyper::http::Method::GET),
+        let http_request = SlackClientHttpApi::setup_basic_auth_header(
+            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::GET),
             &req.client_id,
             &req.client_secret,
         )
         .body(Body::empty())?;
 
-        self.send_webapi_request(http_request).await
+        self.http_api.send_webapi_request(http_request).await
     }
+
 }

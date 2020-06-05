@@ -114,6 +114,16 @@ pub struct SlackUserFlags {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTeamInfo {
+    pub id: String,
+    pub name: Option<String>,
+    pub domain: Option<String>,
+    pub email_domain: Option<String>,
+    pub icon: Option<SlackIcon>
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackIcon {
     pub image_original: Option<String>,
     pub image_default: Option<bool>,

@@ -3,8 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::collections::HashMap;
 
-use crate::ClientResult;
-use crate::SlackClient;
+use crate::{ClientResult, SlackClientHttpApi};
 use crate::SlackClientSession;
 
 #[skip_serializing_none]
@@ -22,8 +21,8 @@ pub struct SlackApiTestResponse {
 
 impl<'a> SlackClientSession<'a> {
     pub async fn api_test(&self, req: &SlackApiTestRequest) -> ClientResult<SlackApiTestResponse> {
-        let full_uri = SlackClient::create_url_with_params(
-            &SlackClient::create_method_uri_path("api.test"),
+        let full_uri = SlackClientHttpApi::create_url_with_params(
+            &SlackClientHttpApi::create_method_uri_path("api.test"),
             vec![("foo", req.foo.clone()), ("error", req.error.clone())],
         );
         self.http_post_uri(full_uri, &req).await
