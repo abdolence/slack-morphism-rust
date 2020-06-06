@@ -25,6 +25,6 @@ impl<'a> SlackClientSession<'a> {
             &SlackClientHttpApi::create_method_uri_path("api.test"),
             vec![("foo", req.foo.clone()), ("error", req.error.clone())],
         );
-        self.http_post_uri(full_uri, &req).await
+        self.http_api.http_post_uri(full_uri, &req).await
     }
 }

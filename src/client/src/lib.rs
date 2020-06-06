@@ -32,10 +32,16 @@ pub struct SlackClientHttpApi {
 
 #[derive(Debug)]
 pub struct SlackClientSession<'a> {
+    pub http_api : SlackClientHttpSessionApi<'a>,
     client: &'a SlackClient,
-    token: SlackApiToken
+    token: &'a SlackApiToken
 }
 
+#[derive(Debug)]
+pub struct SlackClientHttpSessionApi<'a> {
+    client: &'a SlackClient,
+    token: &'a SlackApiToken
+}
 
 pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -271,15 +277,22 @@ impl SlackClient {
         }
     }
 
-    pub fn open_session(&self, token: &SlackApiToken) -> SlackClientSession {
+    pub fn open_session<'a>(&'a self, token: &'a SlackApiToken) -> SlackClientSession<'a> {
+
+        let http_session_api = SlackClientHttpSessionApi {
+            client: self,
+            token
+        };
+
         SlackClientSession {
-            client: &self,
-            token: token.clone()
+            client: self,
+            token,
+            http_api : http_session_api
         }
     }
 }
 
-impl<'a> SlackClientSession<'a> {
+impl<'a> SlackClientHttpSessionApi<'a> {
 
     pub async fn http_get_uri<RS, PT, TS>(&self, full_uri: Uri) -> ClientResult<RS>
     where

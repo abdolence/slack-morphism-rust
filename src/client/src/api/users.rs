@@ -28,7 +28,7 @@ impl<'a> SlackClientSession<'a> {
         &self,
         req: &SlackApiUsersListRequest,
     ) -> ClientResult<SlackApiUsersListResponse> {
-        self.http_get(
+        self.http_api.http_get(
             "users.list",
             vec![
                 ("cursor", req.cursor.as_ref().map(|c| c.value().into())),

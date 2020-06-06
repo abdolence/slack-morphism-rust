@@ -30,7 +30,7 @@ impl<'a> SlackClientSession<'a> {
         &self,
         req: &SlackApiBotsInfoRequest,
     ) -> ClientResult<SlackApiBotsInfoResponse> {
-        self.http_get("bots.info", vec![("bot", req.bot.as_ref())])
+        self.http_api.http_get("bots.info", vec![("bot", req.bot.as_ref())])
             .await
     }
 }
