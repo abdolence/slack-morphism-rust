@@ -76,8 +76,8 @@ impl SlackClientHttpApi {
 
     fn create_url_with_params<'p, PT, TS>(url_str: &String, params: PT) -> Uri
     where
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)>,
-        TS: std::string::ToString,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        TS: std::string::ToString + 'p,
     {
         let url_query_params: Vec<(String, String)> = params
             .into_iter()
@@ -186,8 +186,8 @@ impl SlackClientHttpApi {
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)>,
-        TS: std::string::ToString,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        TS: std::string::ToString + 'p,
     {
         let full_uri = SlackClientHttpApi::create_url_with_params(
             &SlackClientHttpApi::create_method_uri_path(&method_relative_uri),
@@ -204,8 +204,8 @@ impl SlackClientHttpApi {
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)>,
-        TS: std::string::ToString,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        TS: std::string::ToString + 'p,
     {
         self.http_get_token(&method_relative_uri, params, None)
             .await
@@ -306,8 +306,8 @@ impl<'a> SlackClientHttpSessionApi<'a> {
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)>,
-        TS: std::string::ToString,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        TS: std::string::ToString + 'p,
     {
         self.client
             .http_api

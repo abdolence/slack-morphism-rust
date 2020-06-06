@@ -54,8 +54,8 @@ impl SlackClient {
         let full_uri = SlackClientHttpApi::create_url_with_params(
             &SlackClientHttpApi::create_method_uri_path("oauth.v2.access"),
             vec![
-                ("code", Some(req.code.clone())),
-                ("redirect_uri", req.redirect_uri.clone()),
+                ("code", Some(&req.code)),
+                ("redirect_uri", req.redirect_uri.as_ref()),
             ],
         );
 
