@@ -74,12 +74,13 @@ impl SlackClientHttpApi {
         url_str.parse().unwrap()
     }
 
-    fn create_url_with_params<'p, PT, TS>(url_str: &String, params: PT) -> Uri
+    fn create_url_with_params<'p, PT, TS>(url_str: &String, params: &'p PT) -> Uri
     where
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p,
     {
         let url_query_params: Vec<(String, String)> = params
+            .clone()
             .into_iter()
             .map(|(k, vo)| vo.map(|v| (k.to_string(), v.to_string())))
             .flatten()
@@ -181,12 +182,12 @@ impl SlackClientHttpApi {
     async fn http_get_token<'a, 'p, RS, PT, TS>(
         &self,
         method_relative_uri: &str,
-        params: PT,
+        params: &'p PT,
         token: Option<&'a SlackApiToken>,
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p,
     {
         let full_uri = SlackClientHttpApi::create_url_with_params(
@@ -200,11 +201,11 @@ impl SlackClientHttpApi {
     pub async fn http_get<'p, RS, PT, TS>(
         &self,
         method_relative_uri: &str,
-        params: PT,
+        params: &'p PT,
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p,
     {
         self.http_get_token(&method_relative_uri, params, None)
@@ -302,11 +303,11 @@ impl<'a> SlackClientHttpSessionApi<'a> {
     pub async fn http_get<'p, RS, PT, TS>(
         &self,
         method_relative_uri: &str,
-        params: PT,
+        params: &'p PT,
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)>,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p,
     {
         self.client

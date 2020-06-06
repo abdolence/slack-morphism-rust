@@ -31,7 +31,7 @@ impl<'a> SlackClientSession<'a> {
         self.http_api
             .http_get(
                 "users.list",
-                vec![
+                &vec![
                     ("cursor", req.cursor.as_ref().map(|x| x.value())),
                     ("limit", req.limit.map(|v| v.to_string()).as_ref()),
                     (

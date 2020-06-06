@@ -31,7 +31,7 @@ impl<'a> SlackClientSession<'a> {
         req: &SlackApiBotsInfoRequest,
     ) -> ClientResult<SlackApiBotsInfoResponse> {
         self.http_api
-            .http_get("bots.info", vec![("bot", req.bot.as_ref())])
+            .http_get("bots.info", &vec![("bot", req.bot.as_ref())])
             .await
     }
 }

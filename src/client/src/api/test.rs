@@ -23,7 +23,7 @@ impl<'a> SlackClientSession<'a> {
     pub async fn api_test(&self, req: &SlackApiTestRequest) -> ClientResult<SlackApiTestResponse> {
         let full_uri = SlackClientHttpApi::create_url_with_params(
             &SlackClientHttpApi::create_method_uri_path("api.test"),
-            vec![("foo", req.foo.as_ref()), ("error", req.error.as_ref())],
+            &vec![("foo", req.foo.as_ref()), ("error", req.error.as_ref())],
         );
         self.http_api.http_post_uri(full_uri, &req).await
     }
