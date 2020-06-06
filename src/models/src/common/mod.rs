@@ -119,7 +119,7 @@ pub struct SlackTeamInfo {
     pub name: Option<String>,
     pub domain: Option<String>,
     pub email_domain: Option<String>,
-    pub icon: Option<SlackIcon>
+    pub icon: Option<SlackIcon>,
 }
 
 #[skip_serializing_none]

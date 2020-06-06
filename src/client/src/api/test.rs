@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::collections::HashMap;
 
-use crate::{ClientResult, SlackClientHttpApi};
 use crate::SlackClientSession;
+use crate::{ClientResult, SlackClientHttpApi};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]

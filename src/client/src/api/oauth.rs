@@ -25,7 +25,7 @@ pub struct SlackOAuthV2AccessTokenResponse {
     pub app_id: String,
     pub team: SlackTeamInfo,
     pub authed_user: SlackOAuthV2AuthedUser,
-    pub incoming_webhook: Option<SlackOAuthIncomingWebHook>
+    pub incoming_webhook: Option<SlackOAuthIncomingWebHook>,
 }
 
 #[skip_serializing_none]
@@ -34,7 +34,7 @@ pub struct SlackOAuthV2AuthedUser {
     pub id: String,
     pub scope: Option<String>,
     pub access_token: Option<String>,
-    pub token_type: Option<String>
+    pub token_type: Option<String>,
 }
 
 #[skip_serializing_none]
@@ -43,11 +43,10 @@ pub struct SlackOAuthIncomingWebHook {
     pub channel: String,
     pub channel_id: SlackChannelId,
     pub configuration_url: String,
-    pub url: String
+    pub url: String,
 }
 
 impl SlackClient {
-
     pub async fn oauth2_access(
         &self,
         req: &SlackOAuthV2AccessTokenRequest,
@@ -69,5 +68,4 @@ impl SlackClient {
 
         self.http_api.send_webapi_request(http_request).await
     }
-
 }
