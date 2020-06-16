@@ -8,12 +8,12 @@ use serde::{Deserialize, Serialize};
 use bytes::buf::BufExt as _;
 use hyper::client::*;
 use hyper::http::StatusCode;
-use hyper::{Body, Request, Uri, Response};
+use hyper::{Body, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
 use rsb_derive::Builder;
+use std::collections::HashMap;
 use std::io::Read;
 use url::Url;
-use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiToken {
@@ -95,7 +95,7 @@ impl SlackClientHttpApi {
             .unwrap()
     }
 
-    pub fn parse_query_params(request : &Request<Body>) -> HashMap<String,String> {
+    pub fn parse_query_params(request: &Request<Body>) -> HashMap<String, String> {
         request
             .uri()
             .query()
@@ -107,7 +107,9 @@ impl SlackClientHttpApi {
             .unwrap_or_else(HashMap::new)
     }
 
-    pub fn hyper_redirect_to(url : &str) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn hyper_redirect_to(
+        url: &str,
+    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
         Response::builder()
             .status(hyper::http::StatusCode::FOUND)
             .header(hyper::header::LOCATION, url)
