@@ -1,5 +1,6 @@
 pub mod api;
 pub mod errors;
+pub mod listener;
 pub mod scroller;
 
 use serde::{Deserialize, Serialize};
@@ -7,11 +8,12 @@ use serde::{Deserialize, Serialize};
 use bytes::buf::BufExt as _;
 use hyper::client::*;
 use hyper::http::StatusCode;
-use hyper::{Body, Request, Uri};
+use hyper::{Body, Request, Uri, Response};
 use hyper_tls::HttpsConnector;
 use rsb_derive::Builder;
 use std::io::Read;
 use url::Url;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiToken {
@@ -74,7 +76,7 @@ impl SlackClientHttpApi {
         url_str.parse().unwrap()
     }
 
-    fn create_url_with_params<'p, PT, TS>(url_str: &String, params: &'p PT) -> Uri
+    fn create_url_with_params<'p, PT, TS>(url_str: &str, params: &'p PT) -> Uri
     where
         PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p,
@@ -86,11 +88,31 @@ impl SlackClientHttpApi {
             .flatten()
             .collect();
 
-        Url::parse_with_params(url_str.as_str(), url_query_params)
+        Url::parse_with_params(url_str, url_query_params)
             .unwrap()
             .as_str()
             .parse()
             .unwrap()
+    }
+
+    pub fn parse_query_params(request : &Request<Body>) -> HashMap<String,String> {
+        request
+            .uri()
+            .query()
+            .map(|v| {
+                url::form_urlencoded::parse(v.as_bytes())
+                    .into_owned()
+                    .collect()
+            })
+            .unwrap_or_else(HashMap::new)
+    }
+
+    pub fn hyper_redirect_to(url : &str) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
+        Response::builder()
+            .status(hyper::http::StatusCode::FOUND)
+            .header(hyper::header::LOCATION, url)
+            .body(Body::empty())
+            .map_err(|e| e.into())
     }
 
     fn setup_token_auth_header(

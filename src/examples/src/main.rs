@@ -10,8 +10,17 @@ use slack_morphism_models::common::*;
 use slack_morphism_models::*;
 use std::time::Duration;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+use hyper::service::{make_service_fn, service_fn};
+use hyper::{Body, Request, Response};
+use slack_morphism_client::listener::oauth::*;
+use slack_morphism_client::listener::push_events::*;
+use slack_morphism_client::listener::*;
+use std::sync::Arc;
+use slack_morphism_client::api::oauth::SlackOAuthV2AccessTokenResponse;
+use log::*;
+
+#[allow(dead_code)]
+async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
     let sb_ser = serde_json::to_string_pretty(&sb).unwrap();
     let sb_des: SlackSectionBlock = serde_json::from_str(&sb_ser).unwrap();
@@ -19,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let section_block = SlackSectionBlock::new()
         .with_text(md!("hey, {}", 10))
-        .with_fields(slack_items! [
+        .with_fields(slack_items![
             some(md!("hey1")),
             some(pt!("hey2")),
             optionally( sb_ser.is_empty() => md!("hey"))
@@ -29,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 action_id: "-".into(),
                 text: pt!("ddd"),
             })
-            .into(),
+                .into(),
         );
 
     let context_block: SlackContextBlock = SlackContextBlock::new(slack_blocks![
@@ -43,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         ))
     ]);
 
-    let blocks: Vec<SlackBlock> = slack_blocks! [
+    let blocks: Vec<SlackBlock> = slack_blocks![
        some ( section_block ),
        optionally( !sb_ser.is_empty() => context_block)
     ];
@@ -81,6 +90,70 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     while let Some(items) = items_stream.try_next().await? {
         println!("res: {:#?}", items);
     }
+
+    Ok(())
+}
+
+async fn test_oauth_install_function(resp : SlackOAuthV2AccessTokenResponse) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("{:#?}",resp);
+    Ok(())
+}
+
+async fn test_server(client : Arc<SlackClient>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
+    info!("Loading server: {}", addr);
+
+    async fn hello_world(
+        _req: Request<Body>,
+    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
+        Response::builder()
+            .body("Hello, World".into())
+            .map_err(|e| e.into())
+    }
+
+    let oauth_listener_config = Arc::new(
+            SlackOAuthListenerConfig::new(
+                std::env::var("SLACK_CLIENT_ID")?,
+                std::env::var("SLACK_CLIENT_SECRET")?,
+                std::env::var("SLACK_BOT_SCOPE")?,
+                std::env::var("SLACK_REDIRECT_HOST")?
+            )
+        );
+
+    let push_events_config = Arc::new(
+        SlackPushEventsListenerConfig::new("".into())
+    );
+
+    let make_svc = make_service_fn(move |_| {
+        let thread_oauth_config = oauth_listener_config.clone();
+        let thread_push_events_config = push_events_config.clone();
+        let thread_slack_client = client.clone();
+        async move {
+            let routes = chain_service_routes_fn(
+                create_slack_oauth_service_fn(thread_oauth_config, thread_slack_client, test_oauth_install_function),
+                chain_service_routes_fn(
+                    create_slack_push_events_service_fn(thread_push_events_config),
+                    hello_world,
+                )
+            );
+
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(service_fn(routes))
+        }
+    });
+
+    let server = hyper::server::Server::bind(&addr).serve(make_svc);
+    server.await
+        .map_err(|e| {
+            error!("Server error: {}",e);
+            e.into()
+        })
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pretty_env_logger::init();
+    let client : Arc<SlackClient> = Arc::new(SlackClient::new() );
+    test_server(client.clone()).await?;
 
     Ok(())
 }
