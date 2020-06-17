@@ -1,4 +1,7 @@
+mod common;
+
 pub mod blocks;
-pub mod common;
 pub mod events;
 pub mod messages;
+
+pub use common::*;

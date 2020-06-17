@@ -4,7 +4,7 @@ use serde_with::skip_serializing_none;
 
 use crate::{ClientResult, SlackClient, SlackClientHttpApi};
 use hyper::Body;
-use slack_morphism_models::common::*;
+use slack_morphism_models::*;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]

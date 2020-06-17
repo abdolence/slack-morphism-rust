@@ -4,7 +4,7 @@ use serde_with::skip_serializing_none;
 
 use crate::ClientResult;
 use crate::SlackClientSession;
-use slack_morphism_models::common::*;
+use slack_morphism_models::*;
 use std::collections::HashMap;
 
 #[skip_serializing_none]

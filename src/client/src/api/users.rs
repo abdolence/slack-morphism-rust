@@ -6,7 +6,7 @@ use crate::scroller::*;
 use crate::ClientResult;
 use crate::SlackClientSession;
 use futures::future::{BoxFuture, FutureExt};
-use slack_morphism_models::common::*;
+use slack_morphism_models::*;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
