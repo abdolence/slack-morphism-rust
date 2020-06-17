@@ -5,6 +5,9 @@ use std::future::Future;
 pub mod oauth;
 pub mod push_events;
 
+pub mod signature_verifier;
+
+
 pub fn chain_service_routes_fn<'a, R, D, FR, FD>(
     route: R,
     default: D,

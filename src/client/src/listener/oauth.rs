@@ -64,9 +64,7 @@ where
         + 'a
         + Send,
     I: Fn(Result<SlackOAuthV2AccessTokenResponse,Box<dyn std::error::Error + Send + Sync + 'static>>) -> IF + 'static + Send + Sync + Clone,
-    IF: Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>>
-        + 'static
-        + Send,
+    IF: Future<Output = ()> + 'static + Send,
 {
     move |req: Request<Body>, chain: D| {
         let cfg = config.clone();
@@ -112,9 +110,7 @@ async fn slack_oauth_callback_service<'a, I, IF>(
 ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>>
 where
     I: Fn(Result<SlackOAuthV2AccessTokenResponse,Box<dyn std::error::Error + Send + Sync + 'static>>) -> IF + 'static + Send + Sync + Clone,
-    IF: Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>>
-        + 'static
-        + Send,
+    IF: Future<Output = ()> + 'static + Send,
 {
     let params = SlackClientHttpApi::parse_query_params(&req);
     debug!("Received Slack OAuth callback: {:?}", &params);
@@ -135,12 +131,12 @@ where
             match oauth_access_resp {
                 Ok(oauth_resp) => {
                     info!("Slack OAuth access: {:#?}", &oauth_resp);
-                    install_service_fn(Ok(oauth_resp)).await?;
+                    install_service_fn(Ok(oauth_resp)).await;
                     SlackClientHttpApi::hyper_redirect_to(&config.redirect_installed_url)
                 }
                 Err(err) => {
                     error!("Slack OAuth error: {}", &err);
-                    install_service_fn(Err(err)).await?;
+                    install_service_fn(Err(err)).await;
                     SlackClientHttpApi::hyper_redirect_to(&config.redirect_error_redirect_url)
                 }
             }

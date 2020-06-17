@@ -14,6 +14,7 @@ use rsb_derive::Builder;
 use std::collections::HashMap;
 use std::io::Read;
 use url::Url;
+use hyper::body::HttpBody;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiToken {
@@ -67,7 +68,7 @@ impl SlackClientHttpApi {
     fn create_method_uri_path(method_relative_uri: &str) -> String {
         format!(
             "{}/{}",
-            SlackClientHttpApi::SLACK_API_URI_STR,
+            Self::SLACK_API_URI_STR,
             method_relative_uri
         )
     }
@@ -148,16 +149,21 @@ impl SlackClientHttpApi {
             .header("accept-charset", "utf-8")
     }
 
+    async fn http_body_to_string<T>(body : T) -> ClientResult<String> where T: HttpBody, T::Error : std::error::Error + Sync + Send + 'static {
+        let http_body = hyper::body::aggregate(body).await?;
+        let mut http_reader = http_body.reader();
+        let mut http_body_str = String::new();
+        http_reader.read_to_string(&mut http_body_str)?;
+        Ok(http_body_str)
+    }
+
     async fn send_webapi_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let http_res = self.connector.request(request).await?;
         let http_status = http_res.status();
-        let http_body = hyper::body::aggregate(http_res).await?;
-        let mut http_reader = http_body.reader();
-        let mut http_body_str = String::new();
-        http_reader.read_to_string(&mut http_body_str)?;
+        let http_body_str = Self::http_body_to_string(http_res).await?;
 
         match http_status {
             StatusCode::OK => {
@@ -192,9 +198,9 @@ impl SlackClientHttpApi {
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let base_http_request =
-            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::GET);
+            Self::create_http_request(full_uri, hyper::http::Method::GET);
 
-        let http_request = SlackClientHttpApi::setup_token_auth_header(base_http_request, token);
+        let http_request = Self::setup_token_auth_header(base_http_request, token);
 
         let body = self
             .send_webapi_request(http_request.body(Body::empty())?)
@@ -214,8 +220,8 @@ impl SlackClientHttpApi {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p,
     {
-        let full_uri = SlackClientHttpApi::create_url_with_params(
-            &SlackClientHttpApi::create_method_uri_path(&method_relative_uri),
+        let full_uri = Self::create_url_with_params(
+            &Self::create_method_uri_path(&method_relative_uri),
             params,
         );
 
@@ -249,10 +255,10 @@ impl SlackClientHttpApi {
         let post_json = serde_json::to_string(&request_body)?;
 
         let base_http_request =
-            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::POST)
+            Self::create_http_request(full_uri, hyper::http::Method::POST)
                 .header("content-type", "application/json; charset=utf-8");
 
-        let http_request = SlackClientHttpApi::setup_token_auth_header(base_http_request, token);
+        let http_request = Self::setup_token_auth_header(base_http_request, token);
 
         let response_body = self
             .send_webapi_request(http_request.body(post_json.into())?)
@@ -271,7 +277,7 @@ impl SlackClientHttpApi {
         RQ: serde::ser::Serialize,
         RS: for<'de> serde::de::Deserialize<'de>,
     {
-        let full_uri = SlackClientHttpApi::create_url(&SlackClientHttpApi::create_method_uri_path(
+        let full_uri = Self::create_url(&SlackClientHttpApi::create_method_uri_path(
             &method_relative_uri,
         ));
 
