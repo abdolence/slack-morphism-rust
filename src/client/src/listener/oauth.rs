@@ -1,6 +1,6 @@
 use rsb_derive::Builder;
 
-use crate::api::oauth::*;
+use crate::api::*;
 use crate::errors::*;
 use crate::{SlackClient, SlackClientHttpApi};
 

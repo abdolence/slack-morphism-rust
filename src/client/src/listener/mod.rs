@@ -2,10 +2,13 @@ use futures::future::{BoxFuture, FutureExt};
 use hyper::{Body, Request, Response};
 use std::future::Future;
 
-pub mod oauth;
-pub mod push_events;
+mod oauth;
+mod push_events;
+mod signature_verifier;
 
-pub mod signature_verifier;
+pub use oauth::*;
+pub use push_events::*;
+pub use signature_verifier::*;
 
 pub fn chain_service_routes_fn<'a, R, D, FR, FD>(
     route: R,

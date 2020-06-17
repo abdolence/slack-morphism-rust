@@ -6,7 +6,7 @@ use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
 use log::*;
-use slack_morphism_models::events::SlackPushEvent;
+use slack_morphism_models::events::*;
 use std::future::Future;
 use std::sync::Arc;
 

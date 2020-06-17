@@ -1,4 +1,4 @@
-use crate::blocks::kit::*;
+use crate::blocks::*;
 use crate::common::*;
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
