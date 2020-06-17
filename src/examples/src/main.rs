@@ -163,9 +163,45 @@ async fn test_server(
     })
 }
 
+fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    use fern::colors::{Color, ColoredLevelConfig};
+
+    let colors_level = ColoredLevelConfig::new()
+        .info(Color::Green)
+        .warn(Color::Magenta);
+
+    let colors_line = colors_level.clone();
+
+    fern::Dispatch::new()
+        // Perform allocation-free log formatting
+        .format(move |out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}{}\x1B[0m",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                colors_level.color(record.level()),
+                format_args!(
+                    "\x1B[{}m",
+                    colors_line.get_color(&record.level()).to_fg_str()
+                ),
+                message
+            ))
+        })
+        // Add blanket level filter -
+        .level(log::LevelFilter::Debug)
+        // - and per-module overrides
+        .level_for("hyper", log::LevelFilter::Info)
+        // Output to stdout, files, and other Dispatch configurations
+        .chain(std::io::stdout())
+        // Apply globally
+        .apply()?;
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    pretty_env_logger::init();
+    init_log()?;
     let client: Arc<SlackClient> = Arc::new(SlackClient::new());
     test_server(client.clone()).await?;
 
