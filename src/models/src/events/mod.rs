@@ -2,9 +2,9 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::blocks::view::SlackView;
 use crate::common::*;
 use crate::messages::*;
-use crate::blocks::view::SlackView;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -48,7 +48,7 @@ pub enum SlackEventCallbackBody {
     #[serde(rename = "message")]
     Message(SlackMessageEvent),
     #[serde(rename = "app_home_opened")]
-    AppHomeOpened(SlackAppHomeOpenedEvent)
+    AppHomeOpened(SlackAppHomeOpenedEvent),
 }
 
 #[skip_serializing_none]
@@ -82,12 +82,11 @@ pub enum SlackMessageEventType {
     ChannelName,
 }
 
-
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackAppHomeOpenedEvent {
     pub user: SlackUserId,
     pub channel: SlackChannelId,
     pub tab: String,
-    pub view: Option<SlackView>
+    pub view: Option<SlackView>,
 }

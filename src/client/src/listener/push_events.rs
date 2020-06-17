@@ -5,10 +5,10 @@ use crate::SlackClientHttpApi;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
+use log::*;
 use slack_morphism_models::events::SlackPushEvent;
 use std::future::Future;
 use std::sync::Arc;
-use log::*;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackPushEventsListenerConfig {
