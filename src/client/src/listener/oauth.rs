@@ -48,7 +48,7 @@ impl SlackOAuthListenerConfig {
 pub fn create_slack_oauth_service_fn<'a, D, F, I, IF>(
     config: Arc<SlackOAuthListenerConfig>,
     client: Arc<SlackClient>,
-    install_service: I,
+    install_service_fn: I,
 ) -> impl Fn(
     Request<Body>,
     D,
@@ -70,14 +70,14 @@ where
         let cfg = config.clone();
         let c = chain.clone();
         let sc = client.clone();
-        let install_service_fn = install_service.clone();
+        let install_fn = install_service_fn.clone();
         async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, url) if url == cfg.install_path => {
                     slack_oauth_install_service(req, &cfg).await
                 }
                 (&Method::GET, url) if url == cfg.redirect_callback_path => {
-                    slack_oauth_callback_service(req, &cfg, &sc, install_service_fn).await
+                    slack_oauth_callback_service(req, &cfg, &sc, install_fn).await
                 }
                 _ => c(req).await,
             }
