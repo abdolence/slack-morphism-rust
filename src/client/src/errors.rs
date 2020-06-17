@@ -9,6 +9,7 @@ pub enum SlackClientError {
     ApiError(SlackClientApiError),
     HttpError(SlackClientHttpError),
     EndOfStream(SlackClientEndOfStreamError),
+    SystemError(SlackClientSystemError)
 }
 
 impl SlackClientError {
@@ -28,6 +29,7 @@ impl Display for SlackClientError {
             SlackClientError::ApiError(ref err) => err.fmt(f),
             SlackClientError::HttpError(ref err) => err.fmt(f),
             SlackClientError::EndOfStream(ref err) => err.fmt(f),
+            SlackClientError::SystemError(ref err) => err.fmt(f)
         }
     }
 }
@@ -38,6 +40,7 @@ impl Error for SlackClientError {
             SlackClientError::ApiError(ref err) => Some(err),
             SlackClientError::HttpError(ref err) => Some(err),
             SlackClientError::EndOfStream(ref err) => Some(err),
+            SlackClientError::SystemError(ref err) => Some(err),
         }
     }
 }
@@ -86,3 +89,14 @@ impl Display for SlackClientEndOfStreamError {
 }
 
 impl std::error::Error for SlackClientEndOfStreamError {}
+
+#[derive(Debug, PartialEq, Clone, Builder)]
+pub struct SlackClientSystemError { message : String}
+
+impl Display for SlackClientSystemError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "Slack system/unexpected protocol error: {}", self.message)
+    }
+}
+
+impl std::error::Error for SlackClientSystemError {}

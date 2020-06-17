@@ -95,7 +95,7 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 async fn test_oauth_install_function(
-    resp: SlackOAuthV2AccessTokenResponse,
+    resp: Result<SlackOAuthV2AccessTokenResponse,Box<dyn std::error::Error + Send + Sync>>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", resp);
     Ok(())
