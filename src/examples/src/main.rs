@@ -128,7 +128,7 @@ async fn test_server(
         std::env::var("SLACK_REDIRECT_HOST")?,
     ));
 
-    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new("".into()));
+    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(std::env::var("SLACK_SIGNING_SECRET")?));
 
     let make_svc = make_service_fn(move |_| {
         let thread_oauth_config = oauth_listener_config.clone();
