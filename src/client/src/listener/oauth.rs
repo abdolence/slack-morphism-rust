@@ -140,12 +140,13 @@ where
                 }
                 Err(err) => {
                     error!("Slack OAuth error: {}", &err);
+                    install_service_fn(Err(err)).await?;
                     SlackClientHttpApi::hyper_redirect_to(&config.redirect_error_redirect_url)
                 }
             }
         }
         (None, Some(err)) => {
-            warn!("Slack OAuth cancelled with the reason: {}", err);
+            info!("Slack OAuth cancelled with the reason: {}", err);
             install_service_fn(Err(Box::new(SlackClientError::ApiError(SlackClientApiError::new(err.clone())))));
             let redirect_error_url = format!(
                 "{}{}",
@@ -155,7 +156,7 @@ where
             SlackClientHttpApi::hyper_redirect_to(&redirect_error_url)
         }
         _ => {
-            warn!("Slack OAuth cancelled with unknown reason");
+            error!("Slack OAuth cancelled with unknown reason");
             install_service_fn(Err(Box::new(SlackClientError::SystemError(SlackClientSystemError::new("OAuth cancelled with unknown reason".into())))));
             SlackClientHttpApi::hyper_redirect_to(&config.redirect_error_redirect_url)
         }
