@@ -55,6 +55,9 @@ pub struct SlackCursorId(pub String);
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackColor(pub String);
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackCallbackId(pub String);
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackResponseMetadata {

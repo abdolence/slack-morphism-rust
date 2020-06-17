@@ -8,16 +8,17 @@ use hyper::{Method, Request, Response, StatusCode};
 use slack_morphism_models::events::SlackPushEvent;
 use std::future::Future;
 use std::sync::Arc;
+use log::*;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackPushEventsListenerConfig {
     pub events_signing_secret: String,
     #[default = "SlackPushEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
-    pub events_url: String,
+    pub events_path: String,
 }
 
 impl SlackPushEventsListenerConfig {
-    const DEFAULT_EVENTS_URL_VALUE: &'static str = "/events";
+    const DEFAULT_EVENTS_URL_VALUE: &'static str = "/push";
 }
 
 pub fn create_slack_push_events_service_fn<'a, D, F, I, IF>(
@@ -53,7 +54,7 @@ where
         let sign_verifier = signature_verifier.clone();
         async move {
             match (req.method(), req.uri().path()) {
-                (&Method::GET, url) if url == cfg.events_url => {
+                (&Method::POST, url) if url == cfg.events_path => {
                     let headers = &req.headers().clone();
                     let req_body = req.into_body();
                     match (
@@ -76,9 +77,23 @@ where
                                     serde_json::from_str::<SlackPushEvent>(body.as_str())
                                         .map_err(|e| e.into())
                                 })
-                                .and_then(|event| push_serv(event).map(|_| Ok(())))
-                                .await?;
-                            Ok(Response::new(Body::empty()))
+                                .and_then(|event|
+                                    async move {
+                                        match event {
+                                            Ok(SlackPushEvent::UrlVerification(url_ver)) => {
+                                                debug!("Received Slack URL push verification challenge: {}", url_ver.challenge);
+                                                Response::builder()
+                                                    .status(StatusCode::OK)
+                                                    .body(url_ver.challenge.into())
+                                                    .map_err(|e| e.into())
+                                            }
+                                            other => {
+                                                push_serv(other).map(|_| Ok(Response::new(Body::empty()))).await
+                                            }
+                                        }
+                                    }
+                                )
+                                .await
                         }
                         _ => Response::builder()
                             .status(StatusCode::FORBIDDEN)
