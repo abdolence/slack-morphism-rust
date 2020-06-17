@@ -1,8 +1,8 @@
 use rsb_derive::Builder;
 
 use crate::api::oauth::*;
-use crate::{SlackClient, SlackClientHttpApi};
 use crate::errors::*;
+use crate::{SlackClient, SlackClientHttpApi};
 
 use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
@@ -10,7 +10,6 @@ use hyper::{Method, Request, Response};
 use log::*;
 use std::future::Future;
 use std::sync::Arc;
-
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackOAuthListenerConfig {
@@ -63,7 +62,16 @@ where
     F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
         + 'a
         + Send,
-    I: Fn(Result<SlackOAuthV2AccessTokenResponse,Box<dyn std::error::Error + Send + Sync + 'static>>) -> IF + 'static + Send + Sync + Clone,
+    I: Fn(
+            Result<
+                SlackOAuthV2AccessTokenResponse,
+                Box<dyn std::error::Error + Send + Sync + 'static>,
+            >,
+        ) -> IF
+        + 'static
+        + Send
+        + Sync
+        + Clone,
     IF: Future<Output = ()> + 'static + Send,
 {
     move |req: Request<Body>, chain: D| {
@@ -109,7 +117,16 @@ async fn slack_oauth_callback_service<'a, I, IF>(
     install_service_fn: I,
 ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>>
 where
-    I: Fn(Result<SlackOAuthV2AccessTokenResponse,Box<dyn std::error::Error + Send + Sync + 'static>>) -> IF + 'static + Send + Sync + Clone,
+    I: Fn(
+            Result<
+                SlackOAuthV2AccessTokenResponse,
+                Box<dyn std::error::Error + Send + Sync + 'static>,
+            >,
+        ) -> IF
+        + 'static
+        + Send
+        + Sync
+        + Clone,
     IF: Future<Output = ()> + 'static + Send,
 {
     let params = SlackClientHttpApi::parse_query_params(&req);
@@ -143,7 +160,9 @@ where
         }
         (None, Some(err)) => {
             info!("Slack OAuth cancelled with the reason: {}", err);
-            install_service_fn(Err(Box::new(SlackClientError::ApiError(SlackClientApiError::new(err.clone())))));
+            install_service_fn(Err(Box::new(SlackClientError::ApiError(
+                SlackClientApiError::new(err.clone()),
+            ))));
             let redirect_error_url = format!(
                 "{}{}",
                 &config.redirect_error_redirect_url,
@@ -153,7 +172,9 @@ where
         }
         _ => {
             error!("Slack OAuth cancelled with unknown reason");
-            install_service_fn(Err(Box::new(SlackClientError::SystemError(SlackClientSystemError::new("OAuth cancelled with unknown reason".into())))));
+            install_service_fn(Err(Box::new(SlackClientError::SystemError(
+                SlackClientSystemError::new("OAuth cancelled with unknown reason".into()),
+            ))));
             SlackClientHttpApi::hyper_redirect_to(&config.redirect_error_redirect_url)
         }
     }

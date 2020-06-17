@@ -6,6 +6,7 @@ pub mod scroller;
 use serde::{Deserialize, Serialize};
 
 use bytes::buf::BufExt as _;
+use hyper::body::HttpBody;
 use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
@@ -14,7 +15,6 @@ use rsb_derive::Builder;
 use std::collections::HashMap;
 use std::io::Read;
 use url::Url;
-use hyper::body::HttpBody;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiToken {
@@ -66,11 +66,7 @@ impl SlackClientHttpApi {
     }
 
     fn create_method_uri_path(method_relative_uri: &str) -> String {
-        format!(
-            "{}/{}",
-            Self::SLACK_API_URI_STR,
-            method_relative_uri
-        )
+        format!("{}/{}", Self::SLACK_API_URI_STR, method_relative_uri)
     }
 
     fn create_url(url_str: &String) -> Uri {
@@ -149,7 +145,11 @@ impl SlackClientHttpApi {
             .header("accept-charset", "utf-8")
     }
 
-    async fn http_body_to_string<T>(body : T) -> ClientResult<String> where T: HttpBody, T::Error : std::error::Error + Sync + Send + 'static {
+    async fn http_body_to_string<T>(body: T) -> ClientResult<String>
+    where
+        T: HttpBody,
+        T::Error: std::error::Error + Sync + Send + 'static,
+    {
         let http_body = hyper::body::aggregate(body).await?;
         let mut http_reader = http_body.reader();
         let mut http_body_str = String::new();
@@ -197,8 +197,7 @@ impl SlackClientHttpApi {
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
-        let base_http_request =
-            Self::create_http_request(full_uri, hyper::http::Method::GET);
+        let base_http_request = Self::create_http_request(full_uri, hyper::http::Method::GET);
 
         let http_request = Self::setup_token_auth_header(base_http_request, token);
 
@@ -254,9 +253,8 @@ impl SlackClientHttpApi {
     {
         let post_json = serde_json::to_string(&request_body)?;
 
-        let base_http_request =
-            Self::create_http_request(full_uri, hyper::http::Method::POST)
-                .header("content-type", "application/json; charset=utf-8");
+        let base_http_request = Self::create_http_request(full_uri, hyper::http::Method::POST)
+            .header("content-type", "application/json; charset=utf-8");
 
         let http_request = Self::setup_token_auth_header(base_http_request, token);
 

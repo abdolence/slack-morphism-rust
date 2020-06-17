@@ -1,61 +1,65 @@
+use ring::hmac;
 use rsb_derive::Builder;
-use std::fmt::{Formatter, Display};
 use std::error::Error;
-use ring::{hmac};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
 pub struct SlackEventSignatureVerifier {
-    secret_len : usize,
-    key : hmac::Key
+    secret_len: usize,
+    key: hmac::Key,
 }
 
 impl SlackEventSignatureVerifier {
-    pub const SLACK_SIGNED_HASH_HEADER : &'static str = "x-slack-signature";
-    pub const SLACK_SIGNED_TIMESTAMP : &'static str = "x-slack-request-timestamp";
+    pub const SLACK_SIGNED_HASH_HEADER: &'static str = "x-slack-signature";
+    pub const SLACK_SIGNED_TIMESTAMP: &'static str = "x-slack-request-timestamp";
 
-    pub fn new(secret : &str) -> Self {
+    pub fn new(secret: &str) -> Self {
         let secret_bytes = secret.as_bytes();
         SlackEventSignatureVerifier {
-            secret_len : secret_bytes.len(),
-            key : hmac::Key::new(hmac::HMAC_SHA256,secret.as_bytes())
+            secret_len: secret_bytes.len(),
+            key: hmac::Key::new(hmac::HMAC_SHA256, secret.as_bytes()),
         }
     }
 
-    fn sign<'a,'b>(&'a self, body : &'b str, ts : &'b str) -> String {
-        let data_to_sign = format!("v0:{}:{}",ts,body);
+    fn sign<'a, 'b>(&'a self, body: &'b str, ts: &'b str) -> String {
+        let data_to_sign = format!("v0:{}:{}", ts, body);
         hex::encode(hmac::sign(&self.key, data_to_sign.as_bytes()))
     }
 
-    pub fn verify<'b>(&self, hash: &'b str, body : &'b str, ts : &'b str) -> Result<(),SlackEventSignatureVerifierError> {
+    pub fn verify<'b>(
+        &self,
+        hash: &'b str,
+        body: &'b str,
+        ts: &'b str,
+    ) -> Result<(), SlackEventSignatureVerifierError> {
         if self.secret_len == 0 {
-            Err(SlackEventSignatureVerifierError::CryptoInitError(SlackEventSignatureCryptoInitError::new("secret key is empty".into())))
-        }
-        else {
-            let hash_to_check = self.sign(body,ts);
+            Err(SlackEventSignatureVerifierError::CryptoInitError(
+                SlackEventSignatureCryptoInitError::new("secret key is empty".into()),
+            ))
+        } else {
+            let hash_to_check = self.sign(body, ts);
             if hash_to_check != hash {
                 Err(SlackEventSignatureVerifierError::WrongSignatureError(
                     SlackEventWrongSignatureErrorInit {
-                        body_len : body.len(),
-                        ts : ts.into(),
-                        received_hash : hash.into(),
-                        generated_hash : hash_to_check.clone()
-                    }.into()
+                        body_len: body.len(),
+                        ts: ts.into(),
+                        received_hash: hash.into(),
+                        generated_hash: hash_to_check.clone(),
+                    }
+                    .into(),
                 ))
-            }
-            else {
+            } else {
                 Ok(())
             }
         }
     }
 }
 
-
-
 #[derive(Debug)]
 pub enum SlackEventSignatureVerifierError {
     CryptoInitError(SlackEventSignatureCryptoInitError),
     AbsentSignatureError(SlackEventAbsentSignatureError),
-    WrongSignatureError(SlackEventWrongSignatureError)
+    WrongSignatureError(SlackEventWrongSignatureError),
 }
 
 impl Display for SlackEventSignatureVerifierError {
@@ -63,7 +67,7 @@ impl Display for SlackEventSignatureVerifierError {
         match *self {
             SlackEventSignatureVerifierError::CryptoInitError(ref err) => err.fmt(f),
             SlackEventSignatureVerifierError::AbsentSignatureError(ref err) => err.fmt(f),
-            SlackEventSignatureVerifierError::WrongSignatureError(ref err) => err.fmt(f)
+            SlackEventSignatureVerifierError::WrongSignatureError(ref err) => err.fmt(f),
         }
     }
 }
@@ -73,14 +77,14 @@ impl Error for SlackEventSignatureVerifierError {
         match *self {
             SlackEventSignatureVerifierError::CryptoInitError(ref err) => Some(err),
             SlackEventSignatureVerifierError::AbsentSignatureError(ref err) => Some(err),
-            SlackEventSignatureVerifierError::WrongSignatureError(ref err) => Some(err)
+            SlackEventSignatureVerifierError::WrongSignatureError(ref err) => Some(err),
         }
     }
 }
 
 #[derive(Debug, PartialEq, Clone, Builder)]
-pub struct SlackEventSignatureCryptoInitError{
-    pub message : String
+pub struct SlackEventSignatureCryptoInitError {
+    pub message: String,
 }
 
 impl Display for SlackEventSignatureCryptoInitError {
@@ -96,25 +100,22 @@ impl Display for SlackEventSignatureCryptoInitError {
 impl Error for SlackEventSignatureCryptoInitError {}
 
 #[derive(Debug, PartialEq, Clone, Builder)]
-pub struct SlackEventAbsentSignatureError{}
+pub struct SlackEventAbsentSignatureError {}
 
 impl Display for SlackEventAbsentSignatureError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "Slack API signature is absent"
-        )
+        write!(f, "Slack API signature is absent")
     }
 }
 
 impl Error for SlackEventAbsentSignatureError {}
 
 #[derive(Debug, PartialEq, Clone, Builder)]
-pub struct SlackEventWrongSignatureError{
-    pub body_len : usize,
-    pub ts : String,
-    pub received_hash : String,
-    pub generated_hash : String,
+pub struct SlackEventWrongSignatureError {
+    pub body_len: usize,
+    pub ts: String,
+    pub received_hash: String,
+    pub generated_hash: String,
 }
 
 impl Display for SlackEventWrongSignatureError {
@@ -132,48 +133,34 @@ impl Display for SlackEventWrongSignatureError {
 
 impl Error for SlackEventWrongSignatureError {}
 
-
 #[test]
 fn check_signature_success() {
     let rng = ring::rand::SystemRandom::new();
-    let key_value: [u8; ring::digest::SHA256_OUTPUT_LEN] = ring::rand::generate(&rng).unwrap().expose();
-    let key_str : String = hex::encode(key_value);
+    let key_value: [u8; ring::digest::SHA256_OUTPUT_LEN] =
+        ring::rand::generate(&rng).unwrap().expose();
+    let key_str: String = hex::encode(key_value);
 
-    let verifier = SlackEventSignatureVerifier::new(
-        &key_str
-    );
+    let verifier = SlackEventSignatureVerifier::new(&key_str);
 
     const TEST_BODY: &'static str = "test-body";
     const TEST_TS: &'static str = "test-ts";
 
-    let hash = verifier.sign(TEST_BODY,TEST_TS);
+    let hash = verifier.sign(TEST_BODY, TEST_TS);
 
-    match verifier.verify(
-        &hash,
-        TEST_BODY,
-        TEST_TS
-    ) {
-        Ok(_) => {
-
-        }
+    match verifier.verify(&hash, TEST_BODY, TEST_TS) {
+        Ok(_) => {}
         Err(e) => {
-            panic!("{}",e);
+            panic!("{}", e);
         }
     }
 }
 
 #[test]
 fn check_empty_secret_error_test() {
-    match SlackEventSignatureVerifier::new(
-        ""
-    ).verify(
-        "test-hash",
-        "test-body",
-        "test-ts"
-    ) {
+    match SlackEventSignatureVerifier::new("").verify("test-hash", "test-body", "test-ts") {
         Err(SlackEventSignatureVerifierError::CryptoInitError(ref err)) => {
             assert!(!err.message.is_empty())
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }

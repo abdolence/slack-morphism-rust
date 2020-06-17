@@ -17,8 +17,8 @@ use slack_morphism_client::api::oauth::SlackOAuthV2AccessTokenResponse;
 use slack_morphism_client::listener::oauth::*;
 use slack_morphism_client::listener::push_events::*;
 use slack_morphism_client::listener::*;
-use std::sync::Arc;
 use slack_morphism_models::events::SlackPushEvent;
+use std::sync::Arc;
 
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -96,13 +96,14 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 async fn test_oauth_install_function(
-    resp: Result<SlackOAuthV2AccessTokenResponse,Box<dyn std::error::Error + Send + Sync>>,
+    resp: Result<SlackOAuthV2AccessTokenResponse, Box<dyn std::error::Error + Send + Sync>>,
 ) {
     println!("{:#?}", resp);
 }
 
 async fn test_push_events_function(
-    resp: Result<SlackPushEvent,Box<dyn std::error::Error + Send + Sync>>) {
+    resp: Result<SlackPushEvent, Box<dyn std::error::Error + Send + Sync>>,
+) {
     println!("{:#?}", resp);
 }
 
@@ -143,7 +144,7 @@ async fn test_server(
                 chain_service_routes_fn(
                     create_slack_push_events_service_fn(
                         thread_push_events_config,
-                        test_push_events_function
+                        test_push_events_function,
                     ),
                     hello_world,
                 ),
