@@ -10,6 +10,7 @@ use crate::scroller::*;
 use crate::ClientResult;
 use crate::SlackClientSession;
 use futures::future::{BoxFuture, FutureExt};
+use slack_morphism_models::blocks::SlackBlock;
 use slack_morphism_models::*;
 
 impl<'a> SlackClientSession<'a> {
@@ -33,6 +34,34 @@ impl<'a> SlackClientSession<'a> {
         self.http_api
             .http_post("chat.deleteScheduledMessage", req)
             .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/chat.getPermalink
+    ///
+    pub async fn chat_get_permalink(
+        &self,
+        req: &SlackApiChatGetPermalinkRequest,
+    ) -> ClientResult<SlackApiChatGetPermalinkResponse> {
+        self.http_api
+            .http_get(
+                "chat.getPermalink",
+                &vec![
+                    ("channel", Some(&req.channel.value())),
+                    ("message_ts", Some(&req.message_ts.value())),
+                ],
+            )
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/chat.postEphemeral
+    ///
+    pub async fn chat_post_ephemeral(
+        &self,
+        req: &SlackApiChatPostEphemeralRequest,
+    ) -> ClientResult<SlackApiChatPostEphemeralResponse> {
+        self.http_api.http_post("chat.postEphemeral", req).await
     }
 }
 
@@ -62,3 +91,37 @@ pub struct SlackApiChatDeleteScheduledMessageRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatDeleteScheduledMessageResponse {}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatGetPermalinkRequest {
+    pub channel: SlackChannelId,
+    pub message_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatGetPermalinkResponse {
+    pub channel: SlackChannelId,
+    pub message_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatPostEphemeralRequest {
+    pub channel: SlackChannelId,
+    pub text: String,
+    pub user: SlackUserId,
+    pub as_user: Option<bool>,
+    pub blocks: Option<Vec<SlackBlock>>,
+    pub icon_emoji: Option<String>,
+    pub icon_url: Option<String>,
+    pub link_names: Option<bool>,
+    pub parse: Option<String>,
+    pub thread_ts: Option<SlackTs>,
+    pub username: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatPostEphemeralResponse {}
