@@ -12,12 +12,36 @@ use crate::SlackClientSession;
 use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
 
+impl<'a> SlackClientSession<'a> {
+    ///
+    /// https://api.slack.com/methods/chat.delete
+    ///
+    pub async fn chat_delete(
+        &self,
+        req: &SlackApiChatDeleteRequest,
+    ) -> ClientResult<SlackApiChatDeleteResponse> {
+        self.http_api.http_post("chat.delete", req).await
+    }
+
+    ///
+    /// https://api.slack.com/methods/chat.deleteScheduledMessage
+    ///
+    pub async fn chat_delete_scheduled_message(
+        &self,
+        req: &SlackApiChatDeleteScheduledMessageRequest,
+    ) -> ClientResult<SlackApiChatDeleteScheduledMessageResponse> {
+        self.http_api
+            .http_post("chat.deleteScheduledMessage", req)
+            .await
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatDeleteRequest {
     pub channel: SlackChannelId,
     pub ts: SlackTs,
-    pub as_user: Option<bool>
+    pub as_user: Option<bool>,
 }
 
 #[skip_serializing_none]
@@ -27,21 +51,14 @@ pub struct SlackApiChatDeleteResponse {
     pub ts: SlackTs,
 }
 
-impl<'a> SlackClientSession<'a> {
-
-    ///
-    /// https://api.slack.com/methods/chat.delete
-    ///
-    pub async fn chat_delete(
-        &self,
-        req: &SlackApiChatDeleteRequest,
-    ) -> ClientResult<SlackApiChatDeleteResponse> {
-        self.http_api
-            .http_post(
-                "chat.delete",
-                req,
-            )
-            .await
-    }
-
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatDeleteScheduledMessageRequest {
+    pub channel: SlackChannelId,
+    pub scheduled_message: SlackTs,
+    pub as_user: Option<bool>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatDeleteScheduledMessageResponse {}

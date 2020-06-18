@@ -12,21 +12,6 @@ use crate::SlackClientSession;
 use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
 
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackApiUsersListRequest {
-    pub cursor: Option<SlackCursorId>,
-    pub include_locale: Option<bool>,
-    pub limit: Option<u16>,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackApiUsersListResponse {
-    pub members: Vec<SlackUser>,
-    pub response_metadata: Option<SlackResponseMetadata>,
-}
-
 impl<'a> SlackClientSession<'a> {
     ///
     /// https://api.slack.com/methods/users.list
@@ -49,6 +34,21 @@ impl<'a> SlackClientSession<'a> {
             )
             .await
     }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiUsersListRequest {
+    pub cursor: Option<SlackCursorId>,
+    pub include_locale: Option<bool>,
+    pub limit: Option<u16>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiUsersListResponse {
+    pub members: Vec<SlackUser>,
+    pub response_metadata: Option<SlackResponseMetadata>,
 }
 
 impl SlackApiScrollableRequest for SlackApiUsersListRequest {

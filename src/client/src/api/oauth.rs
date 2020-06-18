@@ -10,6 +10,33 @@ use crate::{ClientResult, SlackClient, SlackClientHttpApi};
 use hyper::Body;
 use slack_morphism_models::*;
 
+impl SlackClient {
+    ///
+    /// https://api.slack.com/methods/oauth.v2.access
+    ///
+    pub async fn oauth2_access(
+        &self,
+        req: &SlackOAuthV2AccessTokenRequest,
+    ) -> ClientResult<SlackOAuthV2AccessTokenResponse> {
+        let full_uri = SlackClientHttpApi::create_url_with_params(
+            &SlackClientHttpApi::create_method_uri_path("oauth.v2.access"),
+            &vec![
+                ("code", Some(&req.code)),
+                ("redirect_uri", req.redirect_uri.as_ref()),
+            ],
+        );
+
+        let http_request = SlackClientHttpApi::setup_basic_auth_header(
+            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::GET),
+            &req.client_id,
+            &req.client_secret,
+        )
+        .body(Body::empty())?;
+
+        self.http_api.send_webapi_request(http_request).await
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackOAuthV2AccessTokenRequest {
@@ -48,32 +75,4 @@ pub struct SlackOAuthIncomingWebHook {
     pub channel_id: SlackChannelId,
     pub configuration_url: String,
     pub url: String,
-}
-
-impl SlackClient {
-
-    ///
-    /// https://api.slack.com/methods/oauth.v2.access
-    ///
-    pub async fn oauth2_access(
-        &self,
-        req: &SlackOAuthV2AccessTokenRequest,
-    ) -> ClientResult<SlackOAuthV2AccessTokenResponse> {
-        let full_uri = SlackClientHttpApi::create_url_with_params(
-            &SlackClientHttpApi::create_method_uri_path("oauth.v2.access"),
-            &vec![
-                ("code", Some(&req.code)),
-                ("redirect_uri", req.redirect_uri.as_ref()),
-            ],
-        );
-
-        let http_request = SlackClientHttpApi::setup_basic_auth_header(
-            SlackClientHttpApi::create_http_request(full_uri, hyper::http::Method::GET),
-            &req.client_id,
-            &req.client_secret,
-        )
-        .body(Body::empty())?;
-
-        self.http_api.send_webapi_request(http_request).await
-    }
 }

@@ -11,6 +11,20 @@ use crate::SlackClientSession;
 use slack_morphism_models::*;
 use std::collections::HashMap;
 
+impl<'a> SlackClientSession<'a> {
+    ///
+    /// https://api.slack.com/methods/bots.info
+    ///
+    pub async fn bots_info(
+        &self,
+        req: &SlackApiBotsInfoRequest,
+    ) -> ClientResult<SlackApiBotsInfoResponse> {
+        self.http_api
+            .http_get("bots.info", &vec![("bot", req.bot.as_ref())])
+            .await
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiBotsInfoRequest {
@@ -27,18 +41,4 @@ pub struct SlackApiBotsInfoResponse {
     pub app_id: String,
     pub user_id: String,
     pub icons: Option<HashMap<String, String>>,
-}
-
-impl<'a> SlackClientSession<'a> {
-    ///
-    /// https://api.slack.com/methods/bots.info
-    ///
-    pub async fn bots_info(
-        &self,
-        req: &SlackApiBotsInfoRequest,
-    ) -> ClientResult<SlackApiBotsInfoResponse> {
-        self.http_api
-            .http_get("bots.info", &vec![("bot", req.bot.as_ref())])
-            .await
-    }
 }
