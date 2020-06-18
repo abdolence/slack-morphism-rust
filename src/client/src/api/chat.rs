@@ -11,6 +11,7 @@ use crate::ClientResult;
 use crate::SlackClientSession;
 use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
+use std::collections::HashMap;
 
 impl<'a> SlackClientSession<'a> {
     ///
@@ -72,6 +73,48 @@ impl<'a> SlackClientSession<'a> {
     ) -> ClientResult<SlackApiChatPostMessageResponse> {
         self.http_api.http_post("chat.postMessage", req).await
     }
+
+    ///
+    /// https://api.slack.com/methods/chat.scheduleMessage
+    ///
+    pub async fn chat_schedule_message(
+        &self,
+        req: &SlackApiChatScheduleMessageRequest,
+    ) -> ClientResult<SlackApiChatScheduleMessageResponse> {
+        self.http_api.http_post("chat.scheduleMessage", req).await
+    }
+
+    ///
+    /// https://api.slack.com/methods/chat.unfurl
+    ///
+    pub async fn chat_unfurl(
+        &self,
+        req: &SlackApiChatUnfurlRequest,
+    ) -> ClientResult<SlackApiChatUnfurlResponse> {
+        self.http_api.http_post("chat.unfurl", req).await
+    }
+
+    ///
+    /// https://api.slack.com/methods/chat.update
+    ///
+    pub async fn chat_update(
+        &self,
+        req: &SlackApiChatUpdateRequest,
+    ) -> ClientResult<SlackApiChatUpdateResponse> {
+        self.http_api.http_post("chat.update", req).await
+    }
+
+    ///
+    /// https://api.slack.com/methods/chat.scheduledMessages.list
+    ///
+    pub async fn chat_scheduled_messages_list(
+        &self,
+        req: &SlackApiChatScheduledMessagesListRequest,
+    ) -> ClientResult<SlackApiChatScheduledMessagesListResponse> {
+        self.http_api
+            .http_post("chat.scheduledMessages.list", req)
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -93,7 +136,7 @@ pub struct SlackApiChatDeleteResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatDeleteScheduledMessageRequest {
     pub channel: SlackChannelId,
-    pub scheduled_message: SlackTs,
+    pub scheduled_message: SlackScheduledMid,
     pub as_user: Option<bool>,
 }
 
@@ -158,4 +201,131 @@ pub struct SlackApiChatPostMessageRequest {
 pub struct SlackApiChatPostMessageResponse {
     ts: SlackTs,
     message: SlackMessage,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatScheduleMessageRequest {
+    pub channel: SlackChannelId,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+    pub post_at: SlackDateTime,
+    pub as_user: Option<bool>,
+    pub icon_emoji: Option<String>,
+    pub icon_url: Option<String>,
+    pub link_names: Option<bool>,
+    pub parse: Option<String>,
+    pub thread_ts: Option<SlackTs>,
+    pub username: Option<String>,
+    pub reply_broadcast: Option<bool>,
+    pub unfurl_links: Option<bool>,
+    pub unfurl_media: Option<bool>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatScheduleMessageResponse {
+    pub channel: SlackChannelId,
+    pub scheduled_message_id: SlackScheduledMid,
+    pub post_at: SlackDateTime,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlRequest {
+    pub channel: SlackChannelId,
+    pub ts: SlackTs,
+    pub unfurls: HashMap<String, SlackApiChatUnfurlMapItem>,
+    pub user_auth_message: Option<String>,
+    pub user_auth_required: Option<bool>,
+    pub user_auth_url: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlResponse {}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlMapItem {
+    pub text: String,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUpdateRequest {
+    pub channel: SlackChannelId,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+    pub ts: SlackTs,
+    pub as_user: Option<bool>,
+    pub link_names: Option<bool>,
+    pub parse: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUpdateResponse {
+    pub channel: String,
+    pub ts: SlackTs,
+    pub message: SlackMessage,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatScheduledMessagesListRequest {
+    pub channel: Option<SlackChannelId>,
+    pub cursor: Option<SlackCursorId>,
+    pub latest: Option<SlackTs>,
+    pub limit: Option<u16>,
+    pub oldest: Option<SlackTs>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatScheduledMessagesListResponse {
+    pub scheduled_messages: Vec<SlackApiChatScheduledMessageInfo>,
+    pub response_metadata: Option<SlackResponseMetadata>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatScheduledMessageInfo {
+    pub id: SlackScheduledMid,
+    pub channel_id: SlackChannelId,
+    pub post_at: SlackDateTime,
+    pub date_created: SlackDateTime,
+}
+
+impl SlackApiScrollableRequest for SlackApiChatScheduledMessagesListRequest {
+    type ResponseType = SlackApiChatScheduledMessagesListResponse;
+    type CursorType = SlackCursorId;
+    type ResponseItemType = SlackApiChatScheduledMessageInfo;
+
+    fn with_new_cursor(&self, new_cursor: Option<&Self::CursorType>) -> Self {
+        self.clone().opt_cursor(new_cursor.cloned())
+    }
+
+    fn scroll<'a, 's>(
+        &'a self,
+        session: &'a SlackClientSession<'s>,
+    ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
+        async move { session.chat_scheduled_messages_list(&self).await }.boxed()
+    }
+}
+
+impl SlackApiScrollableResponse for SlackApiChatScheduledMessagesListResponse {
+    type CursorType = SlackCursorId;
+    type ResponseItemType = SlackApiChatScheduledMessageInfo;
+
+    fn next_cursor(&self) -> Option<&Self::CursorType> {
+        self.response_metadata
+            .as_ref()
+            .map(|rm| rm.next_cursor.as_ref())
+            .flatten()
+    }
+
+    fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {
+        Box::new(self.scheduled_messages.iter())
+    }
 }

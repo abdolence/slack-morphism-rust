@@ -13,6 +13,7 @@ use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
+use mime::Mime;
 use rsb_derive::Builder;
 use std::collections::HashMap;
 use std::io::Read;
@@ -159,16 +160,30 @@ impl SlackClientHttpApi {
         Ok(http_body_str)
     }
 
+    fn http_response_content_type<RS>(response: &Response<RS>) -> Option<Mime> {
+        let http_headers = response.headers();
+        http_headers.get(hyper::header::CONTENT_TYPE).map(|hv| {
+            let hvs = hv.to_str().unwrap();
+            hvs.parse::<Mime>().unwrap()
+        })
+    }
+
     async fn send_webapi_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let http_res = self.connector.request(request).await?;
         let http_status = http_res.status();
+        let http_content_type = Self::http_response_content_type(&http_res);
         let http_body_str = Self::http_body_to_string(http_res).await?;
 
         match http_status {
-            StatusCode::OK => {
+            StatusCode::OK
+                if http_content_type.iter().all(|response_mime| {
+                    response_mime.type_() == mime::APPLICATION
+                        && response_mime.subtype() == mime::JSON
+                }) =>
+            {
                 let slack_message: SlackEnvelopeMessage =
                     serde_json::from_str(http_body_str.as_str())?;
                 if slack_message.error.is_none() {
@@ -183,6 +198,7 @@ impl SlackClientHttpApi {
                     .into())
                 }
             }
+            StatusCode::OK => serde_json::from_str("{}").map_err(|e| e.into()),
             _ => Err(errors::SlackClientError::HttpError(
                 errors::SlackClientHttpError::new(http_status)
                     .with_http_response_body(http_body_str),

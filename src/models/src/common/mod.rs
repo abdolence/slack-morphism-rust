@@ -26,6 +26,9 @@ impl SlackTs {
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackScheduledMid(pub String);
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTeamId(pub String);
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
