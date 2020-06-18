@@ -1,7 +1,7 @@
 use chrono::serde::ts_seconds;
 use chrono::{DateTime, TimeZone, Utc};
 use rsb_derive::Builder;
-use rvs_derive::ValueStruct;
+use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::hash::Hash;
@@ -11,6 +11,8 @@ mod user;
 pub use user::*;
 mod team;
 pub use team::*;
+mod channel;
+pub use channel::*;
 
 mod icon;
 pub use icon::*;

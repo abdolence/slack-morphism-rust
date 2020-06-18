@@ -2,6 +2,7 @@
 //! Support for Slack Users API methods
 //!
 
+use rvstruct::ValueStruct;
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;

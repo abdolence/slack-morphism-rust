@@ -8,7 +8,7 @@ use serde_with::skip_serializing_none;
 
 use crate::ClientResult;
 use crate::SlackClientSession;
-use slack_morphism_models::{SlackChannelId, SlackUserId};
+use slack_morphism_models::*;
 use std::collections::HashSet;
 
 impl<'a> SlackClientSession<'a> {
@@ -76,4 +76,6 @@ pub struct SlackApiConversationsCreateRequest {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackApiConversationsCreateResponse {}
+pub struct SlackApiConversationsCreateResponse {
+    pub channel: SlackChannelInfo
+}
