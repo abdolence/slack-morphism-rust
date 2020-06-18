@@ -129,9 +129,8 @@ async fn test_server(
     let make_svc = make_service_fn(move |_| {
         let thread_oauth_config = oauth_listener_config.clone();
         let thread_push_events_config = push_events_config.clone();
-        let thread_slack_client = client.clone();
+        let listener = SlackClientEventsListener::new(client.clone());
         async move {
-            let listener = SlackClientEventsListener::new(thread_slack_client.clone());
 
             let routes = chain_service_routes_fn(
                 listener.oauth_service_fn(thread_oauth_config.clone(), test_oauth_install_function),
