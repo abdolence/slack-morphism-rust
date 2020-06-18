@@ -4,6 +4,7 @@ use rsb_derive::Builder;
 use rvs_derive::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use std::hash::Hash;
 use std::*;
 
 mod user;
@@ -46,25 +47,25 @@ pub struct SlackConversationId(pub String);
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackActionId(pub String);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackEventId(pub String);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackUserId(pub String);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackDateTime(#[serde(with = "ts_seconds")] pub DateTime<Utc>);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackLocale(pub String);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackCursorId(pub String);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackColor(pub String);
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackCallbackId(pub String);
 
 #[skip_serializing_none]
