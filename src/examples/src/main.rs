@@ -1,18 +1,17 @@
 use slack_morphism_client::api::*;
-use slack_morphism_client::scroller::*;
+use slack_morphism_client::listener::*;
 use slack_morphism_client::*;
+use slack_morphism_models::blocks::*;
+use slack_morphism_models::*;
 
 use futures::stream::BoxStream;
 use futures::TryStreamExt;
-use slack_morphism_models::blocks::*;
-use slack_morphism_models::*;
 use std::time::Duration;
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response};
 use log::*;
-use slack_morphism_client::listener::*;
-use slack_morphism_models::events::*;
+
 use std::sync::Arc;
 
 #[allow(dead_code)]
@@ -132,14 +131,12 @@ async fn test_server(
         let thread_push_events_config = push_events_config.clone();
         let thread_slack_client = client.clone();
         async move {
+            let listener = SlackClientEventsListener::new(thread_slack_client.clone());
+
             let routes = chain_service_routes_fn(
-                create_slack_oauth_service_fn(
-                    thread_oauth_config,
-                    thread_slack_client,
-                    test_oauth_install_function,
-                ),
+                listener.oauth_service_fn(thread_oauth_config.clone(), test_oauth_install_function),
                 chain_service_routes_fn(
-                    create_slack_push_events_service_fn(
+                    listener.push_events_service_fn(
                         thread_push_events_config,
                         test_push_events_function,
                     ),

@@ -1,7 +1,9 @@
 pub mod api;
 pub mod errors;
 pub mod listener;
-pub mod scroller;
+mod scroller;
+
+pub use scroller::*;
 
 use serde::{Deserialize, Serialize};
 

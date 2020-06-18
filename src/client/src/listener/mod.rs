@@ -6,9 +6,11 @@ mod oauth;
 mod push_events;
 mod signature_verifier;
 
+use crate::SlackClient;
 pub use oauth::*;
 pub use push_events::*;
 pub use signature_verifier::*;
+use std::sync::Arc;
 
 pub fn chain_service_routes_fn<'a, R, D, FR, FD>(
     route: R,
@@ -30,4 +32,15 @@ where
         + Send,
 {
     move |req: Request<Body>| route(req, default.clone()).boxed()
+}
+
+#[derive(Clone)]
+pub struct SlackClientEventsListener {
+    client: Arc<SlackClient>,
+}
+
+impl SlackClientEventsListener {
+    pub fn new(client: Arc<SlackClient>) -> Self {
+        Self { client }
+    }
 }
