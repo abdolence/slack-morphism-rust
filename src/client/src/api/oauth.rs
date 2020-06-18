@@ -1,3 +1,7 @@
+//!
+//! Support for Slack OAuth v2 API methods
+//!
+
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -47,6 +51,10 @@ pub struct SlackOAuthIncomingWebHook {
 }
 
 impl SlackClient {
+
+    ///
+    /// https://api.slack.com/methods/oauth.v2.access
+    ///
     pub async fn oauth2_access(
         &self,
         req: &SlackOAuthV2AccessTokenRequest,

@@ -1,3 +1,7 @@
+//!
+//! Support for Slack Users API methods
+//!
+
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -24,6 +28,9 @@ pub struct SlackApiUsersListResponse {
 }
 
 impl<'a> SlackClientSession<'a> {
+    ///
+    /// https://api.slack.com/methods/users.list
+    ///
     pub async fn users_list(
         &self,
         req: &SlackApiUsersListRequest,

@@ -1,3 +1,7 @@
+//!
+//! Support for Slack Bots API methods
+//!
+
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -26,6 +30,9 @@ pub struct SlackApiBotsInfoResponse {
 }
 
 impl<'a> SlackClientSession<'a> {
+    ///
+    /// https://api.slack.com/methods/bots.info
+    ///
     pub async fn bots_info(
         &self,
         req: &SlackApiBotsInfoRequest,

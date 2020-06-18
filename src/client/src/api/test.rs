@@ -1,3 +1,7 @@
+//!
+//! Support for Slack test API methods
+//!
+
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -20,6 +24,10 @@ pub struct SlackApiTestResponse {
 }
 
 impl<'a> SlackClientSession<'a> {
+
+    ///
+    /// https://api.slack.com/methods/api.test
+    ///
     pub async fn api_test(&self, req: &SlackApiTestRequest) -> ClientResult<SlackApiTestResponse> {
         let full_uri = SlackClientHttpApi::create_url_with_params(
             &SlackClientHttpApi::create_method_uri_path("api.test"),
