@@ -2,7 +2,7 @@ use rsb_derive::Builder;
 
 use crate::listener::signature_verifier::SlackEventSignatureVerifier;
 use crate::listener::SlackClientEventsListener;
-use crate::SlackClientHttpApi;
+use crate::{SlackClient, SlackClientHttpApi};
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
@@ -42,7 +42,10 @@ impl SlackClientEventsListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(Result<SlackPushEvent, Box<dyn std::error::Error + Send + Sync + 'static>>) -> IF
+        I: Fn(
+                Result<SlackPushEvent, Box<dyn std::error::Error + Send + Sync + 'static>>,
+                Arc<SlackClient>,
+            ) -> IF
             + 'static
             + Send
             + Sync
@@ -52,12 +55,14 @@ impl SlackClientEventsListener {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
         );
+        let client = self.client.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
             let c = chain.clone();
             let push_serv = push_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
+            let sc = client.clone();
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
@@ -94,7 +99,7 @@ impl SlackClientEventsListener {
                                                         .map_err(|e| e.into())
                                                 }
                                                 other => {
-                                                    push_serv(other).map(|_| Ok(Response::new(Body::empty()))).await
+                                                    push_serv(other,sc).map(|_| Ok(Response::new(Body::empty()))).await
                                                 }
                                             }
                                         }

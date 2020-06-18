@@ -67,7 +67,7 @@ impl SlackClientEventsListener {
     async fn slack_oauth_callback_service<'a, I, IF>(
         req: Request<Body>,
         config: &'a SlackOAuthListenerConfig,
-        client: &'a SlackClient,
+        client: Arc<SlackClient>,
         install_service_fn: I,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>>
     where
@@ -76,6 +76,7 @@ impl SlackClientEventsListener {
                     SlackOAuthV2AccessTokenResponse,
                     Box<dyn std::error::Error + Send + Sync + 'static>,
                 >,
+                Arc<SlackClient>,
             ) -> IF
             + 'static
             + Send
@@ -101,22 +102,35 @@ impl SlackClientEventsListener {
 
                 match oauth_access_resp {
                     Ok(oauth_resp) => {
-                        info!("Slack OAuth access: {:#?}", &oauth_resp);
-                        install_service_fn(Ok(oauth_resp)).await;
+                        info!(
+                            "Received slack OAuth access resp for: {} / {} / {}",
+                            &oauth_resp.team.id,
+                            &oauth_resp
+                                .team
+                                .name
+                                .as_ref()
+                                .map(|n| n.clone())
+                                .unwrap_or("".into()),
+                            &oauth_resp.authed_user.id
+                        );
+                        install_service_fn(Ok(oauth_resp), client).await;
                         SlackClientHttpApi::hyper_redirect_to(&config.redirect_installed_url)
                     }
                     Err(err) => {
                         error!("Slack OAuth error: {}", &err);
-                        install_service_fn(Err(err)).await;
+                        install_service_fn(Err(err), client).await;
                         SlackClientHttpApi::hyper_redirect_to(&config.redirect_error_redirect_url)
                     }
                 }
             }
             (None, Some(err)) => {
                 info!("Slack OAuth cancelled with the reason: {}", err);
-                install_service_fn(Err(Box::new(SlackClientError::ApiError(
-                    SlackClientApiError::new(err.clone()),
-                ))));
+                install_service_fn(
+                    Err(Box::new(SlackClientError::ApiError(
+                        SlackClientApiError::new(err.clone()),
+                    ))),
+                    client,
+                );
                 let redirect_error_url = format!(
                     "{}{}",
                     &config.redirect_error_redirect_url,
@@ -126,9 +140,12 @@ impl SlackClientEventsListener {
             }
             _ => {
                 error!("Slack OAuth cancelled with unknown reason");
-                install_service_fn(Err(Box::new(SlackClientError::SystemError(
-                    SlackClientSystemError::new("OAuth cancelled with unknown reason".into()),
-                ))));
+                install_service_fn(
+                    Err(Box::new(SlackClientError::SystemError(
+                        SlackClientSystemError::new("OAuth cancelled with unknown reason".into()),
+                    ))),
+                    client,
+                );
                 SlackClientHttpApi::hyper_redirect_to(&config.redirect_error_redirect_url)
             }
         }
@@ -158,6 +175,7 @@ impl SlackClientEventsListener {
                     SlackOAuthV2AccessTokenResponse,
                     Box<dyn std::error::Error + Send + Sync + 'static>,
                 >,
+                Arc<SlackClient>,
             ) -> IF
             + 'static
             + Send
@@ -177,7 +195,7 @@ impl SlackClientEventsListener {
                         Self::slack_oauth_install_service(req, &cfg).await
                     }
                     (&Method::GET, url) if url == cfg.redirect_callback_path => {
-                        Self::slack_oauth_callback_service(req, &cfg, &sc, install_fn).await
+                        Self::slack_oauth_callback_service(req, &cfg, sc, install_fn).await
                     }
                     _ => c(req).await,
                 }

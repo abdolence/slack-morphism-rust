@@ -91,12 +91,14 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 async fn test_oauth_install_function(
     resp: Result<SlackOAuthV2AccessTokenResponse, Box<dyn std::error::Error + Send + Sync>>,
+    _client: Arc<SlackClient>,
 ) {
     println!("{:#?}", resp);
 }
 
 async fn test_push_events_function(
     resp: Result<SlackPushEvent, Box<dyn std::error::Error + Send + Sync>>,
+    _client: Arc<SlackClient>,
 ) {
     println!("{:#?}", resp);
 }
@@ -131,9 +133,8 @@ async fn test_server(
         let thread_push_events_config = push_events_config.clone();
         let listener = SlackClientEventsListener::new(client.clone());
         async move {
-
             let routes = chain_service_routes_fn(
-                listener.oauth_service_fn(thread_oauth_config.clone(), test_oauth_install_function),
+                listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
                 chain_service_routes_fn(
                     listener.push_events_service_fn(
                         thread_push_events_config,
