@@ -2,8 +2,8 @@
 //! Support for Slack Chat API methods
 //!
 
-use rvstruct::ValueStruct;
 use rsb_derive::Builder;
+use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 

@@ -77,5 +77,5 @@ pub struct SlackApiConversationsCreateRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiConversationsCreateResponse {
-    pub channel: SlackChannelInfo
+    pub channel: SlackChannelInfo,
 }

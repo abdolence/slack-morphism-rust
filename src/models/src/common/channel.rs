@@ -20,9 +20,8 @@ pub struct SlackChannelInfo {
     #[serde(flatten)]
     pub flags: SlackChannelFlags,
     #[serde(flatten)]
-    pub last_state: SlackChannelCurrentState
+    pub last_state: SlackChannelCurrentState,
 }
-
 
 pub type SlackChannelTopicInfo = SlackChannelDetails;
 pub type SlackChannelPurposeInfo = SlackChannelDetails;
@@ -32,7 +31,7 @@ pub type SlackChannelPurposeInfo = SlackChannelDetails;
 pub struct SlackChannelDetails {
     pub value: String,
     pub creator: Option<String>,
-    pub last_set: Option<SlackDateTime>
+    pub last_set: Option<SlackDateTime>,
 }
 
 #[skip_serializing_none]
@@ -48,7 +47,7 @@ pub struct SlackChannelFlags {
     is_member: Option<bool>,
     is_private: Option<bool>,
     is_mpim: Option<bool>,
-    is_user_deleted: Option<bool>
+    is_user_deleted: Option<bool>,
 }
 
 #[skip_serializing_none]
@@ -56,5 +55,5 @@ pub struct SlackChannelFlags {
 pub struct SlackChannelCurrentState {
     last_read: Option<SlackTs>,
     unread_count: Option<u64>,
-    unread_count_display: Option<u64>
+    unread_count_display: Option<u64>,
 }
