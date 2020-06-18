@@ -10,7 +10,6 @@ use crate::scroller::*;
 use crate::ClientResult;
 use crate::SlackClientSession;
 use futures::future::{BoxFuture, FutureExt};
-use slack_morphism_models::blocks::SlackBlock;
 use slack_morphism_models::*;
 
 impl<'a> SlackClientSession<'a> {
@@ -63,6 +62,16 @@ impl<'a> SlackClientSession<'a> {
     ) -> ClientResult<SlackApiChatPostEphemeralResponse> {
         self.http_api.http_post("chat.postEphemeral", req).await
     }
+
+    ///
+    /// https://api.slack.com/methods/chat.postMessage
+    ///
+    pub async fn chat_post_message(
+        &self,
+        req: &SlackApiChatPostMessageRequest,
+    ) -> ClientResult<SlackApiChatPostMessageResponse> {
+        self.http_api.http_post("chat.postMessage", req).await
+    }
 }
 
 #[skip_serializing_none]
@@ -110,10 +119,10 @@ pub struct SlackApiChatGetPermalinkResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatPostEphemeralRequest {
     pub channel: SlackChannelId,
-    pub text: String,
     pub user: SlackUserId,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
     pub as_user: Option<bool>,
-    pub blocks: Option<Vec<SlackBlock>>,
     pub icon_emoji: Option<String>,
     pub icon_url: Option<String>,
     pub link_names: Option<bool>,
@@ -125,3 +134,28 @@ pub struct SlackApiChatPostEphemeralRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatPostEphemeralResponse {}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatPostMessageRequest {
+    pub channel: SlackChannelId,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+    pub as_user: Option<bool>,
+    pub icon_emoji: Option<String>,
+    pub icon_url: Option<String>,
+    pub link_names: Option<bool>,
+    pub parse: Option<String>,
+    pub thread_ts: Option<SlackTs>,
+    pub username: Option<String>,
+    pub reply_broadcast: Option<bool>,
+    pub unfurl_links: Option<bool>,
+    pub unfurl_media: Option<bool>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatPostMessageResponse {
+    ts: SlackTs,
+    message: SlackMessage,
+}

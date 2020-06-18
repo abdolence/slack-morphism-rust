@@ -19,3 +19,12 @@ pub struct SlackMessageContent {
     pub text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessage {
+    #[serde(flatten)]
+    pub origin: SlackMessageOrigin,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+}
