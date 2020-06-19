@@ -1,5 +1,4 @@
 use rsb_derive::Builder;
-use rvstruct::ValueStruct;
 
 use crate::api::*;
 use crate::errors::*;
@@ -105,7 +104,7 @@ impl SlackClientEventsListener {
                     Ok(oauth_resp) => {
                         info!(
                             "Received slack OAuth access resp for: {} / {} / {}",
-                            &oauth_resp.team.id.value(),
+                            &oauth_resp.team.id,
                             &oauth_resp
                                 .team
                                 .name
