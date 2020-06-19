@@ -4,6 +4,10 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+pub trait HasChannelInfo {
+    fn get_channel_id(&self) -> &SlackChannelId;
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackChannelInfo {
@@ -21,6 +25,12 @@ pub struct SlackChannelInfo {
     pub flags: SlackChannelFlags,
     #[serde(flatten)]
     pub last_state: SlackChannelCurrentState,
+}
+
+impl HasChannelInfo for SlackChannelInfo {
+    fn get_channel_id(&self) -> &SlackChannelId {
+        &self.id
+    }
 }
 
 pub type SlackChannelTopicInfo = SlackChannelDetails;
@@ -56,4 +66,17 @@ pub struct SlackChannelCurrentState {
     last_read: Option<SlackTs>,
     unread_count: Option<u64>,
     unread_count_display: Option<u64>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBasicChannelInfo {
+    pub id: SlackChannelId,
+    pub name: Option<String>,
+}
+
+impl HasChannelInfo for SlackBasicChannelInfo {
+    fn get_channel_id(&self) -> &SlackChannelId {
+        &self.id
+    }
 }

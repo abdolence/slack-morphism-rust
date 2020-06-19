@@ -76,3 +76,22 @@ pub struct SlackResponseMetadata {
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub next_cursor: Option<SlackCursorId>,
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub enum SlackConversationType {
+    IM,
+    MPIM,
+    PRIVATE,
+    PUBLIC,
+}
+
+impl ToString for SlackConversationType {
+    fn to_string(&self) -> String {
+        match self {
+            SlackConversationType::IM => "im".into(),
+            SlackConversationType::MPIM => "mpim".into(),
+            SlackConversationType::PRIVATE => "private".into(),
+            SlackConversationType::PUBLIC => "public".into(),
+        }
+    }
+}

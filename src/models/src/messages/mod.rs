@@ -1,9 +1,9 @@
 use crate::blocks::*;
 use crate::common::*;
+use crate::events::SlackMessageEventType;
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use crate::events::SlackMessageEventType;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
