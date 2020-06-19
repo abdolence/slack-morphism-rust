@@ -3,6 +3,7 @@ use crate::common::*;
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use crate::events::SlackMessageEventType;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -27,4 +28,14 @@ pub struct SlackMessage {
     pub origin: SlackMessageOrigin,
     #[serde(flatten)]
     pub content: SlackMessageContent,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackHistoryMessage {
+    #[serde(flatten)]
+    pub origin: SlackMessageOrigin,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+    pub subtype: Option<SlackMessageEventType>,
 }
