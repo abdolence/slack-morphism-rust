@@ -218,6 +218,61 @@ impl<'a> SlackClientSession<'a> {
     ) -> ClientResult<SlackApiConversationsRenameResponse> {
         self.http_api.http_post("conversations.rename", req).await
     }
+
+    ///
+    /// https://api.slack.com/methods/conversations.replies
+    ///
+    pub async fn conversations_replies(
+        &self,
+        req: &SlackApiConversationsRepliesRequest,
+    ) -> ClientResult<SlackApiConversationsRepliesResponse> {
+        self.http_api
+            .http_get(
+                "conversations.replies",
+                &vec![
+                    ("channel", Some(req.channel.value())),
+                    ("ts", Some(req.channel.value())),
+                    ("cursor", req.cursor.as_ref().map(|x| x.value())),
+                    ("limit", req.limit.map(|v| v.to_string()).as_ref()),
+                    ("inclusive", req.inclusive.map(|v| v.to_string()).as_ref()),
+                    ("latest", req.latest.as_ref().map(|x| x.value())),
+                    ("oldest", req.oldest.as_ref().map(|x| x.value())),
+                ],
+            )
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/conversations.setPurpose
+    ///
+    pub async fn conversations_set_purpose(
+        &self,
+        req: &SlackApiConversationsSetPurposeRequest,
+    ) -> ClientResult<SlackApiConversationsSetPurposeResponse> {
+        self.http_api
+            .http_post("conversations.setPurpose", req)
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/conversations.setTopic
+    ///
+    pub async fn conversations_set_topic(
+        &self,
+        req: &SlackApiConversationsSetTopicRequest,
+    ) -> ClientResult<SlackApiConversationsSetTopicResponse> {
+        self.http_api.http_post("conversations.setTopic", req).await
+    }
+
+    ///
+    /// https://api.slack.com/methods/conversations.unarchive
+    ///
+    pub async fn conversations_unarchive(
+        &self,
+        req: &SlackApiConversationsUnarchiveRequest,
+    ) -> ClientResult<SlackApiConversationsUnarchiveResponse> {
+        self.http_api.http_post("conversations.setTopic", req).await
+    }
 }
 
 #[skip_serializing_none]
@@ -501,3 +556,92 @@ pub struct SlackApiConversationsRenameRequest {
 pub struct SlackApiConversationsRenameResponse {
     pub channel: SlackChannelInfo,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsRepliesRequest {
+    pub channel: SlackChannelId,
+    pub ts: SlackTs,
+    pub cursor: Option<SlackCursorId>,
+    pub latest: Option<SlackTs>,
+    pub limit: Option<u16>,
+    pub oldest: Option<SlackTs>,
+    pub inclusive: Option<bool>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsRepliesResponse {
+    pub messages: Vec<SlackHistoryMessage>,
+    pub response_metadata: Option<SlackResponseMetadata>,
+    pub has_more: Option<bool>,
+}
+
+impl SlackApiScrollableRequest for SlackApiConversationsRepliesRequest {
+    type ResponseType = SlackApiConversationsRepliesResponse;
+    type CursorType = SlackCursorId;
+    type ResponseItemType = SlackHistoryMessage;
+
+    fn with_new_cursor(&self, new_cursor: Option<&Self::CursorType>) -> Self {
+        self.clone().opt_cursor(new_cursor.cloned())
+    }
+
+    fn scroll<'a, 's>(
+        &'a self,
+        session: &'a SlackClientSession<'s>,
+    ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
+        async move { session.conversations_replies(&self).await }.boxed()
+    }
+}
+
+impl SlackApiScrollableResponse for SlackApiConversationsRepliesResponse {
+    type CursorType = SlackCursorId;
+    type ResponseItemType = SlackHistoryMessage;
+
+    fn next_cursor(&self) -> Option<&Self::CursorType> {
+        self.response_metadata
+            .as_ref()
+            .map(|rm| rm.next_cursor.as_ref())
+            .flatten()
+    }
+
+    fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {
+        Box::new(self.messages.iter())
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsSetPurposeRequest {
+    pub channel: SlackChannelId,
+    pub purpose: String,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsSetPurposeResponse {
+    pub purpose: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsSetTopicRequest {
+    pub channel: SlackChannelId,
+    pub topic: String,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsSetTopicResponse {
+    pub topic: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsUnarchiveRequest {
+    pub channel: SlackChannelId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiConversationsUnarchiveResponse {}
