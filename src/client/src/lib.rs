@@ -7,7 +7,9 @@ pub use scroller::*;
 
 use serde::{Deserialize, Serialize};
 
+use crate::listener::{SlackEventAbsentSignatureError, SlackEventSignatureVerifier};
 use bytes::buf::BufExt as _;
+use futures::future::TryFutureExt;
 use hyper::body::HttpBody;
 use hyper::client::*;
 use hyper::http::StatusCode;
@@ -166,6 +168,34 @@ impl SlackClientHttpApi {
             let hvs = hv.to_str().unwrap();
             hvs.parse::<Mime>().unwrap()
         })
+    }
+
+    async fn decode_signed_response(
+        req: Request<Body>,
+        signature_verifier: &SlackEventSignatureVerifier,
+    ) -> ClientResult<String> {
+        let headers = &req.headers().clone();
+        let req_body = req.into_body();
+        match (
+            headers.get(SlackEventSignatureVerifier::SLACK_SIGNED_HASH_HEADER),
+            headers.get(SlackEventSignatureVerifier::SLACK_SIGNED_TIMESTAMP),
+        ) {
+            (Some(received_hash), Some(received_ts)) => {
+                Self::http_body_to_string(req_body)
+                    .and_then(|body| async {
+                        signature_verifier
+                            .verify(
+                                &received_hash.to_str().unwrap(),
+                                &body,
+                                &received_ts.to_str().unwrap(),
+                            )
+                            .map(|_| body)
+                            .map_err(|e| e.into())
+                    })
+                    .await
+            }
+            _ => Err(Box::new(SlackEventAbsentSignatureError::new())),
+        }
     }
 
     async fn send_webapi_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>

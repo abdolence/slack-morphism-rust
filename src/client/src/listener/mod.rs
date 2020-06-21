@@ -2,11 +2,13 @@ use futures::future::{BoxFuture, FutureExt};
 use hyper::{Body, Request, Response};
 use std::future::Future;
 
+mod interaction_events;
 mod oauth;
 mod push_events;
 mod signature_verifier;
 
 use crate::SlackClient;
+pub use interaction_events::*;
 pub use oauth::*;
 pub use push_events::*;
 pub use signature_verifier::*;
