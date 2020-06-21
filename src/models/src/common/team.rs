@@ -13,3 +13,10 @@ pub struct SlackTeamInfo {
     pub email_domain: Option<String>,
     pub icon: Option<SlackIcon>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBasicTeamInfo {
+    pub id: SlackTeamId,
+    pub name: Option<String>,
+}

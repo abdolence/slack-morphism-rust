@@ -53,3 +53,11 @@ pub struct SlackUserFlags {
     pub is_stranger: Option<bool>,
     pub is_ultra_restricted: Option<bool>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBasicUserInfo {
+    pub id: SlackUserId,
+    pub team_id: Option<SlackTeamId>,
+    pub username: Option<String>,
+}
