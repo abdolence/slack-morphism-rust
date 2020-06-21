@@ -8,8 +8,8 @@ use serde_with::skip_serializing_none;
 
 use crate::ClientResult;
 use crate::SlackClientSession;
-use slack_morphism_models::*;
 use slack_morphism_models::blocks::*;
+use slack_morphism_models::*;
 
 impl<'a> SlackClientSession<'a> {
     ///
@@ -57,13 +57,13 @@ impl<'a> SlackClientSession<'a> {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiViewsOpenRequest {
     pub trigger_id: SlackTriggerId,
-    pub view: SlackView
+    pub view: SlackView,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiViewsOpenResponse {
-    pub view: SlackStatefulView
+    pub view: SlackStatefulView,
 }
 
 #[skip_serializing_none]
@@ -71,26 +71,26 @@ pub struct SlackApiViewsOpenResponse {
 pub struct SlackApiViewsPublishRequest {
     pub user_id: SlackUserId,
     pub view: SlackView,
-    pub hash: Option<String>
+    pub hash: Option<String>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiViewsPublishResponse {
-    pub view: SlackStatefulView
+    pub view: SlackStatefulView,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiViewsPushRequest {
     pub trigger_id: SlackTriggerId,
-    pub view: SlackView
+    pub view: SlackView,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiViewsPushResponse {
-    pub view: SlackStatefulView
+    pub view: SlackStatefulView,
 }
 
 #[skip_serializing_none]
@@ -99,12 +99,11 @@ pub struct SlackApiViewsUpdateRequest {
     pub view: SlackView,
     pub external_id: Option<String>,
     pub hash: Option<String>,
-    pub view_id: Option<SlackViewId>
+    pub view_id: Option<SlackViewId>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiViewsUpdateResponse {
-    pub view: SlackStatefulView
+    pub view: SlackStatefulView,
 }
-
