@@ -15,6 +15,7 @@ use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
 use hyper_tls::HttpsConnector;
+use lazy_static::*;
 use mime::Mime;
 use rsb_derive::Builder;
 use std::collections::HashMap;
@@ -58,6 +59,10 @@ struct SlackEnvelopeMessage {
     ok: bool,
     error: Option<String>,
     warnings: Option<Vec<String>>,
+}
+
+lazy_static! {
+    static ref SLACK_HTTP_EMPTY_GET_PARAMS: Vec<(&'static str, Option<&'static String>)> = vec![];
 }
 
 impl SlackClientHttpApi {
