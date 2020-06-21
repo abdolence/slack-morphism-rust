@@ -110,6 +110,16 @@ async fn test_interaction_events_function(
     println!("{:#?}", resp);
 }
 
+async fn test_command_events_function(
+    resp: Result<SlackCommandEvent, Box<dyn std::error::Error + Send + Sync>>,
+    _client: Arc<SlackClient>,
+) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
+    resp.map(|event| {
+        println!("{:#?}", event);
+        SlackCommandEventResponse::new(SlackMessageContent::new().with_text("Working on it".into()))
+    })
+}
+
 async fn test_server(
     client: Arc<SlackClient>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -139,10 +149,15 @@ async fn test_server(
         std::env::var("SLACK_SIGNING_SECRET")?,
     ));
 
+    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(std::env::var(
+        "SLACK_SIGNING_SECRET",
+    )?));
+
     let make_svc = make_service_fn(move |_| {
         let thread_oauth_config = oauth_listener_config.clone();
         let thread_push_events_config = push_events_config.clone();
         let thread_interaction_events_config = interactions_events_config.clone();
+        let thread_command_events_config = command_events_config.clone();
         let listener = SlackClientEventsListener::new(client.clone());
         async move {
             let routes = chain_service_routes_fn(
@@ -157,7 +172,13 @@ async fn test_server(
                             thread_interaction_events_config,
                             test_interaction_events_function,
                         ),
-                        hello_world,
+                        chain_service_routes_fn(
+                            listener.command_events_service_fn(
+                                thread_command_events_config,
+                                test_command_events_function,
+                            ),
+                            hello_world,
+                        ),
                     ),
                 ),
             );

@@ -39,3 +39,12 @@ pub struct SlackHistoryMessage {
     pub content: SlackMessageContent,
     pub subtype: Option<SlackMessageEventType>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum SlackMessageResponseType {
+    #[serde(rename = "in_channel")]
+    InChannel,
+    #[serde(rename = "ephemeral")]
+    Ephemeral,
+}
