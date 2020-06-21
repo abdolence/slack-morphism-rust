@@ -6,6 +6,7 @@ mod team;
 mod test;
 mod users;
 mod webhook;
+mod views;
 
 pub use bots::*;
 pub use chat::*;
@@ -15,3 +16,4 @@ pub use team::*;
 pub use test::*;
 pub use users::*;
 pub use webhook::*;
+pub use views::*;
