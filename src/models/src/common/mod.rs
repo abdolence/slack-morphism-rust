@@ -20,7 +20,6 @@ pub use icon::*;
 mod formatters;
 pub use formatters::*;
 
-
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTs(pub String);
 
