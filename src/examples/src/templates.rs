@@ -28,7 +28,20 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                             None
                         )
                     ))
-                ]))
+                ])),
+                some_into(SlackDividerBlock::new()),
+                some_into(SlackImageBlock::new(
+                    "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
+                    "Test Image".into()
+                )),
+                some_into(SlackActionsBlock::new(
+                    slack_blocks![
+                        some_into(SlackBlockButtonElement::new(
+                            "simple-message-button".into(),
+                            pt!("Simple button text")
+                        ))
+                    ]
+                ))
             ])
     }
 }
