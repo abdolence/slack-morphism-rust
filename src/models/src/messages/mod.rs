@@ -5,10 +5,8 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-mod datetime;
 mod templates;
 
-pub use datetime::*;
 pub use templates::*;
 
 #[skip_serializing_none]

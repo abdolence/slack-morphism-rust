@@ -15,6 +15,7 @@ mod channel;
 pub use channel::*;
 
 mod icon;
+use crate::blocks::SlackStringFormat;
 pub use icon::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
@@ -57,6 +58,12 @@ pub struct SlackEventId(pub String);
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackUserId(pub String);
+
+impl SlackStringFormat for SlackUserId {
+    fn to_slack_format(&self) -> String {
+        format!("<@${}", self.value())
+    }
+}
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackBotId(pub String);

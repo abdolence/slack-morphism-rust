@@ -11,18 +11,18 @@ pub struct WelcomeMessageTemplateParams {
 impl SlackMessageTemplate for WelcomeMessageTemplateParams {
     fn render_template(&self) -> SlackMessageContent {
         SlackMessageContent::new()
-            .with_text(format!("Hey {}", Self::fmt_user_id(&self.user_id)))
+            .with_text(format!("Hey {}", self.user_id.to_slack_format()))
             .with_blocks(slack_blocks![
                 some_into(
                     SlackSectionBlock::new()
-                        .with_text(md!("Hey {}", Self::fmt_user_id(&self.user_id)))
+                        .with_text(md!("Hey {}", self.user_id.to_slack_format()))
                 ),
                 some_into(SlackDividerBlock::new()),
                 some_into(SlackContextBlock::new(slack_blocks![
                     some(md!("This is an example of block message")),
                     some(md!(
                         "Current time is: {}",
-                        Self::fmt_date(
+                        fmt_slack_date(
                             Local::now(),
                             SlackDateTimeFormats::DatePretty.to_string().as_str(),
                             None
@@ -34,14 +34,12 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                     "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
                     "Test Image".into()
                 )),
-                some_into(SlackActionsBlock::new(
-                    slack_blocks![
-                        some_into(SlackBlockButtonElement::new(
-                            "simple-message-button".into(),
-                            pt!("Simple button text")
-                        ))
-                    ]
-                ))
+                some_into(SlackActionsBlock::new(slack_blocks![some_into(
+                    SlackBlockButtonElement::new(
+                        "simple-message-button".into(),
+                        pt!("Simple button text")
+                    )
+                )]))
             ])
     }
 }
