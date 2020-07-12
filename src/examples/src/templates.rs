@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use rsb_derive::Builder;
 use slack_morphism_models::blocks::*;
 use slack_morphism_models::*;
@@ -18,8 +19,15 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                 ),
                 some_into(SlackDividerBlock::new()),
                 some_into(SlackContextBlock::new(slack_blocks![
-                    some_into(SlackBlockImageElement::new("".into(), "".into())),
-                    some(md!("This is an example of block message"))
+                    some(md!("This is an example of block message")),
+                    some(md!(
+                        "Current time is: {}",
+                        Self::fmt_date(
+                            Local::now(),
+                            SlackDateTimeFormats::DatePretty.to_string().as_str(),
+                            None
+                        )
+                    ))
                 ]))
             ])
     }
