@@ -1,7 +1,6 @@
 use slack_morphism_client::api::*;
 use slack_morphism_client::listener::*;
 use slack_morphism_client::*;
-use slack_morphism_models::blocks::*;
 use slack_morphism_models::*;
 
 use futures::stream::BoxStream;
@@ -15,48 +14,10 @@ use log::*;
 use std::sync::Arc;
 
 mod templates;
-//use templates::*;
+use templates::*;
 
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
-    let sb_ser = serde_json::to_string_pretty(&sb).unwrap();
-    let sb_des: SlackSectionBlock = serde_json::from_str(&sb_ser).unwrap();
-    println!("{} {:?}", sb_ser, sb_des);
-
-    let section_block = SlackSectionBlock::new()
-        .with_text(md!("hey, {}", 10))
-        .with_fields(slack_blocks![
-            some(md!("hey1")),
-            some(pt!("hey2")),
-            optionally( sb_ser.is_empty() => md!("hey"))
-        ])
-        .with_accessory(
-            SlackBlockButtonElement::from(SlackBlockButtonElementInit {
-                action_id: "-".into(),
-                text: pt!("ddd"),
-            })
-            .into(),
-        );
-
-    let context_block: SlackContextBlock = SlackContextBlock::new(slack_blocks![
-        some_into(SlackBlockImageElement::new(
-            "http://example.net/img1".into(),
-            "text 1".into()
-        )),
-        some_into(SlackBlockImageElement::new(
-            "http://example.net/img2".into(),
-            "text 2".into()
-        ))
-    ]);
-
-    let blocks: Vec<SlackBlock> = slack_blocks![
-       some_into ( section_block ),
-       optionally_into( !sb_ser.is_empty() => context_block )
-    ];
-
-    println!("{:#?}", blocks);
-
     let client = SlackClient::new();
     let token_value: String = std::env::var("SLACK_TEST_TOKEN")?;
     let token: SlackApiToken = SlackApiToken::new(token_value);
@@ -68,6 +29,14 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .await?;
 
     println!("{:#?}", test);
+
+    let message = WelcomeMessageTemplateParams::new("".into());
+
+    let post_chat_req =
+        SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
+
+    let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
+    println!("post chat resp: {:#?}", &post_chat_resp);
 
     let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
     let scroller = scroller_req.scroller();
