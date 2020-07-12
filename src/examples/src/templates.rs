@@ -43,3 +43,38 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
             ])
     }
 }
+
+#[derive(Debug, Clone, Builder)]
+pub struct SlackHomeNewsItem {
+    pub title: String,
+    pub body: String,
+    pub published: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Builder)]
+pub struct SlackHomeTabBlocksTemplateExample {
+    pub latest_news: Vec<SlackHomeNewsItem>,
+    pub user_id: SlackUserId,
+}
+
+impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
+    fn render_template(&self) -> Vec<SlackBlock> {
+        slack_blocks![
+            some_into(
+                SlackSectionBlock::new()
+                    .with_text(md!("Home tab for {}", self.user_id.to_slack_format()))
+            ),
+            some_into(SlackContextBlock::new(slack_blocks![
+                some(md!("This is an example of home tab")),
+                some(md!(
+                    "Current time is: {}",
+                    fmt_slack_date(
+                        Local::now(),
+                        SlackDateTimeFormats::DatePretty.to_string().as_str(),
+                        None
+                    )
+                ))
+            ]))
+        ]
+    }
+}
