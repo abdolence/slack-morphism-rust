@@ -14,6 +14,9 @@ use log::*;
 
 use std::sync::Arc;
 
+mod templates;
+//use templates::*;
+
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let sb: SlackSectionBlock = SlackSectionBlock::new().with_block_id("test".into());
@@ -23,7 +26,7 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let section_block = SlackSectionBlock::new()
         .with_text(md!("hey, {}", 10))
-        .with_fields(slack_items![
+        .with_fields(slack_blocks![
             some(md!("hey1")),
             some(pt!("hey2")),
             optionally( sb_ser.is_empty() => md!("hey"))
@@ -37,19 +40,19 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         );
 
     let context_block: SlackContextBlock = SlackContextBlock::new(slack_blocks![
-        some(SlackBlockImageElement::new(
+        some_into(SlackBlockImageElement::new(
             "http://example.net/img1".into(),
             "text 1".into()
         )),
-        some(SlackBlockImageElement::new(
+        some_into(SlackBlockImageElement::new(
             "http://example.net/img2".into(),
             "text 2".into()
         ))
     ]);
 
     let blocks: Vec<SlackBlock> = slack_blocks![
-       some ( section_block ),
-       optionally( !sb_ser.is_empty() => context_block)
+       some_into ( section_block ),
+       optionally_into( !sb_ser.is_empty() => context_block )
     ];
 
     println!("{:#?}", blocks);
