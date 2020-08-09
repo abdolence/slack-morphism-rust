@@ -5,7 +5,7 @@ use slack_morphism_models::*;
 
 #[derive(Debug, Clone, Builder)]
 pub struct WelcomeMessageTemplateParams {
-    user_id: SlackUserId,
+    pub user_id: SlackUserId,
 }
 
 impl SlackMessageTemplate for WelcomeMessageTemplateParams {
