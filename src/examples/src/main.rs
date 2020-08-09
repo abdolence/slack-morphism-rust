@@ -19,7 +19,7 @@ use templates::*;
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new();
-    let token_value: String = std::env::var("SLACK_TEST_TOKEN")?;
+    let token_value: SlackApiTokenValue = std::env::var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
     println!("{:#?}", session);

@@ -68,7 +68,7 @@ impl<'a> SlackClientSession<'a> {
         self.http_api
             .http_get(
                 "users.identity",
-                &crate::SLACK_HTTP_EMPTY_GET_PARAMS.clone(),
+                &crate::client::SLACK_HTTP_EMPTY_GET_PARAMS.clone(),
             )
             .await
     }
