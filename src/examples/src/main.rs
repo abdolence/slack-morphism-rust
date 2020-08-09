@@ -98,11 +98,11 @@ async fn test_server(
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
 
-    async fn hello_world(
+    async fn your_others_routes(
         _req: Request<Body>,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
         Response::builder()
-            .body("Hello, World".into())
+            .body("Hey, this is a default users route handler".into())
             .map_err(|e| e.into())
     }
 
@@ -149,7 +149,7 @@ async fn test_server(
                                 thread_command_events_config,
                                 test_command_events_function,
                             ),
-                            hello_world,
+                            your_others_routes,
                         ),
                     ),
                 ),
