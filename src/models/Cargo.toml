@@ -3,6 +3,14 @@ name = "slack-morphism-models"
 version = "0.1.0"
 authors = ["Abdulla Abdurakhmanov <abdulla@latestbit.com>"]
 edition = "2018"
+description = "Slack Morphism Models"
+homepage = "https://github.com/abdolence/slack-morphism-rust"
+repository = "https://github.com/abdolence/slack-morphism-rust"
+documentation = "https://docs.rs/slack_morphism"
+keywords = ["slack", "client"]
+categories = ["api-bindings"]
+readme = "../README.md"
+include = ["Cargo.toml", "src/**/*.rs", "../README.md", "../LICENSE"]
 
 [lib]
 name = "slack_morphism_models"
