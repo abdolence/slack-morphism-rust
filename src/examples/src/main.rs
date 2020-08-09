@@ -1,6 +1,6 @@
-use slack_morphism_client::api::*;
-use slack_morphism_client::listener::*;
-use slack_morphism_client::*;
+use slack_morphism::api::*;
+use slack_morphism::listener::*;
+use slack_morphism::*;
 use slack_morphism_models::*;
 
 use futures::stream::BoxStream;

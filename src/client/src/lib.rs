@@ -15,7 +15,7 @@
 //! ```toml
 //!
 //! [dependencies]
-//! slack-morphism-client="0.1"
+//! slack-morphism="0.1"
 //! slack-morphism-models="0.1"
 //!
 //! ```
@@ -23,9 +23,9 @@
 //! All imports you need:
 //!
 //! ```rust
-//! use slack_morphism_client::*; // access to network/client functions
-//! use slack_morphism_client::api::*; // Slack Web API methods (chat, users, views, etc)
-//! use slack_morphism_client::listener::*; // Slack Events API listener (routes) implementation
+//! use slack_morphism::*; // access to network/client functions
+//! use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
+//! use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
 //! use slack_morphism_models::*; // common models and Block Kit macros
 //! ```
 //!
@@ -33,7 +33,7 @@
 //!
 //! ### Create a client instance:
 //! ```rust
-//! use slack_morphism_client::*;
+//! use slack_morphism::*;
 //!
 //! let client = SlackClient::new();
 //! ```
@@ -50,8 +50,8 @@
 //!
 //! ```rust
 //!
-//! use slack_morphism_client::*;
-//! use slack_morphism_client::api::*;
+//! use slack_morphism::*;
+//! use slack_morphism::api::*;
 //!
 //! let client = SlackClient::new();
 //!
@@ -90,8 +90,8 @@
 //!
 //! ```rust
 //!
-//! use slack_morphism_client::*;
-//! use slack_morphism_client::api::*;
+//! use slack_morphism::*;
+//! use slack_morphism::api::*;
 //! use slack_morphism_models::*;
 //! use std::time::Duration;
 //!
@@ -161,8 +161,8 @@
 //!
 //! ```rust
 //!
-//! use slack_morphism_client::*;
-//! use slack_morphism_client::api::*;
+//! use slack_morphism::*;
+//! use slack_morphism::api::*;
 //! use slack_morphism_models::*;
 //! use std::time::Duration;
 //! use rsb_derive::Builder;
