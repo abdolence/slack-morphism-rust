@@ -10,8 +10,8 @@ repository = "https://github.com/abdolence/slack-morphism-rust"
 documentation = "https://docs.rs/slack_morphism"
 keywords = ["slack", "client"]
 categories = ["api-bindings"]
-readme = "../README.md"
-include = ["Cargo.toml", "src/**/*.rs", "../README.md", "../LICENSE"]
+readme = "../../README.md"
+include = ["Cargo.toml", "src/**/*.rs", "../../README.md", "../../LICENSE"]
 
 [lib]
 name = "slack_morphism"
