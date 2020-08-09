@@ -3,6 +3,7 @@ name = "slack-morphism-models"
 version = "0.1.0"
 authors = ["Abdulla Abdurakhmanov <abdulla@latestbit.com>"]
 edition = "2018"
+license = "Apache-2.0"
 description = "Slack Morphism Models"
 homepage = "https://github.com/abdolence/slack-morphism-rust"
 repository = "https://github.com/abdolence/slack-morphism-rust"
