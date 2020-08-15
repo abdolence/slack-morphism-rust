@@ -26,7 +26,9 @@
 //! use slack_morphism::*; // access to network/client functions
 //! use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
 //! use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
-//! use slack_morphism_models::*; // common models and Block Kit macros
+//! use slack_morphism_models::*; // common Slack models like SlackUser, etc and macros
+//! use slack_morphism_models::blocks::*; // Slack Block Kit models
+//! use slack_morphism_models::events::*; // Slack Events Models
 //! ```
 //!
 //! ## Slack Web API client
@@ -52,6 +54,9 @@
 //!
 //! use slack_morphism::*;
 //! use slack_morphism::api::*;
+//! use slack_morphism_models::*;
+//!
+//! async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
 //! let client = SlackClient::new();
 //!
@@ -75,6 +80,9 @@
 //!
 //! let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
 //!
+//! Ok(())
+//! }
+//!
 //! ```
 //!
 //! ### Pagination support
@@ -94,6 +102,8 @@
 //! use slack_morphism::api::*;
 //! use slack_morphism_models::*;
 //! use std::time::Duration;
+//!
+//! async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
 //! let client = SlackClient::new();
 //! let token_value: SlackApiTokenValue = "xoxb-89.....".into();
@@ -119,6 +129,8 @@
 //! let collected_members: Vec<SlackUser> = scroller
 //!     .collect_items_stream(&session, Duration::from_millis(1000))
 //!     .await?;
+//! Ok(())
+//! }
 //!
 //! ```
 //!
@@ -148,13 +160,14 @@
 //!
 //! ```rust
 //! use slack_morphism_models::*;
+//! use slack_morphism_models::blocks::*;
 //!
-//! slack_blocks![
+//! let blocks : Vec<SlackBlock> = slack_blocks![
 //!  some_into(
 //!     SlackSectionBlock::new()
 //!         .with_text(md!("A message *with some bold text* and _some italicized text_."))
 //!  )
-//! ]
+//! ];
 //! ```
 //!
 //! Let’s look at another more complex example for welcoming message:
@@ -164,6 +177,10 @@
 //! use slack_morphism::*;
 //! use slack_morphism::api::*;
 //! use slack_morphism_models::*;
+//! use slack_morphism_models::blocks::*;
+//!
+//! async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+//!
 //! use std::time::Duration;
 //! use rsb_derive::Builder;
 //!
@@ -188,7 +205,7 @@
 //!                     SlackSectionBlock::new()
 //!                         .with_text(md!("Hey {}", self.user_id.to_slack_format()))
 //!                 ),
-//!                 some_into(SlackDividerBlock::new())
+//!                 some_into(SlackDividerBlock::new()),
 //!                 some_into(SlackImageBlock::new(
 //!                     "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
 //!                     "Test Image".into()
@@ -208,6 +225,9 @@
 //!
 //! let post_chat_req =
 //!     SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
+//!
+//! Ok(())
+//! }
 //!
 //! ```
 //! Look other examples in examples/templates.rs
