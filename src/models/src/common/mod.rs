@@ -14,6 +14,9 @@ pub use team::*;
 mod channel;
 pub use channel::*;
 
+mod bot;
+pub use bot::*;
+
 mod icon;
 pub use icon::*;
 
