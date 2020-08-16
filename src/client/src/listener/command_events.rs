@@ -43,14 +43,7 @@ impl SlackClientEventsListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                Result<SlackCommandEvent, Box<dyn std::error::Error + Send + Sync + 'static>>,
-                Arc<SlackClient>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
+        I: Fn(SlackCommandEvent, Arc<SlackClient>) -> IF + 'static + Send + Sync + Clone,
         IF: Future<
                 Output = Result<
                     SlackCommandEventResponse,
@@ -64,6 +57,7 @@ impl SlackClientEventsListener {
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
         );
         let client = self.client.clone();
+        let error_handler = self.error_handler.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
@@ -71,6 +65,8 @@ impl SlackClientEventsListener {
             let serv = command_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
+            let thread_error_handler = error_handler.clone();
+
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
@@ -116,16 +112,25 @@ impl SlackClientEventsListener {
                                 }
                             })
                             .and_then(|event| async move {
-                                match serv(event, sc).await {
-                                    Ok(cresp) => Response::builder()
-                                        .status(StatusCode::OK)
-                                        .header("content-type", "application/json; charset=utf-8")
-                                        .body(serde_json::to_string(&cresp).unwrap().into())
-                                        .map_err(|e| e.into()),
-                                    Err(_) => Response::builder()
-                                        .status(StatusCode::BAD_REQUEST)
-                                        .body(Body::empty())
-                                        .map_err(|e| e.into()),
+                                match event {
+                                    Ok(command_event) => match serv(command_event, sc).await {
+                                        Ok(cresp) => Response::builder()
+                                            .status(StatusCode::OK)
+                                            .header(
+                                                "content-type",
+                                                "application/json; charset=utf-8",
+                                            )
+                                            .body(serde_json::to_string(&cresp).unwrap().into())
+                                            .map_err(|e| e.into()),
+                                        Err(_) => Response::builder()
+                                            .status(StatusCode::BAD_REQUEST)
+                                            .body(Body::empty())
+                                            .map_err(|e| e.into()),
+                                    },
+                                    Err(command_event_err) => {
+                                        thread_error_handler(command_event_err, sc);
+                                        Ok(Response::new(Body::empty()))
+                                    }
                                 }
                             })
                             .await

@@ -62,34 +62,32 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 async fn test_oauth_install_function(
-    resp: Result<SlackOAuthV2AccessTokenResponse, Box<dyn std::error::Error + Send + Sync>>,
+    resp: SlackOAuthV2AccessTokenResponse,
     _client: Arc<SlackClient>,
 ) {
     println!("{:#?}", resp);
 }
 
-async fn test_push_events_function(
-    resp: Result<SlackPushEvent, Box<dyn std::error::Error + Send + Sync>>,
-    _client: Arc<SlackClient>,
-) {
-    println!("{:#?}", resp);
+async fn test_push_events_function(event: SlackPushEvent, _client: Arc<SlackClient>) {
+    println!("{:#?}", event);
 }
 
-async fn test_interaction_events_function(
-    resp: Result<SlackInteractionEvent, Box<dyn std::error::Error + Send + Sync>>,
-    _client: Arc<SlackClient>,
-) {
-    println!("{:#?}", resp);
+async fn test_interaction_events_function(event: SlackInteractionEvent, _client: Arc<SlackClient>) {
+    println!("{:#?}", event);
 }
 
 async fn test_command_events_function(
-    resp: Result<SlackCommandEvent, Box<dyn std::error::Error + Send + Sync>>,
+    event: SlackCommandEvent,
     _client: Arc<SlackClient>,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
-    resp.map(|event| {
-        println!("{:#?}", event);
-        SlackCommandEventResponse::new(SlackMessageContent::new().with_text("Working on it".into()))
-    })
+    println!("{:#?}", event);
+    Ok(SlackCommandEventResponse::new(
+        SlackMessageContent::new().with_text("Working on it".into()),
+    ))
+}
+
+fn test_error_handler(err: Box<dyn std::error::Error + Send + Sync>, _client: Arc<SlackClient>) {
+    println!("{:#?}", err);
 }
 
 async fn test_server(
@@ -130,7 +128,8 @@ async fn test_server(
         let thread_push_events_config = push_events_config.clone();
         let thread_interaction_events_config = interactions_events_config.clone();
         let thread_command_events_config = command_events_config.clone();
-        let listener = SlackClientEventsListener::new(client.clone());
+        let listener =
+            SlackClientEventsListener::new(client.clone()).with_error_handler(test_error_handler);
         async move {
             let routes = chain_service_routes_fn(
                 listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),

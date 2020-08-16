@@ -41,10 +41,30 @@ where
 #[derive(Clone)]
 pub struct SlackClientEventsListener {
     client: Arc<SlackClient>,
+    error_handler: Box<fn(Box<dyn std::error::Error + Send + Sync + 'static>, Arc<SlackClient>)>,
 }
 
 impl SlackClientEventsListener {
     pub fn new(client: Arc<SlackClient>) -> Self {
-        Self { client }
+        Self {
+            client,
+            error_handler: Box::new(Self::empty_error_handler),
+        }
+    }
+
+    pub fn with_error_handler(
+        self,
+        error_handler: fn(Box<dyn std::error::Error + Send + Sync + 'static>, Arc<SlackClient>),
+    ) -> Self {
+        Self {
+            error_handler: Box::new(error_handler),
+            ..self
+        }
+    }
+
+    fn empty_error_handler(
+        _err: Box<dyn std::error::Error + Send + Sync>,
+        _client: Arc<SlackClient>,
+    ) -> () {
     }
 }

@@ -43,20 +43,14 @@ impl SlackClientEventsListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                Result<SlackInteractionEvent, Box<dyn std::error::Error + Send + Sync + 'static>>,
-                Arc<SlackClient>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
+        I: Fn(SlackInteractionEvent, Arc<SlackClient>) -> IF + 'static + Send + Sync + Clone,
         IF: Future<Output = ()> + 'static + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
         );
         let client = self.client.clone();
+        let error_handler = self.error_handler.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
@@ -64,6 +58,8 @@ impl SlackClientEventsListener {
             let serv = interaction_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
+            let thread_error_handler = error_handler.clone();
+
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
@@ -90,19 +86,19 @@ impl SlackClientEventsListener {
                             })
                             .and_then(|event| async move {
                                 match event {
-                                    Ok(SlackInteractionEvent::ViewSubmission(_)) => {
-                                        serv(event, sc).await;
+                                    Ok(view_submission_event@SlackInteractionEvent::ViewSubmission(_)) => {
+                                        serv(view_submission_event, sc).await;
                                         Response::builder()
                                             .status(StatusCode::OK)
                                             .body("".into())
                                             .map_err(|e| e.into())
                                     }
-                                    Ok(_) => {
-                                        serv(event, sc).await;
+                                    Ok(interaction_event) => {
+                                        serv(interaction_event, sc).await;
                                         Ok(Response::new(Body::empty()))
                                     }
-                                    Err(_) => {
-                                        serv(event, sc).await;
+                                    Err(event_err) => {
+                                        thread_error_handler(event_err, sc);
                                         Response::builder()
                                             .status(StatusCode::FORBIDDEN)
                                             .body(Body::empty())

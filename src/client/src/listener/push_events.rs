@@ -42,20 +42,14 @@ impl SlackClientEventsListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                Result<SlackPushEvent, Box<dyn std::error::Error + Send + Sync + 'static>>,
-                Arc<SlackClient>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
+        I: Fn(SlackPushEvent, Arc<SlackClient>) -> IF + 'static + Send + Sync + Clone,
         IF: Future<Output = ()> + 'static + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
         );
         let client = self.client.clone();
+        let error_handler = self.error_handler.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
@@ -63,6 +57,7 @@ impl SlackClientEventsListener {
             let push_serv = push_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
+            let thread_error_handler = error_handler.clone();
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
@@ -84,12 +79,12 @@ impl SlackClientEventsListener {
                                             .map_err(|e| e.into())
                                     }
                                     other => match other {
-                                        Ok(_) => {
-                                            push_serv(other, sc).await;
+                                        Ok(push_event) => {
+                                            push_serv(push_event, sc).await;
                                             Ok(Response::new(Body::empty()))
                                         }
-                                        Err(_) => {
-                                            push_serv(other, sc).await;
+                                        Err(err_oush_event) => {
+                                            thread_error_handler(err_oush_event, sc);
                                             Response::builder()
                                                 .status(StatusCode::FORBIDDEN)
                                                 .body(Body::empty())
