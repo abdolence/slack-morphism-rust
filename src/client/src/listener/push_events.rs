@@ -73,6 +73,7 @@ impl SlackClientEventsListener {
                                             "Received Slack URL push verification challenge: {}",
                                             url_ver.challenge
                                         );
+                                        push_serv(SlackPushEvent::UrlVerification(url_ver.clone()), sc).await;
                                         Response::builder()
                                             .status(StatusCode::OK)
                                             .body(url_ver.challenge.into())
