@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
-slack-morphism-models = { path = "../models", version = "0.1" }
+slack-morphism-models = { path = "../models", version = "0.2" }
 slack-morphism = { path = "../client", version = "0.2" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

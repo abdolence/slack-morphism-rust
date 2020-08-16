@@ -16,7 +16,7 @@
 //!
 //! [dependencies]
 //! slack-morphism="0.2"
-//! slack-morphism-models="0.1"
+//! slack-morphism-models="0.2"
 //!
 //! ```
 //!

@@ -27,6 +27,14 @@ pub struct SlackMessageContent {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageSender {
+    pub user: Option<SlackUserId>,
+    pub bot_id: Option<SlackBotId>,
+    pub username: Option<String>
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessage {
     #[serde(flatten)]
     pub origin: SlackMessageOrigin,
@@ -41,6 +49,8 @@ pub struct SlackHistoryMessage {
     pub origin: SlackMessageOrigin,
     #[serde(flatten)]
     pub content: SlackMessageContent,
+    #[serde(flatten)]
+    pub sender: SlackMessageSender,
     pub subtype: Option<SlackMessageEventType>,
 }
 

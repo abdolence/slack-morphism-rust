@@ -58,6 +58,8 @@ pub struct SlackMessageEvent {
     pub origin: SlackMessageOrigin,
     #[serde(flatten)]
     pub content: SlackMessageContent,
+    #[serde(flatten)]
+    pub sender: SlackMessageSender,
     pub subtype: Option<SlackMessageEventType>,
     pub hidden: Option<bool>,
 }
