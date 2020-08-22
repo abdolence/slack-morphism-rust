@@ -15,3 +15,4 @@ create-missing = false
 
 [output.html]
 default-theme = "navy"
+git-repository-url = "https://github.com/abdolence/slack-morphism-rust"
