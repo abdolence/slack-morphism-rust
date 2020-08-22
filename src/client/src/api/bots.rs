@@ -33,5 +33,5 @@ pub struct SlackApiBotsInfoRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiBotsInfoResponse {
-    pub bot : SlackBotInfo
+    pub bot: SlackBotInfo,
 }

@@ -13,5 +13,5 @@ pub struct SlackBotInfo {
     pub app_id: String,
     pub user_id: String,
     #[serde(flatten)]
-    pub icons: Option<SlackIconImages>
+    pub icons: Option<SlackIconImages>,
 }

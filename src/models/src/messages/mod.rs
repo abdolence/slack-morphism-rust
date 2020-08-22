@@ -30,7 +30,7 @@ pub struct SlackMessageContent {
 pub struct SlackMessageSender {
     pub user: Option<SlackUserId>,
     pub bot_id: Option<SlackBotId>,
-    pub username: Option<String>
+    pub username: Option<String>,
 }
 
 #[skip_serializing_none]
