@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="chapter_1.html"><strong aria-hidden="true">1.</strong> Chapter 1</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination sypport</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -161,8 +161,246 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#chapter-1" id="chapter-1">Chapter 1</a></h1>
-<p>test</p>
+                        <h1><a class="header" href="#intro-and-motivation" id="intro-and-motivation">Intro and motivation</a></h1>
+<h2><a class="header" href="#type-safety" id="type-safety">Type-safety</a></h2>
+<p>All of the models, API and Block Kit support in Slack Morphism is well-typed.</p>
+<h2><a class="header" href="#easy-to-use" id="easy-to-use">Easy to use</a></h2>
+<p>The library depends only on familiar for Rust developers principles and libraries like Serde, hyper, futures.</p>
+<p>##Async
+Using latest Rust async/.await language features and libraries, 
+the library provides access to all of the functions in asynchronous manner</p>
+<h2><a class="header" href="#getting-started" id="getting-started">Getting Started</a></h2>
+<p>Cargo.toml dependencies example:</p>
+<pre><code class="language-toml">[dependencies]
+slack-morphism=&quot;0.2&quot;
+slack-morphism-models=&quot;0.2&quot;
+</code></pre>
+<p>All imports you need:</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use slack_morphism::*; // access to network/client functions
+use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
+use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
+use slack_morphism_models::*; // common Slack models like SlackUser, etc and macros
+use slack_morphism_models::blocks::*; // Slack Block Kit models
+use slack_morphism_models::events::*; // Slack Events Models
+<span class="boring">}
+</span></code></pre></pre>
+<h1><a class="header" href="#slack-web-api-client" id="slack-web-api-client">Slack Web API client</a></h1>
+<h2><a class="header" href="#create-a-client-instance" id="create-a-client-instance">Create a client instance</a></h2>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use slack_morphism::*;
+let client = SlackClient::new();
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#make-web-api-methods-calls" id="make-web-api-methods-calls">Make Web API methods calls</a></h3>
+<p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
+you need a Slack token to make a call.
+For simple bots you can have it in your config files, or you can obtain
+workspace tokens using Slack OAuth.</p>
+<p>In the example below, we’re using a hardcoded Slack token, but don’t do that for your production bots and apps.
+You should securely and properly store all of Slack tokens.</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>use slack_morphism::*;
+use slack_morphism::api::*;
+use slack_morphism_models::*;
+
+async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    let client = SlackClient::new();
+    
+    // Create our Slack API token
+    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    
+    // Create a Slack session with this token
+    let session = client.open_session(&amp;token);
+    
+    // Make your first API call (which is `api.test` here)
+    let test: SlackApiTestResponse = session
+            .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+            .await?;
+
+    // Send a simple text message
+    let post_chat_req =
+        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(),
+               SlackMessageContent::new().with_text(&quot;Hey there!&quot;.into())
+        );
+
+    let post_chat_resp = session.chat_post_message(&amp;post_chat_req).await?;
+
+    Ok(())
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h1><a class="header" href="#pagination-support" id="pagination-support">Pagination support</a></h1>
+<p>Some Web API methods defines cursors and pagination, to give you an ability to load a lot of data continually
+(using batching and continually making many requests).</p>
+<p>Examples: <code>conversations.history</code>, <code>conversations.list</code>, <code>users.list</code>, ...</p>
+<p>To help with those methods Slack Morphism provides additional a “scroller” implementation,
+which deal with all scrolling/batching requests for you.</p>
+<p>For example for <code>users.list</code>:</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>use slack_morphism::*;
+use slack_morphism::api::*;
+use slack_morphism_models::*;
+use std::time::Duration;
+
+async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    let client = SlackClient::new();
+    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = client.open_session(&amp;token);
+    
+    // Create a first request and specify a batch limit:
+    let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(5);
+    
+    // Create a scroller from this request
+    let scroller = scroller_req.scroller();
+    
+    // Option 1: Create a Rust Futures Stream from this scroller and use it
+    use futures::stream::BoxStream;
+    use futures::TryStreamExt;
+    
+    let mut items_stream = scroller.to_items_stream(&amp;session);
+    while let Some(items) = items_stream.try_next().await? {
+        println!(&quot;users batch: {:#?}&quot;, items);
+    }
+    
+    // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
+    let collected_members: Vec&lt;SlackUser&gt; = scroller
+        .collect_items_stream(&amp;session, Duration::from_millis(1000))
+        .await?;
+    Ok(())
+}
+
+<span class="boring">}
+</span></code></pre></pre>
+<h1><a class="header" href="#block-kit-support" id="block-kit-support">Block Kit support</a></h1>
+<p>To support Slack Block Kit rich messages and views, the library provides:</p>
+<ul>
+<li>Well-typed models</li>
+<li>Macros to help build blocks, block elements</li>
+</ul>
+<p>Let’s take some very simple block example:</p>
+<pre><code class="language-json">{
+  &quot;blocks&quot;: [
+      {
+        &quot;type&quot;: &quot;section&quot;,
+        &quot;text&quot;: {
+            &quot;type&quot;: &quot;mrkdwn&quot;,
+            &quot;text&quot;: &quot;A message *with some bold text* and _some italicized text_.&quot;
+        }
+      }
+  ]
+}
+</code></pre>
+<p>Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use slack_morphism_models::*;
+use slack_morphism_models::blocks::*;
+
+let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
+ some_into(
+    SlackSectionBlock::new()
+        .with_text(md!(&quot;A message *with some bold text* and _some italicized text_.&quot;))
+ )
+];
+<span class="boring">}
+</span></code></pre></pre>
+<p>Let’s look at another more complex example for welcoming message:</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>use slack_morphism::*;
+use slack_morphism::api::*;
+use slack_morphism_models::*;
+use slack_morphism_models::blocks::*;
+
+async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    use std::time::Duration;
+    use rsb_derive::Builder;
+    
+    let client = SlackClient::new();
+    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = client.open_session(&amp;token);
+    
+    // Our welcome message params as a struct
+    #[derive(Debug, Clone, Builder)]
+    pub struct WelcomeMessageTemplateParams {
+        pub user_id: SlackUserId,
+    }
+    
+    // Define our welcome message template using block macros, a trait and models from the library
+    impl SlackMessageTemplate for WelcomeMessageTemplateParams {
+        fn render_template(&amp;self) -&gt; SlackMessageContent {
+            SlackMessageContent::new()
+                .with_text(format!(&quot;Hey {}&quot;, self.user_id.to_slack_format()))
+                .with_blocks(slack_blocks![
+                    some_into(
+                        SlackSectionBlock::new()
+                            .with_text(md!(&quot;Hey {}&quot;, self.user_id.to_slack_format()))
+                    ),
+                    some_into(SlackDividerBlock::new()),
+                    some_into(SlackImageBlock::new(
+                        &quot;https://www.gstatic.com/webp/gallery3/2_webp_ll.png&quot;.into(),
+                        &quot;Test Image&quot;.into()
+                    )),
+                    some_into(SlackActionsBlock::new(slack_blocks![some_into(
+                        SlackBlockButtonElement::new(
+                            &quot;simple-message-button&quot;.into(),
+                            pt!(&quot;Simple button text&quot;)
+                        )
+                    )]))
+                ])
+        }
+    }
+    
+    // Use it
+    let message = WelcomeMessageTemplateParams::new(&quot;some-slack-uid&quot;.into());
+    
+    let post_chat_req =
+        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(), message.render_template());
+    
+    Ok(())
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Look other examples in examples/templates.rs.</p>
+<h2><a class="header" href="#events-api-and-oauth-support" id="events-api-and-oauth-support">Events API and OAuth support</a></h2>
+<p>The library provides route implementation in <code>SlackClientEventsListener</code> based on Hyper/Tokio for:</p>
+<ul>
+<li>Push Events</li>
+<li>Interaction Events</li>
+<li>Command Events</li>
+<li>OAuth v2 redirects and client functions</li>
+</ul>
+<p>You can chain all of the routes using <code>chain_service_routes_fn</code> from the library.</p>
+<p>Also the library provides Slack events signature verifier (<code>SlackEventSignatureVerifier</code>)
+(which is already integrated in the routes implementation for you).
+All you need is provide your client id and secret configuration to route implementation.</p>
+<p>Look at the examples/test_server sources for the details.</p>
+<h1><a class="header" href="#limitations" id="limitations">Limitations</a></h1>
+<p>Slack Morphism doesn't provide:</p>
+<ul>
+<li>RTM API (the usage of which is slowly declining in favour of Events API)</li>
+<li>Legacy Web/Events API methods and models (like Slack Message attachments, which should be replaced with Slack Blocks)</li>
+</ul>
 
                     </main>
 

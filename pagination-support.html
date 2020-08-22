@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Chapter 1 - Slack Morphism for Rust</title>
+        <title>Pagination sypport - Slack Morphism for Rust</title>
         
         
 
@@ -93,7 +93,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="chapter_1.html" class="active"><strong aria-hidden="true">1.</strong> Chapter 1</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html" class="active"><strong aria-hidden="true">3.1.</strong> Pagination sypport</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -159,15 +159,68 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#chapter-1" id="chapter-1">Chapter 1</a></h1>
-<p>test</p>
+                        <h1><a class="header" href="#pagination-support" id="pagination-support">Pagination support</a></h1>
+<p>Some Web API methods defines cursors and pagination, to give you an ability to load a lot of data continually
+(using batching and continually making many requests).</p>
+<p>Examples: <code>conversations.history</code>, <code>conversations.list</code>, <code>users.list</code>, ...</p>
+<p>To help with those methods Slack Morphism provides additional a “scroller” implementation,
+which deal with all scrolling/batching requests for you.</p>
+<p>For example for <code>users.list</code>:</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>use slack_morphism::*;
+use slack_morphism::api::*;
+use slack_morphism_models::*;
+use std::time::Duration;
+
+async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    let client = SlackClient::new();
+    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = client.open_session(&amp;token);
+    
+    // Create a first request and specify a batch limit:
+    let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(5);
+    
+    // Create a scroller from this request
+    let scroller = scroller_req.scroller();
+    
+    // Option 1: Create a Rust Futures Stream from this scroller and use it
+    use futures::stream::BoxStream;
+    use futures::TryStreamExt;
+    
+    let mut items_stream = scroller.to_items_stream(&amp;session);
+    while let Some(items) = items_stream.try_next().await? {
+        println!(&quot;users batch: {:#?}&quot;, items);
+    }
+    
+    // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
+    let collected_members: Vec&lt;SlackUser&gt; = scroller
+        .collect_items_stream(&amp;session, Duration::from_millis(1000))
+        .await?;
+    Ok(())
+}
+
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="web-api.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
+                        
+                            <a rel="next" href="block-kit-support.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -177,7 +230,15 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a rel="prev" href="web-api.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
+                
+                    <a rel="next" href="block-kit-support.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 
