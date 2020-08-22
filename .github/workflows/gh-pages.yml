@@ -13,7 +13,7 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: 'latest'
-      - run: cd docs && mdbook build         
+      - run: cd docs && mdbook build
       - name: Copy CNAME
         run: cp CNAME docs/output
       - name: Deploy
