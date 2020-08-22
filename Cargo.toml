@@ -1,7 +1,0 @@
-[workspace]
-
-members = [
-    "src/models",
-    "src/client",
-    "src/examples"
-]
