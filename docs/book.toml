@@ -12,3 +12,6 @@ edition = "2018"
 [build]
 build-dir = "output"
 create-missing = false
+
+[output.html]
+default-theme = "navy"
