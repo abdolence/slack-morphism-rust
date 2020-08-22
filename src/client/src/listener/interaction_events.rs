@@ -54,7 +54,6 @@ impl SlackClientEventsListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let c = chain.clone();
             let serv = interaction_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
@@ -72,7 +71,7 @@ impl SlackClientEventsListener {
 
                                 let payload = body_params
                                     .get("payload")
-                                    .ok_or(SlackClientError::SystemError(
+                                    .ok_or_else( || SlackClientError::SystemError(
                                         SlackClientSystemError::new(
                                             "Absent payload in the request from Slack".into(),
                                         ),
@@ -108,7 +107,7 @@ impl SlackClientEventsListener {
                             })
                             .await
                     }
-                    _ => c(req).await,
+                    _ => chain(req).await,
                 }
             }
             .boxed()

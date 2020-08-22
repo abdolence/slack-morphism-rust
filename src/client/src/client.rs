@@ -69,7 +69,7 @@ impl SlackClientHttpApi {
         format!("{}/{}", Self::SLACK_API_URI_STR, method_relative_uri)
     }
 
-    pub(crate) fn create_url(url_str: &String) -> Uri {
+    pub(crate) fn create_url(url_str: &str) -> Uri {
         url_str.parse().unwrap()
     }
 
@@ -128,8 +128,8 @@ impl SlackClientHttpApi {
 
     pub(crate) fn setup_basic_auth_header(
         request_builder: hyper::http::request::Builder,
-        username: &String,
-        password: &String,
+        username: &str,
+        password: &str,
     ) -> hyper::http::request::Builder {
         let header_value = format!(
             "Basic {}",

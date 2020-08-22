@@ -47,7 +47,7 @@ impl SlackEventSignatureVerifier {
                         body_len: body.len(),
                         ts: ts.into(),
                         received_hash: hash.into(),
-                        generated_hash: hash_to_check.clone(),
+                        generated_hash: hash_to_check,
                     }
                     .into(),
                 ))

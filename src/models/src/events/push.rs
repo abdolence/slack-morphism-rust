@@ -6,6 +6,7 @@ use crate::blocks::*;
 use crate::common::*;
 use crate::messages::*;
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackPushEvent {

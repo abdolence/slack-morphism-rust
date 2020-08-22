@@ -4,7 +4,7 @@ use crate::api::*;
 use crate::errors::*;
 use crate::{SlackClient, SlackClientHttpApi};
 
-use crate::listener::SlackClientEventsListener;
+use crate::listener::{SlackClientEventsListener, ErrorHandler};
 use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response};
@@ -69,9 +69,7 @@ impl SlackClientEventsListener {
         config: &'a SlackOAuthListenerConfig,
         client: Arc<SlackClient>,
         install_service_fn: I,
-        error_handler: Box<
-            fn(Box<dyn std::error::Error + Send + Sync + 'static>, Arc<SlackClient>),
-        >,
+        error_handler: ErrorHandler,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>>
     where
         I: Fn(SlackOAuthV2AccessTokenResponse, Arc<SlackClient>) -> IF
@@ -106,8 +104,8 @@ impl SlackClientEventsListener {
                                 .team
                                 .name
                                 .as_ref()
-                                .map(|n| n.clone())
-                                .unwrap_or("".into()),
+                                .cloned()
+                                .unwrap_or_else(|| "".into()),
                             &oauth_resp.authed_user.id
                         );
                         install_service_fn(oauth_resp, client).await;
@@ -179,7 +177,6 @@ impl SlackClientEventsListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let c = chain.clone();
             let install_fn = install_service_fn.clone();
             let sc = client.clone();
             let error_handler = listener_error_handler.clone();
@@ -192,7 +189,7 @@ impl SlackClientEventsListener {
                         Self::slack_oauth_callback_service(req, &cfg, sc, install_fn, error_handler)
                             .await
                     }
-                    _ => c(req).await,
+                    _ => chain(req).await,
                 }
             }
             .boxed()

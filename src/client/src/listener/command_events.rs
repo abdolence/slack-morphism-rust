@@ -61,7 +61,6 @@ impl SlackClientEventsListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let c = chain.clone();
             let serv = command_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
@@ -135,7 +134,7 @@ impl SlackClientEventsListener {
                             })
                             .await
                     }
-                    _ => c(req).await,
+                    _ => chain(req).await,
                 }
             }
             .boxed()

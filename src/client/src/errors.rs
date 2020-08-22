@@ -14,12 +14,9 @@ pub enum SlackClientError {
 
 impl SlackClientError {
     fn option_to_string<T: ToString>(value: &Option<T>) -> String {
-        format!(
-            "{}",
-            value
-                .as_ref()
-                .map_or_else(|| "-".to_string(), |v| v.to_string())
-        )
+        value
+            .as_ref()
+            .map_or_else(|| "-".to_string(), |v| v.to_string())
     }
 }
 

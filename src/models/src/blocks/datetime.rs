@@ -38,7 +38,7 @@ where
 {
     let link_part = link
         .map(|value| format!("^${}", value))
-        .unwrap_or("".into());
+        .unwrap_or_else(|| "".into());
     let fallback = date.to_rfc2822();
     format!(
         "<!date^${timestamp}^${token_string}${link_part}|${fallback}>",

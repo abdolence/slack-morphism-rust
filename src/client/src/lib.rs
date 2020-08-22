@@ -77,6 +77,8 @@
 //! Please follow to the official website: https://slack-rust.abdolence.dev
 //!
 
+#![allow(clippy::new_without_default)]
+
 pub mod api;
 mod client;
 pub mod errors;

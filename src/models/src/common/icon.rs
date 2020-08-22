@@ -20,7 +20,7 @@ pub struct SlackIconImages {
     pub resolutions: Vec<(u32, String)>,
 }
 
-const SLACK_ICON_JSON_PREFIX: &'static str = "image_";
+const SLACK_ICON_JSON_PREFIX: &str = "image_";
 
 impl Serialize for SlackIconImages {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -64,7 +64,7 @@ impl<'de> Visitor<'de> for SlackIconImagesVisitor {
 
         while let Some(key) = access.next_key::<String>()? {
             if key.starts_with(SLACK_ICON_JSON_PREFIX) {
-                let parsed_key: Vec<_> = key.split("_").collect();
+                let parsed_key: Vec<_> = key.split('_').collect();
                 if parsed_key.len() == 2 {
                     let resolution: u32 = parsed_key[1].parse().unwrap();
                     let value: String = access.next_value()?;

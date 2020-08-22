@@ -114,7 +114,7 @@ impl From<SlackInputBlock> for SlackBlock {
     }
 }
 
-const SLACK_FILE_BLOCK_SOURCE_DEFAULT: &'static str = "remote";
+const SLACK_FILE_BLOCK_SOURCE_DEFAULT: &str = "remote";
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -728,7 +728,7 @@ impl From<&str> for SlackBlockMarkDownText {
 
 impl From<SlackBlockPlainText> for SlackBlockPlainTextOnly {
     fn from(pt: SlackBlockPlainText) -> Self {
-        SlackBlockPlainTextOnly { value: pt.clone() }
+        SlackBlockPlainTextOnly { value: pt }
     }
 }
 

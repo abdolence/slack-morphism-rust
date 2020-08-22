@@ -172,8 +172,6 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .info(Color::Green)
         .warn(Color::Magenta);
 
-    let colors_line = colors_level.clone();
-
     fern::Dispatch::new()
         // Perform allocation-free log formatting
         .format(move |out, message, record| {
@@ -184,7 +182,7 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 colors_level.color(record.level()),
                 format_args!(
                     "\x1B[{}m",
-                    colors_line.get_color(&record.level()).to_fg_str()
+                    colors_level.get_color(&record.level()).to_fg_str()
                 ),
                 message
             ))
