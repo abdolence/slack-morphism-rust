@@ -13,11 +13,9 @@
 //! Cargo.toml dependencies example:
 //!
 //! ```toml
-//!
 //! [dependencies]
 //! slack-morphism="0.2"
 //! slack-morphism-models="0.2"
-//!
 //! ```
 //!
 //! All imports you need:
@@ -56,7 +54,7 @@
 //! use slack_morphism::api::*;
 //! use slack_morphism_models::*;
 //!
-//! async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+//!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
 //! let client = SlackClient::new();
 //!
@@ -80,8 +78,8 @@
 //!
 //! let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
 //!
-//! Ok(())
-//! }
+//!# Ok(())
+//!# }
 //!
 //! ```
 //!
@@ -103,7 +101,7 @@
 //! use slack_morphism_models::*;
 //! use std::time::Duration;
 //!
-//! async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+//!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
 //! let client = SlackClient::new();
 //! let token_value: SlackApiTokenValue = "xoxb-89.....".into();
@@ -129,8 +127,8 @@
 //! let collected_members: Vec<SlackUser> = scroller
 //!     .collect_items_stream(&session, Duration::from_millis(1000))
 //!     .await?;
-//! Ok(())
-//! }
+//!# Ok(())
+//!# }
 //!
 //! ```
 //!
@@ -179,7 +177,7 @@
 //! use slack_morphism_models::*;
 //! use slack_morphism_models::blocks::*;
 //!
-//! async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+//!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
 //! use std::time::Duration;
 //! use rsb_derive::Builder;
@@ -226,8 +224,8 @@
 //! let post_chat_req =
 //!     SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
 //!
-//! Ok(())
-//! }
+//!# Ok(())
+//!# }
 //!
 //! ```
 //! Look other examples in examples/templates.rs

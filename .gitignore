@@ -68,3 +68,4 @@ data/**
 tmp/**
 **/QuickCheck.scala
 *.lock
+docs/output/**
