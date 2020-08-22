@@ -1,3 +1,9 @@
-# Summary
+# Table of Contents
 
-- [Chapter 1](./chapter_1.md)
+- [Intro and Motivation](./intro.md)
+- [Getting Started](./getting-started.md)
+- [Slack Web API client](./web-api.md)
+    - [Pagination sypport](./pagination-support.md)
+    - [Block Kit support](./block-kit-support.md)
+- [Events API](./events-api.md)
+- [Limitations](./limitations.md)

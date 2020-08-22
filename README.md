@@ -5,7 +5,7 @@
 Slack Morphism is a modern client library for Slack Web/Events API and Block Kit.
 
 ## Documentation
-https://docs.rs/slack_morphism
+Please follow to the official website: https://slack-rust.abdolence.dev
 
 ## Examples
 https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src

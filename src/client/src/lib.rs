@@ -2,33 +2,6 @@
 //!
 //! Slack Morphism is a modern client library for Slack Web/Events API and Block Kit.
 //!
-//! ## Intro and motivation
-//!
-//! - *Type-safety*: All of the models, API and Block Kit support in Slack Morphism is well-typed.
-//! - *Easy to use*: The library depends only on familiar for Rust developers principles and libraries like Serde, hyper, futures.
-//! - *Async*: Using latest Rust async/.await language features and libraries, the library provides access to all of the functions in asynchronous manner
-//!
-//! ## Getting Started
-//!
-//! Cargo.toml dependencies example:
-//!
-//! ```toml
-//! [dependencies]
-//! slack-morphism="0.2"
-//! slack-morphism-models="0.2"
-//! ```
-//!
-//! All imports you need:
-//!
-//! ```rust
-//! use slack_morphism::*; // access to network/client functions
-//! use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
-//! use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
-//! use slack_morphism_models::*; // common Slack models like SlackUser, etc and macros
-//! use slack_morphism_models::blocks::*; // Slack Block Kit models
-//! use slack_morphism_models::events::*; // Slack Events Models
-//! ```
-//!
 //! ## Slack Web API client
 //!
 //! ### Create a client instance:
@@ -83,153 +56,6 @@
 //!
 //! ```
 //!
-//! ### Pagination support
-//! Some Web API methods defines cursors and pagination, to give you an ability to load a lot of data continually
-//! (using batching and continually making many requests).
-//!
-//! Examples: `conversations.history`, `conversations.list`, `users.list`, ...
-//!
-//! To help with those methods Slack Morphism provides additional a “scroller” implementation,
-//! which deal with all scrolling/batching requests for you.
-//!
-//! For example for `users.list`:
-//!
-//! ```rust
-//!
-//! use slack_morphism::*;
-//! use slack_morphism::api::*;
-//! use slack_morphism_models::*;
-//! use std::time::Duration;
-//!
-//!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!
-//! let client = SlackClient::new();
-//! let token_value: SlackApiTokenValue = "xoxb-89.....".into();
-//! let token: SlackApiToken = SlackApiToken::new(token_value);
-//! let session = client.open_session(&token);
-//!
-//! // Create a first request and specify a batch limit:
-//! let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(5);
-//!
-//! // Create a scroller from this request
-//! let scroller = scroller_req.scroller();
-//!
-//! // Option 1: Create a Rust Futures Stream from this scroller and use it
-//! use futures::stream::BoxStream;
-//! use futures::TryStreamExt;
-//!
-//! let mut items_stream = scroller.to_items_stream(&session);
-//! while let Some(items) = items_stream.try_next().await? {
-//!     println!("users batch: {:#?}", items);
-//! }
-//!
-//! // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
-//! let collected_members: Vec<SlackUser> = scroller
-//!     .collect_items_stream(&session, Duration::from_millis(1000))
-//!     .await?;
-//!# Ok(())
-//!# }
-//!
-//! ```
-//!
-//! ### Block Kit support
-//!
-//! To support Slack Block Kit rich messages and views, the library provides:
-//! - Well-typed models
-//! - Macros to help build blocks, block elements
-//!
-//! Let’s take some very simple block example:
-//!
-//! ```json
-//! {
-//!   "blocks": [
-//!       {
-//!         "type": "section",
-//!         "text": {
-//!             "type": "mrkdwn",
-//!             "text": "A message *with some bold text* and _some italicized text_."
-//!         }
-//!       }
-//!   ]
-//! }
-//! ```
-//!
-//! Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:
-//!
-//! ```rust
-//! use slack_morphism_models::*;
-//! use slack_morphism_models::blocks::*;
-//!
-//! let blocks : Vec<SlackBlock> = slack_blocks![
-//!  some_into(
-//!     SlackSectionBlock::new()
-//!         .with_text(md!("A message *with some bold text* and _some italicized text_."))
-//!  )
-//! ];
-//! ```
-//!
-//! Let’s look at another more complex example for welcoming message:
-//!
-//! ```rust
-//!
-//! use slack_morphism::*;
-//! use slack_morphism::api::*;
-//! use slack_morphism_models::*;
-//! use slack_morphism_models::blocks::*;
-//!
-//!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-//!
-//! use std::time::Duration;
-//! use rsb_derive::Builder;
-//!
-//! let client = SlackClient::new();
-//! let token_value: SlackApiTokenValue = "xoxb-89.....".into();
-//! let token: SlackApiToken = SlackApiToken::new(token_value);
-//! let session = client.open_session(&token);
-//!
-//! // Our welcome message params as a struct
-//! #[derive(Debug, Clone, Builder)]
-//! pub struct WelcomeMessageTemplateParams {
-//!     pub user_id: SlackUserId,
-//! }
-//!
-//! // Define our welcome message template using block macros, a trait and models from the library
-//! impl SlackMessageTemplate for WelcomeMessageTemplateParams {
-//!     fn render_template(&self) -> SlackMessageContent {
-//!         SlackMessageContent::new()
-//!             .with_text(format!("Hey {}", self.user_id.to_slack_format()))
-//!             .with_blocks(slack_blocks![
-//!                 some_into(
-//!                     SlackSectionBlock::new()
-//!                         .with_text(md!("Hey {}", self.user_id.to_slack_format()))
-//!                 ),
-//!                 some_into(SlackDividerBlock::new()),
-//!                 some_into(SlackImageBlock::new(
-//!                     "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
-//!                     "Test Image".into()
-//!                 )),
-//!                 some_into(SlackActionsBlock::new(slack_blocks![some_into(
-//!                     SlackBlockButtonElement::new(
-//!                         "simple-message-button".into(),
-//!                         pt!("Simple button text")
-//!                     )
-//!                 )]))
-//!             ])
-//!     }
-//! }
-//!
-//! // Use it
-//! let message = WelcomeMessageTemplateParams::new("some-slack-uid".into());
-//!
-//! let post_chat_req =
-//!     SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
-//!
-//!# Ok(())
-//!# }
-//!
-//! ```
-//! Look other examples in examples/templates.rs
-//!
 //! ## Events API and OAuth support
 //!
 //! The library provides route implementation in `SlackClientEventsListener` based on Hyper/Tokio for:
@@ -246,12 +72,9 @@
 //!
 //! Look at the examples/test_server sources for the details.
 //!
+//! # Docs
 //!
-//! ## Limitations
-//!
-//! Slack Morphism doesn't provide:
-//! - RTM API (the usage of which is slowly declining in favour of Events API)
-//! - Legacy Web/Events API methods and models (like Slack Message attachments, which should be replaced with Slack Blocks)
+//! Please follow to the official website: https://slack-rust.abdolence.dev
 //!
 
 pub mod api;
