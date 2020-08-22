@@ -38,7 +38,8 @@ where
     move |req: Request<Body>| route(req, default.clone()).boxed()
 }
 
-pub type ErrorHandler = Box<fn(Box<dyn std::error::Error + Send + Sync + 'static>, Arc<SlackClient>)>;
+pub type ErrorHandler =
+    Box<fn(Box<dyn std::error::Error + Send + Sync + 'static>, Arc<SlackClient>)>;
 
 #[derive(Clone)]
 pub struct SlackClientEventsListener {

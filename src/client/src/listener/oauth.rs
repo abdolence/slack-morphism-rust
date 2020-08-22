@@ -4,7 +4,7 @@ use crate::api::*;
 use crate::errors::*;
 use crate::{SlackClient, SlackClientHttpApi};
 
-use crate::listener::{SlackClientEventsListener, ErrorHandler};
+use crate::listener::{ErrorHandler, SlackClientEventsListener};
 use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response};
