@@ -1,4 +1,5 @@
 [![Cargo](https://img.shields.io/crates/v/slack_morphism.svg)](https://crates.io/crates/slack_morphism)
+![tests and formatting](https://github.com/abdolence/slack-morphism-rust/workflows/tests%20&amp;%20formatting/badge.svg)
 
 # Slack Morphism for Rust
 
