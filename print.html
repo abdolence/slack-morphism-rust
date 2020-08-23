@@ -386,7 +386,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 <span class="boring">}
 </span></code></pre></pre>
 <p>Look other examples in examples/templates.rs.</p>
-<h2><a class="header" href="#events-api-and-oauth-support" id="events-api-and-oauth-support">Events API and OAuth support</a></h2>
+<h1><a class="header" href="#events-api-and-oauth" id="events-api-and-oauth">Events API and OAuth</a></h1>
 <p>The library provides route implementation in <code>SlackClientEventsListener</code> based on Hyper/Tokio for:</p>
 <ul>
 <li>Push Events</li>
@@ -395,10 +395,161 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 <li>OAuth v2 redirects and client functions</li>
 </ul>
 <p>You can chain all of the routes using <code>chain_service_routes_fn</code> from the library.</p>
-<p>Also the library provides Slack events signature verifier (<code>SlackEventSignatureVerifier</code>)
-(which is already integrated in the routes implementation for you).
-All you need is provide your client id and secret configuration to route implementation.</p>
-<p>Look at the examples/test_server sources for the details.</p>
+<h2><a class="header" href="#hyper-configuration" id="hyper-configuration">Hyper configuration</a></h2>
+<p>In order to use Events API/OAuth you need to configure Hyper HTTP server. 
+There is nothing special about how to do that, and you can use <a href="https://hyper.rs/">the official hyper docs</a>.
+This is just merely a quick example how to use it with Slack Morphism routes.</p>
+<p>To create a server, you need hyper <code>make_service_fn</code> and <code>service_fn</code>.</p>
+<h2><a class="header" href="#example" id="example">Example</a></h2>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>use slack_morphism::api::*;
+use slack_morphism::listener::*;
+use slack_morphism::*;
+use slack_morphism_models::*;
+
+// Hyper imports
+use hyper::service::{make_service_fn, service_fn};
+use hyper::{Body, Request, Response};
+
+// For logging
+use log::*;
+
+async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
+    info!(&quot;Loading server: {}&quot;, addr);
+
+    // This is our default HTTP route when Slack routes didn't handle incoming request (different/other path).
+    async fn your_others_routes(
+        _req: Request&lt;Body&gt;,
+    ) -&gt; Result&lt;Response&lt;Body&gt;, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+        Response::builder()
+            .body(&quot;Hey, this is a default users route handler&quot;.into())
+            .map_err(|e| e.into())
+    }
+   
+    // Our error handler for Slack Events API
+    fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, _client: Arc&lt;SlackClient&gt;) {
+        error!(&quot;Slack Events error: {:#?}&quot;, err);
+    }
+
+    // We need also a client instance. `Arc` used here because we would like 
+    // to share the the same client for all of the requests and all hyper threads
+    let client: Arc&lt;SlackClient&gt; = Arc::new(SlackClient::new());
+
+    // In this example we're going to use all of the events handlers, but
+    // you don't have to.
+
+    // Our Slack OAuth handler with a token response after installation
+    async fn slack_oauth_install_function(
+        resp: SlackOAuthV2AccessTokenResponse,
+        _client: Arc&lt;SlackClient&gt;,
+    ) {
+        println!(&quot;{:#?}&quot;, resp);
+    }
+
+    // Push events handler
+    async fn slack_push_events_function(event: SlackPushEvent, _client: Arc&lt;SlackClient&gt;) {
+        println!(&quot;{:#?}&quot;, event);
+    }
+
+    // Interaction events handler
+    async fn slack_interaction_events_function(event: SlackInteractionEvent, _client: Arc&lt;SlackClient&gt;) {
+        println!(&quot;{:#?}&quot;, event);
+    }
+
+    // Commands events handler
+    async fn slack_command_events_function(
+        event: SlackCommandEvent,
+        _client: Arc&lt;SlackClient&gt;,
+    ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+        println!(&quot;{:#?}&quot;, event);
+        Ok(SlackCommandEventResponse::new(
+            SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+        ))
+    }
+
+    // Now we need some configuration for our Slack listener routes.
+    // You can additionally configure HTTP route paths using theses configs,
+    // but for simplicity we will skip that part here and configure only required parameters.
+    let oauth_listener_config = Arc::new(SlackOAuthListenerConfig::new(
+        std::env::var(&quot;SLACK_CLIENT_ID&quot;)?,
+        std::env::var(&quot;SLACK_CLIENT_SECRET&quot;)?,
+        std::env::var(&quot;SLACK_BOT_SCOPE&quot;)?,
+        std::env::var(&quot;SLACK_REDIRECT_HOST&quot;)?,
+    ));
+
+    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(std::env::var(
+        &quot;SLACK_SIGNING_SECRET&quot;,
+    )?));
+
+    let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
+        std::env::var(&quot;SLACK_SIGNING_SECRET&quot;)?,
+    ));
+
+    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(std::env::var(
+        &quot;SLACK_SIGNING_SECRET&quot;,
+    )?));
+   
+    let make_svc = make_service_fn(move |_| {
+        // Because of threading model you have to create copies of configs.
+        let thread_oauth_config = oauth_listener_config.clone();
+        let thread_push_events_config = push_events_config.clone();
+        let thread_interaction_events_config = interactions_events_config.clone();
+        let thread_command_events_config = command_events_config.clone();
+ 
+        // Creating listener
+        let listener =
+            SlackClientEventsListener::new(client.clone()).with_error_handler(slack_listener_error_handler);
+        
+        // Chaining all of the possible routes for Slack.
+        // `chain_service_routes_fn` is an auxiliary function from Slack Morphism. 
+        async move {
+            let routes = chain_service_routes_fn(
+                listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
+                chain_service_routes_fn(
+                    listener.push_events_service_fn(
+                        thread_push_events_config,
+                        slack_push_events_function,
+                    ),
+                    chain_service_routes_fn(
+                        listener.interaction_events_service_fn(
+                            thread_interaction_events_config,
+                            slack_interaction_events_function,
+                        ),
+                        chain_service_routes_fn(
+                            listener.command_events_service_fn(
+                                thread_command_events_config,
+                                slack_command_events_function,
+                            ),
+                            your_others_routes,
+                        ),
+                    ),
+                ),
+            );
+
+            Ok::&lt;_, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt;(service_fn(routes))
+        }
+
+    )};
+
+    // Starting a server with listener routes
+    let server = hyper::server::Server::bind(&amp;addr).serve(make_svc);
+    server.await.map_err(|e| {
+        error!(&quot;Server error: {}&quot;, e);
+        e.into()
+    })
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Also the library provides Slack events signature verifier (<code>SlackEventSignatureVerifier</code>),
+which is already integrated in the routes implementation for you and you don't need to use 
+it directly. All you need is provide your client id and secret configuration 
+to route implementation.</p>
+<p>Look at the examples/test_server sources for a complete ready to use example.</p>
 <h1><a class="header" href="#limitations" id="limitations">Limitations</a></h1>
 <p>Slack Morphism doesn't provide:</p>
 <ul>
