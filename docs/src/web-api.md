@@ -50,4 +50,3 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 ```
-
