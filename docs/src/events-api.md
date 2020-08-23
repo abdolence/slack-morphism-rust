@@ -163,5 +163,5 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
  it directly. All you need is provide your client id and secret configuration 
  to route implementation.
 
- Look at the examples/test_server sources for a complete ready to use example.
+ Look at the [examples/test_server](https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src) sources for a complete ready to use example.
  
