@@ -183,6 +183,13 @@ slack-morphism-models=&quot;0.2&quot;
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
+</span>use slack_morphism::prelude::*;
+<span class="boring">}
+</span></code></pre></pre>
+<p>or more granularly:</p>
+<pre><pre class="playground"><code class="language-rust edition2018">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
 </span>use slack_morphism::*; // access to network/client functions
 use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
 use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
