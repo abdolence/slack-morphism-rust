@@ -1,7 +1,4 @@
-use slack_morphism::api::*;
-use slack_morphism::listener::*;
-use slack_morphism::*;
-use slack_morphism_models::*;
+use slack_morphism::prelude::*;
 
 use futures::stream::BoxStream;
 use futures::TryStreamExt;

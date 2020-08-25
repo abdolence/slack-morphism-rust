@@ -11,6 +11,11 @@ slack-morphism-models="0.2"
 All imports you need:
 
 ```rust
+use slack_morphism::prelude::*;
+```
+
+or more granularly:
+```rust
 use slack_morphism::*; // access to network/client functions
 use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
 use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
