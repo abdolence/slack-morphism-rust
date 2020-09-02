@@ -16,7 +16,7 @@ use templates::*;
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new();
-    let token_value: SlackApiTokenValue = std::env::var("SLACK_TEST_TOKEN")?.into();
+    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
     println!("{:#?}", session);
@@ -102,21 +102,21 @@ async fn test_server(
     }
 
     let oauth_listener_config = Arc::new(SlackOAuthListenerConfig::new(
-        std::env::var("SLACK_CLIENT_ID")?,
-        std::env::var("SLACK_CLIENT_SECRET")?,
-        std::env::var("SLACK_BOT_SCOPE")?,
-        std::env::var("SLACK_REDIRECT_HOST")?,
+        config_env_var("SLACK_CLIENT_ID")?,
+        config_env_var("SLACK_CLIENT_SECRET")?,
+        config_env_var("SLACK_BOT_SCOPE")?,
+        config_env_var("SLACK_REDIRECT_HOST")?,
     ));
 
-    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(std::env::var(
+    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(config_env_var(
         "SLACK_SIGNING_SECRET",
     )?));
 
     let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
-        std::env::var("SLACK_SIGNING_SECRET")?,
+        config_env_var("SLACK_SIGNING_SECRET")?,
     ));
 
-    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(std::env::var(
+    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(config_env_var(
         "SLACK_SIGNING_SECRET",
     )?));
 
@@ -194,6 +194,10 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .apply()?;
 
     Ok(())
+}
+
+pub fn config_env_var(name: &str) -> Result<String, String> {
+    std::env::var(name).map_err(|e| format!("{}: {}", name, e))
 }
 
 #[tokio::main]

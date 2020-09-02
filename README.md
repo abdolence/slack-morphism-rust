@@ -11,6 +11,11 @@ Please follow to the official website: https://slack-rust.abdolence.dev
 ## Examples
 https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src
 
+The example bot requires to work the following environment variables (from your Slack bot profile in api.slack.com):
+- SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_BOT_SCOPE, SLACK_REDIRECT_HOST - for OAuth
+- SLACK_SIGNING_SECRET for all routes
+
+
 ## Licence
 Apache Software License (ASL)
 
