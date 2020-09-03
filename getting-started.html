@@ -170,24 +170,16 @@ slack-morphism=&quot;0.2&quot;
 slack-morphism-models=&quot;0.2&quot;
 </code></pre>
 <p>All imports you need:</p>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use slack_morphism::prelude::*;
-<span class="boring">}
-</span></code></pre></pre>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+</code></pre>
 <p>or more granularly:</p>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use slack_morphism::*; // access to network/client functions
+<pre><code class="language-rust noplaypen">use slack_morphism::*; // access to network/client functions
 use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
 use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
 use slack_morphism_models::*; // common Slack models like SlackUser, etc and macros
 use slack_morphism_models::blocks::*; // Slack Block Kit models
 use slack_morphism_models::events::*; // Slack Events Models
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 
                     </main>
 
