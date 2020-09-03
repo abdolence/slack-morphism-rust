@@ -183,10 +183,7 @@
 }
 </code></pre>
 <p>Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:</p>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use slack_morphism_models::*;
+<pre><code class="language-rust noplaypen">use slack_morphism_models::*;
 use slack_morphism_models::blocks::*;
 
 let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
@@ -195,14 +192,10 @@ let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
         .with_text(md!(&quot;A message *with some bold text* and _some italicized text_.&quot;))
  )
 ];
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <p>Let’s look at another more complex example for welcoming message:</p>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span>
-<span class="boring">fn main() {
-</span>use slack_morphism::*;
+<pre><code class="language-rust noplaypen">
+use slack_morphism::*;
 use slack_morphism::api::*;
 use slack_morphism_models::*;
 use slack_morphism_models::blocks::*;
@@ -256,8 +249,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     
     Ok(())
 }
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <p>Look other examples in examples/templates.rs.</p>
 
                     </main>
