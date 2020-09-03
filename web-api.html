@@ -165,13 +165,9 @@
                     <main>
                         <h1><a class="header" href="#slack-web-api-client" id="slack-web-api-client">Slack Web API client</a></h1>
 <h2><a class="header" href="#create-a-client-instance" id="create-a-client-instance">Create a client instance</a></h2>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use slack_morphism::*;
+<pre><code class="language-rust noplaypen">use slack_morphism::*;
 let client = SlackClient::new();
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <h3><a class="header" href="#make-web-api-methods-calls" id="make-web-api-methods-calls">Make Web API methods calls</a></h3>
 <p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
 you need a Slack token to make a call.
@@ -179,11 +175,8 @@ For simple bots you can have it in your config files, or you can obtain
 workspace tokens using Slack OAuth.</p>
 <p>In the example below, we’re using a hardcoded Slack token, but don’t do that for your production bots and apps.
 You should securely and properly store all of Slack tokens.</p>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span>
-<span class="boring">fn main() {
-</span>use slack_morphism::*;
+<pre><code class="language-rust noplaypen">
+use slack_morphism::*;
 use slack_morphism::api::*;
 use slack_morphism_models::*;
 
@@ -213,8 +206,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 
     Ok(())
 }
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 
                     </main>
 
