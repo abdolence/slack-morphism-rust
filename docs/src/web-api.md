@@ -2,7 +2,7 @@
 
 ## Create a client instance
 
-```rust
+```rust,noplaypen
 use slack_morphism::*;
 let client = SlackClient::new();
 ```
@@ -17,7 +17,7 @@ workspace tokens using Slack OAuth.
 In the example below, we’re using a hardcoded Slack token, but don’t do that for your production bots and apps.
 You should securely and properly store all of Slack tokens.
 
-```rust
+```rust,noplaypen
 
 use slack_morphism::*;
 use slack_morphism::api::*;
