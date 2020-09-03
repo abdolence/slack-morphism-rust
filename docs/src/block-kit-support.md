@@ -22,7 +22,7 @@ Let’s take some very simple block example:
 
 Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:
 
-```rust
+```rust,noplaypen
 use slack_morphism_models::*;
 use slack_morphism_models::blocks::*;
 
@@ -36,7 +36,7 @@ let blocks : Vec<SlackBlock> = slack_blocks![
 
 Let’s look at another more complex example for welcoming message:
 
-```rust
+```rust,noplaypen
 
 use slack_morphism::*;
 use slack_morphism::api::*;
