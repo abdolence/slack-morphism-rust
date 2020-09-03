@@ -15,6 +15,13 @@ The example bot requires to work the following environment variables (from your 
 - SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_BOT_SCOPE, SLACK_REDIRECT_HOST - for OAuth
 - SLACK_SIGNING_SECRET for all routes
 
+Routes for this example are available on http://<your-host>:8080:
+
+- /auth/install - to begin OAuth installation
+- /auth/callback - a callback endpoint for Slack OAuth profile config
+- /push - for Slack Push Events
+- /interaction - for Slack Interaction Events
+- /command - for Slack Command Events
 
 ## Licence
 Apache Software License (ASL)
