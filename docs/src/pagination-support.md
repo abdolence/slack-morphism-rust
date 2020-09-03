@@ -9,7 +9,7 @@ which deal with all scrolling/batching requests for you.
 
 For example for `users.list`:
 
-```rust
+```rust,noplaypen
 
 use slack_morphism::*;
 use slack_morphism::api::*;
