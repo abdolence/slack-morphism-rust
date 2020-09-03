@@ -400,11 +400,8 @@ There is nothing special about how to do that, and you can use <a href="https://
 This is just merely a quick example how to use it with Slack Morphism routes.</p>
 <p>To create a server, you need hyper <code>make_service_fn</code> and <code>service_fn</code>.</p>
 <h2><a class="header" href="#example" id="example">Example</a></h2>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span>
-<span class="boring">fn main() {
-</span>use slack_morphism::api::*;
+<pre><code class="language-rust noplaypen">
+use slack_morphism::api::*;
 use slack_morphism::listener::*;
 use slack_morphism::*;
 use slack_morphism_models::*;
@@ -542,8 +539,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         e.into()
     })
 }
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <p>Also the library provides Slack events signature verifier (<code>SlackEventSignatureVerifier</code>),
 which is already integrated in the routes implementation for you and you don't need to use 
 it directly. All you need is provide your client id and secret configuration 
