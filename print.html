@@ -249,11 +249,8 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 <p>To help with those methods Slack Morphism provides additional a “scroller” implementation,
 which deal with all scrolling/batching requests for you.</p>
 <p>For example for <code>users.list</code>:</p>
-<pre><pre class="playground"><code class="language-rust edition2018">
-<span class="boring">#![allow(unused)]
-</span>
-<span class="boring">fn main() {
-</span>use slack_morphism::*;
+<pre><code class="language-rust noplaypen">
+use slack_morphism::*;
 use slack_morphism::api::*;
 use slack_morphism_models::*;
 use std::time::Duration;
@@ -287,8 +284,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     Ok(())
 }
 
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <h1><a class="header" href="#block-kit-support" id="block-kit-support">Block Kit support</a></h1>
 <p>To support Slack Block Kit rich messages and views, the library provides:</p>
 <ul>
