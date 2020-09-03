@@ -16,7 +16,7 @@ This is just merely a quick example how to use it with Slack Morphism routes.
 To create a server, you need hyper `make_service_fn` and `service_fn`.
 
 ## Example
-```rust
+```rust,noplaypen
 
 use slack_morphism::api::*;
 use slack_morphism::listener::*;
