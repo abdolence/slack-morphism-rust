@@ -204,18 +204,18 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 
     use std::time::Duration;
     use rsb_derive::Builder;
-    
+
     let client = SlackClient::new();
     let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&amp;token);
-    
+
     // Our welcome message params as a struct
     #[derive(Debug, Clone, Builder)]
     pub struct WelcomeMessageTemplateParams {
         pub user_id: SlackUserId,
     }
-    
+
     // Define our welcome message template using block macros, a trait and models from the library
     impl SlackMessageTemplate for WelcomeMessageTemplateParams {
         fn render_template(&amp;self) -&gt; SlackMessageContent {
@@ -240,13 +240,13 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
                 ])
         }
     }
-    
+
     // Use it
     let message = WelcomeMessageTemplateParams::new(&quot;some-slack-uid&quot;.into());
-    
+
     let post_chat_req =
         SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(), message.render_template());
-    
+
     Ok(())
 }
 </code></pre>
