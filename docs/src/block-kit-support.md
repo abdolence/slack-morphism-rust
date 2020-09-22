@@ -1,6 +1,7 @@
 # Block Kit support
 
 To support Slack Block Kit rich messages and views, the library provides:
+
 - Well-typed models
 - Macros to help build blocks, block elements
 
@@ -47,18 +48,18 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     use std::time::Duration;
     use rsb_derive::Builder;
-    
+
     let client = SlackClient::new();
     let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
-    
+
     // Our welcome message params as a struct
     #[derive(Debug, Clone, Builder)]
     pub struct WelcomeMessageTemplateParams {
         pub user_id: SlackUserId,
     }
-    
+
     // Define our welcome message template using block macros, a trait and models from the library
     impl SlackMessageTemplate for WelcomeMessageTemplateParams {
         fn render_template(&self) -> SlackMessageContent {
@@ -83,14 +84,15 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 ])
         }
     }
-    
+
     // Use it
     let message = WelcomeMessageTemplateParams::new("some-slack-uid".into());
-    
+
     let post_chat_req =
         SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
-    
+
     Ok(())
 }
 ```
+
 Look other examples in examples/templates.rs.
