@@ -25,7 +25,7 @@ serde_with = "1.4"
 rvstruct = "0.2"
 rsb_derive = "0.3"
 hyper = "0.13"
-tokio = { version = "0.2", features = ["full"] }
+tokio = { version = "0.3", features = ["full"] }
 hyper-tls = "0.4"
 url = "2.1"
 mime = "0.3"
