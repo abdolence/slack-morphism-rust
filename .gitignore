@@ -69,3 +69,5 @@ tmp/**
 **/QuickCheck.scala
 *.lock
 docs/output/**
+
+.vim/**
