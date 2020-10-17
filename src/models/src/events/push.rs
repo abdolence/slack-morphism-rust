@@ -4,6 +4,7 @@ use serde_with::skip_serializing_none;
 
 use crate::blocks::*;
 use crate::common::*;
+use crate::events::*;
 use crate::messages::*;
 
 #[allow(clippy::large_enum_variant)]
@@ -40,7 +41,9 @@ pub struct SlackEventCallback {
     pub event: SlackEventCallbackBody,
     pub event_id: SlackEventId,
     pub event_time: SlackDateTime,
+    pub event_context: SlackEventContext,
     pub authed_users: Option<Vec<SlackUserId>>,
+    pub authorizations: Option<Vec<SlackEventAuthorization>>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
