@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::client::*;
+use crate::token::*;
 use hyper::Body;
 use slack_morphism_models::*;
 
@@ -50,10 +51,10 @@ pub struct SlackOAuthV2AccessTokenRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackOAuthV2AccessTokenResponse {
     pub access_token: String,
-    pub token_type: String,
-    pub scope: String,
-    pub bot_user_id: Option<String>,
-    pub app_id: String,
+    pub token_type: SlackApiTokenType,
+    pub scope: SlackApiTokenScope,
+    pub bot_user_id: Option<SlackUserId>,
+    pub app_id: SlackAppId,
     pub team: SlackTeamInfo,
     pub authed_user: SlackOAuthV2AuthedUser,
     pub incoming_webhook: Option<SlackOAuthIncomingWebHook>,
@@ -62,10 +63,10 @@ pub struct SlackOAuthV2AccessTokenResponse {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackOAuthV2AuthedUser {
-    pub id: String,
-    pub scope: Option<String>,
+    pub id: SlackUserId,
+    pub scope: Option<SlackApiTokenScope>,
     pub access_token: Option<String>,
-    pub token_type: Option<String>,
+    pub token_type: Option<SlackApiTokenType>,
 }
 
 #[skip_serializing_none]
