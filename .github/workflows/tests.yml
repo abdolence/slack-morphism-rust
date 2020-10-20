@@ -5,7 +5,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: icepuma/rust-action@master
         with:
           args: cargo fmt -- --check && cargo clippy -- -Dwarnings && cargo test
