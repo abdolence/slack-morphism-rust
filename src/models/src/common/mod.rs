@@ -117,8 +117,8 @@ impl ToString for SlackConversationType {
         match self {
             SlackConversationType::IM => "im".into(),
             SlackConversationType::MPIM => "mpim".into(),
-            SlackConversationType::PRIVATE => "private".into(),
-            SlackConversationType::PUBLIC => "public".into(),
+            SlackConversationType::PRIVATE => "private_channel".into(),
+            SlackConversationType::PUBLIC => "public_channel".into(),
         }
     }
 }
