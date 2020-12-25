@@ -9,13 +9,13 @@ use hyper::body::HttpBody;
 use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
+use hyper_rustls::HttpsConnector;
 use lazy_static::*;
 use mime::Mime;
 use rvstruct::ValueStruct;
 use std::collections::HashMap;
 use std::io::Read;
 use url::Url;
-use hyper_rustls::HttpsConnector;
 
 #[derive(Debug)]
 pub struct SlackClient {
@@ -59,7 +59,7 @@ impl SlackClientHttpApi {
 
     fn new() -> Self {
         let https_connector = HttpsConnector::new();
-        let http_client= Client::builder().build::<_, hyper::Body>(https_connector);
+        let http_client = Client::builder().build::<_, hyper::Body>(https_connector);
         Self {
             connector: http_client,
         }
