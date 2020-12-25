@@ -199,7 +199,8 @@ where
         session: &'a SlackClientSession<'s>,
         throttle_duration: Duration,
     ) -> BoxFuture<'a, ClientResult<Vec<Self::ResponseItemType>>> {
-        tokio::time::throttle(throttle_duration, self.to_stream(session))
+        self.to_stream(session)
+            .throttle(throttle_duration)
             .map_ok(|rs| {
                 rs.scrollable_items()
                     .cloned()
