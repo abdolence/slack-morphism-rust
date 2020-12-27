@@ -80,7 +80,7 @@ impl SlackClientEventsListener {
 
                                 payload.and_then(|payload_value| {
                                     serde_json::from_str::<SlackInteractionEvent>(payload_value)
-                                        .map_err(|e| e.into())
+                                        .map_err(|e| SlackClientProtocolError{ json_error: e, http_response_body: payload_value.clone() }.into())
                                 })
                             })
                             .and_then(|event| async move {

@@ -4,13 +4,13 @@ use crate::errors;
 use crate::listener::*;
 use crate::token::*;
 
-use bytes::buf::BufExt as _;
+use bytes::Buf;
 use futures::future::TryFutureExt;
 use hyper::body::HttpBody;
 use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
-use hyper_tls::HttpsConnector;
+use hyper_rustls::HttpsConnector;
 use lazy_static::*;
 use mime::Mime;
 use rvstruct::ValueStruct;
@@ -59,9 +59,10 @@ impl SlackClientHttpApi {
     const SLACK_API_URI_STR: &'static str = "https://slack.com/api";
 
     fn new() -> Self {
-        let https_connector = HttpsConnector::new();
+        let https_connector = HttpsConnector::with_native_roots();
+        let http_client = Client::builder().build::<_, hyper::Body>(https_connector);
         Self {
-            connector: Client::builder().build(https_connector),
+            connector: http_client,
         }
     }
 
