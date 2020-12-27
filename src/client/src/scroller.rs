@@ -199,6 +199,7 @@ where
         session: &'a SlackClientSession<'s>,
         throttle_duration: Duration,
     ) -> BoxFuture<'a, ClientResult<Vec<Self::ResponseItemType>>> {
+        use tokio_stream::StreamExt;
         self.to_stream(session)
             .throttle(throttle_duration)
             .map_ok(|rs| {
