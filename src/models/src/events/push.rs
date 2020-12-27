@@ -41,7 +41,7 @@ pub struct SlackEventCallback {
     pub event: SlackEventCallbackBody,
     pub event_id: SlackEventId,
     pub event_time: SlackDateTime,
-    pub event_context: SlackEventContext,
+    pub event_context: Option<SlackEventContext>,
     pub authed_users: Option<Vec<SlackUserId>>,
     pub authorizations: Option<Vec<SlackEventAuthorization>>,
 }
