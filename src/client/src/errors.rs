@@ -10,7 +10,7 @@ pub enum SlackClientError {
     HttpError(SlackClientHttpError),
     EndOfStream(SlackClientEndOfStreamError),
     SystemError(SlackClientSystemError),
-    ProtocolError(SlackClientProtocolError)
+    ProtocolError(SlackClientProtocolError),
 }
 
 impl SlackClientError {
@@ -103,7 +103,6 @@ impl Display for SlackClientProtocolError {
 }
 
 impl std::error::Error for SlackClientProtocolError {}
-
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackClientSystemError {

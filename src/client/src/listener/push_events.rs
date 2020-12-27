@@ -1,5 +1,6 @@
 use rsb_derive::Builder;
 
+use crate::errors::SlackClientProtocolError;
 use crate::listener::signature_verifier::SlackEventSignatureVerifier;
 use crate::listener::SlackClientEventsListener;
 use crate::{SlackClient, SlackClientHttpApi};
@@ -10,7 +11,6 @@ use log::*;
 pub use slack_morphism_models::events::*;
 use std::future::Future;
 use std::sync::Arc;
-use crate::errors::SlackClientProtocolError;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackPushEventsListenerConfig {
@@ -63,8 +63,13 @@ impl SlackClientEventsListener {
                     (&Method::POST, url) if url == cfg.events_path => {
                         SlackClientHttpApi::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
-                                serde_json::from_str::<SlackPushEvent>(body.as_str())
-                                    .map_err(|e| SlackClientProtocolError{ json_error: e, http_response_body: body.clone() }.into())
+                                serde_json::from_str::<SlackPushEvent>(body.as_str()).map_err(|e| {
+                                    SlackClientProtocolError {
+                                        json_error: e,
+                                        http_response_body: body.clone(),
+                                    }
+                                    .into()
+                                })
                             })
                             .and_then(|event| async move {
                                 match event {
