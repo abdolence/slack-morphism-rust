@@ -44,12 +44,16 @@ use slack_morphism::api::*;
 use slack_morphism_models::*;
 use slack_morphism_models::blocks::*;
 
+use slack_morphism_hyper::*;
+
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     use std::time::Duration;
     use rsb_derive::Builder;
 
-    let client = SlackClient::new();
+    let hyper_connector = SlackClientHyperConnector::new();
+    let client = SlackClient::new(hyper_connector);
+
     let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);

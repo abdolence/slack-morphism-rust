@@ -23,9 +23,13 @@ use slack_morphism::*;
 use slack_morphism::api::*;
 use slack_morphism_models::*;
 
-async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+// Slack Morphism Hyper/Tokio support
+use slack_morphism_hyper::*;
 
-    let client = SlackClient::new();
+async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+   
+    let hyper_connector = SlackClientHyperConnector::new();
+    let client = SlackClient::new(hyper_connector);
     
     // Create our Slack API token
     let token_value: SlackApiTokenValue = "xoxb-89.....".into();
