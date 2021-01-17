@@ -1,12 +1,15 @@
 use crate::errors::*;
-use crate::{ClientResult, SlackClientSession};
+use crate::{ClientResult, SlackClientHttpConnector, SlackClientSession};
 
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 use futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
-use std::time::Duration;
+use std::marker::PhantomData;
 
-pub trait SlackApiResponseScroller {
+pub trait SlackApiResponseScroller<SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send + Sync,
+{
     type ResponseType;
     type CursorType;
     type ResponseItemType;
@@ -15,27 +18,24 @@ pub trait SlackApiResponseScroller {
 
     fn next_mut<'a, 's>(
         &'a mut self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>>;
 
     fn to_stream<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxStream<'a, ClientResult<Self::ResponseType>>;
 
     fn to_items_stream<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxStream<'a, ClientResult<Vec<Self::ResponseItemType>>>;
-
-    fn collect_items_stream<'a, 's>(
-        &'a self,
-        session: &'a SlackClientSession<'s>,
-        throttle_duration: Duration,
-    ) -> BoxFuture<'a, ClientResult<Vec<Self::ResponseItemType>>>;
 }
 
-pub trait SlackApiScrollableRequest {
+pub trait SlackApiScrollableRequest<SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType;
     type CursorType;
     type ResponseItemType;
@@ -44,6 +44,7 @@ pub trait SlackApiScrollableRequest {
         &'a self,
     ) -> Box<
         dyn SlackApiResponseScroller<
+                SCHC,
                 ResponseType = Self::ResponseType,
                 CursorType = Self::CursorType,
                 ResponseItemType = Self::ResponseItemType,
@@ -68,7 +69,7 @@ pub trait SlackApiScrollableRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>>;
 }
 
@@ -81,49 +82,55 @@ pub trait SlackApiScrollableResponse {
 }
 
 #[derive(Debug, Clone)]
-pub struct SlackApiResponseScrollerState<RQ, RS, CT, RIT>
+pub struct SlackApiResponseScrollerState<RQ, RS, CT, RIT, SCHC>
 where
-    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT, ResponseItemType = RIT>
+    RQ: SlackApiScrollableRequest<SCHC, ResponseType = RS, CursorType = CT, ResponseItemType = RIT>
         + Send
         + Sync
         + Clone,
     RS: SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
     CT: Send + Sync + Clone,
     RIT: Send + Sync + Clone,
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
 {
     pub request: RQ,
     pub last_response: Option<RS>,
     pub last_cursor: Option<CT>,
+    phantom: PhantomData<SCHC>,
 }
 
-impl<RQ, RS, CT, RIT> SlackApiResponseScrollerState<RQ, RS, CT, RIT>
+impl<RQ, RS, CT, RIT, SCHC> SlackApiResponseScrollerState<RQ, RS, CT, RIT, SCHC>
 where
-    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT, ResponseItemType = RIT>
+    RQ: SlackApiScrollableRequest<SCHC, ResponseType = RS, CursorType = CT, ResponseItemType = RIT>
         + Send
         + Sync
         + Clone,
     RS: SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
     CT: Send + Sync + Clone,
     RIT: Send + Sync + Clone,
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
 {
     pub fn new(request: &RQ) -> Self {
         Self {
             request: request.clone(),
             last_cursor: None,
             last_response: None,
+            phantom: PhantomData,
         }
     }
 }
 
-impl<RQ, RS, CT, RIT> SlackApiResponseScroller for SlackApiResponseScrollerState<RQ, RS, CT, RIT>
+impl<RQ, RS, CT, RIT, SCHC> SlackApiResponseScroller<SCHC>
+    for SlackApiResponseScrollerState<RQ, RS, CT, RIT, SCHC>
 where
-    RQ: SlackApiScrollableRequest<ResponseType = RS, CursorType = CT, ResponseItemType = RIT>
+    RQ: SlackApiScrollableRequest<SCHC, ResponseType = RS, CursorType = CT, ResponseItemType = RIT>
         + Send
         + Sync
         + Clone,
     RS: SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT> + Send + Sync + Clone,
     CT: Send + Sync + Clone,
     RIT: Send + Sync + Clone,
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone,
 {
     type ResponseType = RS;
     type CursorType = CT;
@@ -135,7 +142,7 @@ where
 
     fn next_mut<'a, 's>(
         &'a mut self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         let cursor = &self.last_cursor;
 
@@ -166,7 +173,7 @@ where
 
     fn to_stream<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxStream<'a, ClientResult<Self::ResponseType>> {
         let init_state = self.clone();
         let stream = futures_util::stream::unfold(init_state, move |mut state| async move {
@@ -183,7 +190,7 @@ where
 
     fn to_items_stream<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxStream<'a, ClientResult<Vec<Self::ResponseItemType>>> {
         self.to_stream(session)
             .map_ok(|rs| {
@@ -191,23 +198,6 @@ where
                     .cloned()
                     .collect::<Vec<Self::ResponseItemType>>()
             })
-            .boxed()
-    }
-
-    fn collect_items_stream<'a, 's>(
-        &'a self,
-        session: &'a SlackClientSession<'s>,
-        throttle_duration: Duration,
-    ) -> BoxFuture<'a, ClientResult<Vec<Self::ResponseItemType>>> {
-        use tokio_stream::StreamExt;
-        self.to_stream(session)
-            .throttle(throttle_duration)
-            .map_ok(|rs| {
-                rs.scrollable_items()
-                    .cloned()
-                    .collect::<Vec<Self::ResponseItemType>>()
-            })
-            .try_concat()
             .boxed()
     }
 }

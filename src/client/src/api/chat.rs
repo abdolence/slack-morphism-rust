@@ -8,13 +8,16 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::scroller::*;
-use crate::ClientResult;
 use crate::SlackClientSession;
+use crate::{ClientResult, SlackClientHttpConnector};
 use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
 use std::collections::HashMap;
 
-impl<'a> SlackClientSession<'a> {
+impl<'a, SCHC> SlackClientSession<'a, SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send,
+{
     ///
     /// https://api.slack.com/methods/chat.delete
     ///
@@ -298,7 +301,10 @@ pub struct SlackApiChatScheduledMessageInfo {
     pub date_created: SlackDateTime,
 }
 
-impl SlackApiScrollableRequest for SlackApiChatScheduledMessagesListRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiChatScheduledMessagesListRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiChatScheduledMessagesListResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackApiChatScheduledMessageInfo;
@@ -309,7 +315,7 @@ impl SlackApiScrollableRequest for SlackApiChatScheduledMessagesListRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.chat_scheduled_messages_list(&self).await }.boxed()
     }

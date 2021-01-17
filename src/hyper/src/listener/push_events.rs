@@ -1,9 +1,11 @@
-use rsb_derive::Builder;
+use crate::connector::SlackClientHyperConnector;
+use crate::listener::SlackClientEventsHyperListener;
 
-use crate::errors::SlackClientProtocolError;
-use crate::listener::signature_verifier::SlackEventSignatureVerifier;
-use crate::listener::SlackClientEventsListener;
-use crate::{SlackClient, SlackClientHttpApi};
+use slack_morphism::errors::*;
+use slack_morphism::listener::*;
+use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
+use slack_morphism::SlackClient;
+
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
@@ -12,18 +14,7 @@ pub use slack_morphism_models::events::*;
 use std::future::Future;
 use std::sync::Arc;
 
-#[derive(Debug, PartialEq, Clone, Builder)]
-pub struct SlackPushEventsListenerConfig {
-    pub events_signing_secret: String,
-    #[default = "SlackPushEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
-    pub events_path: String,
-}
-
-impl SlackPushEventsListenerConfig {
-    const DEFAULT_EVENTS_URL_VALUE: &'static str = "/push";
-}
-
-impl SlackClientEventsListener {
+impl SlackClientEventsHyperListener {
     pub fn push_events_service_fn<'a, D, F, I, IF>(
         &self,
         config: Arc<SlackPushEventsListenerConfig>,
@@ -43,14 +34,18 @@ impl SlackClientEventsListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(SlackPushEvent, Arc<SlackClient>) -> IF + 'static + Send + Sync + Clone,
+        I: Fn(SlackPushEvent, Arc<SlackClient<SlackClientHyperConnector>>) -> IF
+            + 'static
+            + Send
+            + Sync
+            + Clone,
         IF: Future<Output = ()> + 'static + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
         );
-        let client = self.client.clone();
-        let error_handler = self.error_handler.clone();
+        let client = self.environment.client.clone();
+        let error_handler = self.environment.error_handler.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
@@ -61,7 +56,7 @@ impl SlackClientEventsListener {
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
-                        SlackClientHttpApi::decode_signed_response(req, &sign_verifier)
+                        SlackClientHyperConnector::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 serde_json::from_str::<SlackPushEvent>(body.as_str()).map_err(|e| {
                                     SlackClientProtocolError {

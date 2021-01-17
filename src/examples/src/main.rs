@@ -1,4 +1,5 @@
 use slack_morphism::prelude::*;
+use slack_morphism_hyper::*;
 
 use futures::stream::BoxStream;
 use futures::TryStreamExt;
@@ -15,7 +16,8 @@ use templates::*;
 
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new();
+    let hyper_connector = SlackClientHyperConnector::new();
+    let client = SlackClient::new(hyper_connector);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
@@ -60,22 +62,25 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 async fn test_oauth_install_function(
     resp: SlackOAuthV2AccessTokenResponse,
-    _client: Arc<SlackClient>,
+    _client: Arc<SlackHyperClient>,
 ) {
     println!("{:#?}", resp);
 }
 
-async fn test_push_events_function(event: SlackPushEvent, _client: Arc<SlackClient>) {
+async fn test_push_events_function(event: SlackPushEvent, _client: Arc<SlackHyperClient>) {
     println!("{:#?}", event);
 }
 
-async fn test_interaction_events_function(event: SlackInteractionEvent, _client: Arc<SlackClient>) {
+async fn test_interaction_events_function(
+    event: SlackInteractionEvent,
+    _client: Arc<SlackHyperClient>,
+) {
     println!("{:#?}", event);
 }
 
 async fn test_command_events_function(
     event: SlackCommandEvent,
-    _client: Arc<SlackClient>,
+    _client: Arc<SlackHyperClient>,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
     Ok(SlackCommandEventResponse::new(
@@ -83,12 +88,15 @@ async fn test_command_events_function(
     ))
 }
 
-fn test_error_handler(err: Box<dyn std::error::Error + Send + Sync>, _client: Arc<SlackClient>) {
+fn test_error_handler(
+    err: Box<dyn std::error::Error + Send + Sync>,
+    _client: Arc<SlackHyperClient>,
+) {
     println!("{:#?}", err);
 }
 
 async fn test_server(
-    client: Arc<SlackClient>,
+    client: Arc<SlackHyperClient>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
@@ -125,8 +133,9 @@ async fn test_server(
         let thread_push_events_config = push_events_config.clone();
         let thread_interaction_events_config = interactions_events_config.clone();
         let thread_command_events_config = command_events_config.clone();
-        let listener =
-            SlackClientEventsListener::new(client.clone()).with_error_handler(test_error_handler);
+        let listener_environment = SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler);
+        let listener = SlackClientEventsHyperListener::new(listener_environment);
         async move {
             let routes = chain_service_routes_fn(
                 listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
@@ -203,7 +212,8 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     init_log()?;
-    let client: Arc<SlackClient> = Arc::new(SlackClient::new());
+    let hyper_connector = SlackClientHyperConnector::new();
+    let client: Arc<SlackHyperClient> = Arc::new(SlackClient::new(hyper_connector));
     test_server(client.clone()).await?;
 
     Ok(())

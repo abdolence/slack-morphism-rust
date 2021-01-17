@@ -1,4 +1,3 @@
-use hyper::StatusCode;
 use rsb_derive::Builder;
 use std::error::Error;
 use std::fmt::Display;
@@ -67,7 +66,7 @@ impl Error for SlackClientApiError {}
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackClientHttpError {
-    pub status_code: StatusCode,
+    pub status_code: u16,
     pub http_response_body: Option<String>,
 }
 

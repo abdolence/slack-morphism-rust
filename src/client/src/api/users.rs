@@ -8,12 +8,15 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 use crate::scroller::*;
-use crate::ClientResult;
 use crate::SlackClientSession;
+use crate::{ClientResult, SlackClientHttpConnector};
 use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
 
-impl<'a> SlackClientSession<'a> {
+impl<'a, SCHC> SlackClientSession<'a, SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send,
+{
     ///
     /// https://api.slack.com/methods/users.conversations
     ///
@@ -190,7 +193,10 @@ pub struct SlackApiUsersConversationsResponse {
     pub response_metadata: Option<SlackResponseMetadata>,
 }
 
-impl SlackApiScrollableRequest for SlackApiUsersConversationsRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiUsersConversationsRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiUsersConversationsResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackChannelInfo;
@@ -201,7 +207,7 @@ impl SlackApiScrollableRequest for SlackApiUsersConversationsRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.users_conversations(&self).await }.boxed()
     }
@@ -238,7 +244,10 @@ pub struct SlackApiUsersListResponse {
     pub response_metadata: Option<SlackResponseMetadata>,
 }
 
-impl SlackApiScrollableRequest for SlackApiUsersListRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiUsersListRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiUsersListResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackUser;
@@ -249,7 +258,7 @@ impl SlackApiScrollableRequest for SlackApiUsersListRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.users_list(&self).await }.boxed()
     }

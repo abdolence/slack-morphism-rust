@@ -6,11 +6,14 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::ClientResult;
 use crate::SlackClientSession;
+use crate::{ClientResult, SlackClientHttpConnector};
 use slack_morphism_models::*;
 
-impl<'a> SlackClientSession<'a> {
+impl<'a, SCHC> SlackClientSession<'a, SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send,
+{
     ///
     /// https://api.slack.com/methods/bots.info
     ///

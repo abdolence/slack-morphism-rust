@@ -1,10 +1,10 @@
 [package]
-name = "slack-morphism"
+name = "slack-morphism-hyper"
 version = "0.5.0"
 authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
 edition = "2018"
 license = "Apache-2.0"
-description = "Slack Morphism is a modern client library for Slack Web/Events API and Block Kit"
+description = "Slack Morphism Hyper/Tokio support library"
 homepage = "https://github.com/abdolence/slack-morphism-rust"
 repository = "https://github.com/abdolence/slack-morphism-rust"
 documentation = "https://docs.rs/slack_morphism"
@@ -14,24 +14,29 @@ readme = "../../README.md"
 include = ["Cargo.toml", "src/**/*.rs", "../../README.md", "../../LICENSE"]
 
 [lib]
-name = "slack_morphism"
+name = "slack_morphism_hyper"
 path = "src/lib.rs"
 
 [dependencies]
+slack-morphism = { path = "../client", version = "^0.5.0" }
 slack-morphism-models = { path = "../models", version = "^0.5.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_with = "1.6"
 rvstruct = "0.2"
 rsb_derive = "0.3"
+hyper = { version ="0.14", features = ["full"] }
+tokio = { version = "1.0", features = ["full"] }
+tokio-stream = { version = "0.1.0" }
+hyper-rustls = "0.22"
+#hyper-tls = "0.4"
 url = "2.2"
+mime = "0.3"
 futures = "0.3"
 futures-util = "0.3"
+bytes = "1.0"
 base64 = "0.13"
 hex = "0.4"
 log = "0.4"
 ring = "0.16"
 lazy_static = "1.4"
-
-[dev-dependencies]
-cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }

@@ -6,11 +6,14 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::ClientResult;
 use crate::SlackClient;
+use crate::{ClientResult, SlackClientHttpConnector};
 use slack_morphism_models::*;
 
-impl SlackClient {
+impl<SCHC> SlackClient<SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send,
+{
     ///
     /// Post a webhook message using webhook url
     ///
@@ -20,6 +23,7 @@ impl SlackClient {
         req: &SlackApiPostWebhookMessageRequest,
     ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
         self.http_api
+            .connector
             .http_post_uri(hook_url.parse()?, req, None)
             .await
     }

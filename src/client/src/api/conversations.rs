@@ -12,7 +12,10 @@ use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
 use std::collections::HashSet;
 
-impl<'a> SlackClientSession<'a> {
+impl<'a, SCHC> SlackClientSession<'a, SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send,
+{
     ///
     /// https://api.slack.com/methods/conversations.archive
     ///
@@ -332,7 +335,10 @@ pub struct SlackApiConversationsHistoryResponse {
     pub pin_count: Option<u64>,
 }
 
-impl SlackApiScrollableRequest for SlackApiConversationsHistoryRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiConversationsHistoryRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiConversationsHistoryResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackHistoryMessage;
@@ -343,7 +349,7 @@ impl SlackApiScrollableRequest for SlackApiConversationsHistoryRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.conversations_history(&self).await }.boxed()
     }
@@ -444,7 +450,10 @@ pub struct SlackApiConversationsListResponse {
     pub response_metadata: Option<SlackResponseMetadata>,
 }
 
-impl SlackApiScrollableRequest for SlackApiConversationsListRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiConversationsListRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiConversationsListResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackChannelInfo;
@@ -455,7 +464,7 @@ impl SlackApiScrollableRequest for SlackApiConversationsListRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.conversations_list(&self).await }.boxed()
     }
@@ -492,7 +501,10 @@ pub struct SlackApiConversationsMembersResponse {
     pub response_metadata: Option<SlackResponseMetadata>,
 }
 
-impl SlackApiScrollableRequest for SlackApiConversationsMembersRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiConversationsMembersRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiConversationsMembersResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackUserId;
@@ -503,7 +515,7 @@ impl SlackApiScrollableRequest for SlackApiConversationsMembersRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.conversations_members(&self).await }.boxed()
     }
@@ -577,7 +589,10 @@ pub struct SlackApiConversationsRepliesResponse {
     pub has_more: Option<bool>,
 }
 
-impl SlackApiScrollableRequest for SlackApiConversationsRepliesRequest {
+impl<SCHC> SlackApiScrollableRequest<SCHC> for SlackApiConversationsRepliesRequest
+where
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone + 'static,
+{
     type ResponseType = SlackApiConversationsRepliesResponse;
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackHistoryMessage;
@@ -588,7 +603,7 @@ impl SlackApiScrollableRequest for SlackApiConversationsRepliesRequest {
 
     fn scroll<'a, 's>(
         &'a self,
-        session: &'a SlackClientSession<'s>,
+        session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
         async move { session.conversations_replies(&self).await }.boxed()
     }
