@@ -5,10 +5,12 @@
 //! ## Slack Web API client
 //!
 //! ### Create a client instance:
-//! ```rust
+//! ```ignore
 //! use slack_morphism::*;
 //!
-//! let client = SlackClient::new();
+//! let client_connector = SlackClientHyperConnector::new(); // with Tokio/Hyper support
+//! let client = SlackClient::new(client_connector);
+//!
 //! ```
 //!
 //! ### Make Web API methods calls
@@ -21,15 +23,18 @@
 //! In the example below, we’re using a hardcoded Slack token, but don’t do that for your production bots and apps.
 //! You should securely and properly store all of Slack tokens.
 //!
-//! ```rust
+//! ```ignore
 //!
 //! use slack_morphism::*;
 //! use slack_morphism::api::*;
 //! use slack_morphism_models::*;
 //!
+//! use slack_morphism_hyper::*;
+//!
 //!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
-//! let client = SlackClient::new();
+//! let client_connector: SlackClientHyperConnector::new();
+//! let client = SlackClient::new(client_connector);
 //!
 //! // Create our Slack API token
 //! let token_value: SlackApiTokenValue = "xoxb-89.....".into();
