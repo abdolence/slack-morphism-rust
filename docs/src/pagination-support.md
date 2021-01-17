@@ -14,6 +14,7 @@ For example for `users.list`:
 use slack_morphism::*;
 use slack_morphism::api::*;
 use slack_morphism_models::*;
+use slack_morphism_hyper::*;
 use std::time::Duration;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -39,6 +40,7 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
     
     // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
+    // Only for Tokio/Hyper for now
     let collected_members: Vec<SlackUser> = scroller
         .collect_items_stream(&session, Duration::from_millis(1000))
         .await?;
