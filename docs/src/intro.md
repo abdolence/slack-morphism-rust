@@ -15,4 +15,4 @@ in asynchronous manner.
 This library provided in multiple modules:
 - `slack-morphism-models`, gives you access to all type/models definitions that used for Slack Web/Events APIs.
 - `slack-morphism`, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself and you can implement binding to any library you want.
-- `slack-morphism-hyper`, Hyper/Tokio client library implementation
+- `slack-morphism-hyper`, Slack client support/binding for Hyper/Tokio.
