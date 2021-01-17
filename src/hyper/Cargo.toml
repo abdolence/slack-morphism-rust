@@ -27,7 +27,7 @@ rvstruct = "0.2"
 rsb_derive = "0.3"
 hyper = { version ="0.14", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
-tokio-stream = { version = "0.1.0" }
+tokio-stream = { version = "0.1.2" }
 hyper-rustls = "0.22"
 #hyper-tls = "0.4"
 url = "2.2"
