@@ -27,7 +27,7 @@ impl SlackClientEventsHyperListener {
         environment: SlackClientEventsListenerEnvironment<SlackClientHyperConnector>,
     ) -> Self {
         Self {
-            environment: environment,
+            environment,
         }
     }
 }

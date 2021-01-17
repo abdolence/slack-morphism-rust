@@ -30,9 +30,9 @@ impl SlackClientEventsHyperListener {
         SlackClientHyperConnector::hyper_redirect_to(&full_uri.to_string())
     }
 
-    async fn slack_oauth_callback_service<'a, I, IF>(
+    async fn slack_oauth_callback_service<I, IF>(
         req: Request<Body>,
-        config: &'a SlackOAuthListenerConfig,
+        config: &SlackOAuthListenerConfig,
         client: Arc<SlackClient<SlackClientHyperConnector>>,
         install_service_fn: I,
         error_handler: ErrorHandler<SlackClientHyperConnector>,
