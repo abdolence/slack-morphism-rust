@@ -178,6 +178,7 @@ which deal with all scrolling/batching requests for you.</p>
 use slack_morphism::*;
 use slack_morphism::api::*;
 use slack_morphism_models::*;
+use slack_morphism_hyper::*;
 use std::time::Duration;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
@@ -203,6 +204,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     }
     
     // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
+    // Only for Tokio/Hyper for now
     let collected_members: Vec&lt;SlackUser&gt; = scroller
         .collect_items_stream(&amp;session, Duration::from_millis(1000))
         .await?;
