@@ -4,7 +4,11 @@
 
 ```rust,noplaypen
 use slack_morphism::*;
-let client = SlackClient::new();
+// Slack Morphism Hyper/Tokio support
+use slack_morphism_hyper::*;
+
+let hyper_connector = SlackClientHyperConnector::new();
+let client = SlackClient::new(hyper_connector);
 ```
 
 ### Make Web API methods calls
