@@ -170,7 +170,11 @@
                         <h1><a class="header" href="#slack-web-api-client" id="slack-web-api-client">Slack Web API client</a></h1>
 <h2><a class="header" href="#create-a-client-instance" id="create-a-client-instance">Create a client instance</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::*;
-let client = SlackClient::new();
+// Slack Morphism Hyper/Tokio support
+use slack_morphism_hyper::*;
+
+let hyper_connector = SlackClientHyperConnector::new();
+let client = SlackClient::new(hyper_connector);
 </code></pre>
 <h3><a class="header" href="#make-web-api-methods-calls" id="make-web-api-methods-calls">Make Web API methods calls</a></h3>
 <p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
