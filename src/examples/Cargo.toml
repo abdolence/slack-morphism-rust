@@ -1,6 +1,6 @@
 [package]
 name = "slack-morphism-examples"
-version = "0.5.5"
+version = "0.5.6-alpha.0"
 authors = ["Abdulla Abdurakhmanov <abdulla@latestbit.com>"]
 edition = "2018"
 publish = false
