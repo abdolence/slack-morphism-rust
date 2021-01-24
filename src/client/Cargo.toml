@@ -35,3 +35,6 @@ lazy_static = "1.4"
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
+
+[package.metadata.release]
+tag-prefix=""

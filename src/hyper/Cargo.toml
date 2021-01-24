@@ -40,3 +40,6 @@ hex = "0.4"
 log = "0.4"
 ring = "0.16"
 lazy_static = "1.4"
+
+[package.metadata.release]
+disable-tag=true
