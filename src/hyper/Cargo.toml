@@ -18,7 +18,7 @@ name = "slack_morphism_hyper"
 path = "src/lib.rs"
 
 [dependencies]
-slack-morphism = { path = "../client", version = "0.5.4"}
+slack-morphism = { path = "../client", version = "^0.5.6-alpha.0"}
 slack-morphism-models = { path = "../models", version = "^0.5.6-alpha.0"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
