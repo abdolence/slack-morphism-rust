@@ -24,7 +24,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_with = "1.6"
 rvstruct = "0.2"
-rsb_derive = "0.3"
+rsb_derive = "0.4"
 hyper = { version ="0.14", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
 tokio-stream = { version = "0.1.2" }
