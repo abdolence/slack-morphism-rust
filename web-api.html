@@ -167,8 +167,8 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#slack-web-api-client" id="slack-web-api-client">Slack Web API client</a></h1>
-<h2><a class="header" href="#create-a-client-instance" id="create-a-client-instance">Create a client instance</a></h2>
+                        <h1 id="slack-web-api-client"><a class="header" href="#slack-web-api-client">Slack Web API client</a></h1>
+<h2 id="create-a-client-instance"><a class="header" href="#create-a-client-instance">Create a client instance</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::*;
 // Slack Morphism Hyper/Tokio support
 use slack_morphism_hyper::*;
@@ -176,7 +176,7 @@ use slack_morphism_hyper::*;
 let hyper_connector = SlackClientHyperConnector::new();
 let client = SlackClient::new(hyper_connector);
 </code></pre>
-<h3><a class="header" href="#make-web-api-methods-calls" id="make-web-api-methods-calls">Make Web API methods calls</a></h3>
+<h3 id="make-web-api-methods-calls"><a class="header" href="#make-web-api-methods-calls">Make Web API methods calls</a></h3>
 <p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
 you need a Slack token to make a call.
 For simple bots you can have it in your config files, or you can obtain
