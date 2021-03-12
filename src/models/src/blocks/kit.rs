@@ -26,8 +26,10 @@ pub enum SlackBlock {
     Input(SlackInputBlock),
     #[serde(rename = "file")]
     File(SlackFileBlock),
+
+    // This block is still undocumented, so we don't define any structure yet we can return it back,
     #[serde(rename = "rich_text")]
-    RichText,
+    RichText(serde_json::Value),
 }
 
 #[skip_serializing_none]
