@@ -53,6 +53,10 @@ pub enum SlackEventCallbackBody {
     Message(SlackMessageEvent),
     #[serde(rename = "app_home_opened")]
     AppHomeOpened(SlackAppHomeOpenedEvent),
+    #[serde(rename = "app_mention")]
+    AppMention(SlackAppHomeMentionEvent),
+    #[serde(rename = "app_uninstalled")]
+    AppUninstalled(SlackAppUninstalledEvent),
 }
 
 #[skip_serializing_none]
@@ -61,11 +65,13 @@ pub struct SlackMessageEvent {
     #[serde(flatten)]
     pub origin: SlackMessageOrigin,
     #[serde(flatten)]
-    pub content: SlackMessageContent,
+    pub content: Option<SlackMessageContent>,
     #[serde(flatten)]
     pub sender: SlackMessageSender,
     pub subtype: Option<SlackMessageEventType>,
     pub hidden: Option<bool>,
+    pub edited: Option<SlackMessageEventEdited>,
+    pub deleted_ts: Option<SlackTs>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -86,6 +92,10 @@ pub enum SlackMessageEventType {
     ChannelPurpose,
     #[serde(rename = "channel_name")]
     ChannelName,
+    #[serde(rename = "message_changed")]
+    MessageChanged,
+    #[serde(rename = "message_deleted")]
+    MessageDeleted,
 }
 
 #[skip_serializing_none]
@@ -96,3 +106,25 @@ pub struct SlackAppHomeOpenedEvent {
     pub tab: String,
     pub view: Option<SlackView>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAppHomeMentionEvent {
+    pub user: SlackUserId,
+    pub channel: SlackChannelId,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+    #[serde(flatten)]
+    pub origin: SlackMessageOrigin,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageEventEdited {
+    pub user: SlackUserId,
+    pub ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAppUninstalledEvent {}
