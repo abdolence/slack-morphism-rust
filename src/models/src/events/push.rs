@@ -54,7 +54,7 @@ pub enum SlackEventCallbackBody {
     #[serde(rename = "app_home_opened")]
     AppHomeOpened(SlackAppHomeOpenedEvent),
     #[serde(rename = "app_mention")]
-    AppMention(SlackAppHomeMentionEvent),
+    AppMention(SlackAppMentionEvent),
     #[serde(rename = "app_uninstalled")]
     AppUninstalled(SlackAppUninstalledEvent),
 }
@@ -109,7 +109,7 @@ pub struct SlackAppHomeOpenedEvent {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackAppHomeMentionEvent {
+pub struct SlackAppMentionEvent {
     pub user: SlackUserId,
     pub channel: SlackChannelId,
     #[serde(flatten)]
