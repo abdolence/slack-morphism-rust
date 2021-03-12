@@ -4,9 +4,9 @@ Cargo.toml dependencies example:
 
 ```toml
 [dependencies]
-slack-morphism="0.5"
-slack-morphism-models="0.5"
-slack-morphism-hyper="0.5"
+slack-morphism="0.6"
+slack-morphism-models="0.6"
+slack-morphism-hyper="0.6"
 ```
 
 All imports you need:
