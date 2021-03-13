@@ -446,8 +446,11 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // Our error handler for Slack Events API
     fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, 
        _client: Arc&lt;SlackHyperClient&gt;, 
-       _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;) {
+       _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;) -&gt; http::StatusCode {
         error!(&quot;Slack Events error: {:#?}&quot;, err);
+        
+        // Defines what we return Slack server
+        http::StatusCode::BAD_REQUEST
     }
 
     // We need also a client instance. `Arc` used here because we would like 
