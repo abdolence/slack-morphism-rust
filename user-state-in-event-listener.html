@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Slack Web API client - Slack Morphism for Rust</title>
+        <title>User state - Slack Morphism for Rust</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html" class="active"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">4.1.</strong> User state</a></li></ol></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-state-in-event-listener.html" class="active"><strong aria-hidden="true">4.1.</strong> User state</a></li></ol></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -167,56 +167,40 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="slack-web-api-client"><a class="header" href="#slack-web-api-client">Slack Web API client</a></h1>
-<h2 id="create-a-client-instance"><a class="header" href="#create-a-client-instance">Create a client instance</a></h2>
-<pre><code class="language-rust noplaypen">use slack_morphism::*;
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
-
-let hyper_connector = SlackClientHyperConnector::new();
-let client = SlackClient::new(hyper_connector);
-</code></pre>
-<h3 id="make-web-api-methods-calls"><a class="header" href="#make-web-api-methods-calls">Make Web API methods calls</a></h3>
-<p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
-you need a Slack token to make a call.
-For simple bots you can have it in your config files, or you can obtain
-workspace tokens using Slack OAuth.</p>
-<p>In the example below, we’re using a hardcoded Slack token, but don’t do that for your production bots and apps.
-You should securely and properly store all of Slack tokens.</p>
+                        <h1 id="user-state-propagation-in-eventlistener-handlers"><a class="header" href="#user-state-propagation-in-eventlistener-handlers">User state propagation in EventListener handlers</a></h1>
+<p>It is very common to have some user specific context and state in event handler functions.
+So, all listener handlers has access to it using <code>SlackClientEventsUserStateStorage</code>.</p>
+<h2 id="defining-user-state"><a class="header" href="#defining-user-state">Defining user state</a></h2>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
+// Defining your state as a struct
+struct UserStateExample(u64);
 
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+// Initializing it in listener environment:
+let listener_environment = Arc::new(
+    SlackClientEventsListenerEnvironment::new(client.clone())
+        .with_error_handler(test_error_handler)
+        .with_user_state(UserStateExample(555)),
+); 
 
-async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-   
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client = SlackClient::new(hyper_connector);
-    
-    // Create our Slack API token
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-    
-    // Create a Slack session with this token
-    let session = client.open_session(&amp;token);
-    
-    // Make your first API call (which is `api.test` here)
-    let test: SlackApiTestResponse = session
-            .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
-            .await?;
-
-    // Send a simple text message
-    let post_chat_req =
-        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(),
-               SlackMessageContent::new().with_text(&quot;Hey there!&quot;.into())
-        );
-
-    let post_chat_resp = session.chat_post_message(&amp;post_chat_req).await?;
-
-    Ok(())
+</code></pre>
+<h2 id="reading-user-state-in-listeners"><a class="header" href="#reading-user-state-in-listeners">Reading user state in listeners</a></h2>
+<pre><code class="language-rust noplaypen">async fn test_push_events_function(
+    event: SlackPushEvent,
+    client: Arc&lt;SlackHyperClient&gt;,
+    user_states_storage: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+) {
+    let states = user_states_storage.read().unwrap();
+    let user_state: Option&lt;&amp;UserStateExample&gt; = states.get_user_state::&lt;UserStateExample&gt;();
+}
+</code></pre>
+<h2 id="updating-user-state-in-listeners"><a class="header" href="#updating-user-state-in-listeners">Updating user state in listeners</a></h2>
+<pre><code class="language-rust noplaypen">async fn test_push_events_function(
+    event: SlackPushEvent,
+    client: Arc&lt;SlackHyperClient&gt;,
+    user_states_storage: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+) {
+    let states = user_states_storage.write().unwrap();
+    states.set_user_state(UserStateExample(555));
 }
 </code></pre>
 
@@ -225,13 +209,13 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="getting-started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="events-api.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="pagination-support.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="limitations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -243,13 +227,13 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="getting-started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="events-api.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="pagination-support.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="limitations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

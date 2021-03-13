@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html" class="active"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html" class="active"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">4.1.</strong> User state</a></li></ol></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -198,6 +198,8 @@ use hyper::{Body, Request, Response};
 // For logging
 use log::*;
 
+// For convinience there is an alias SlackHyperClient as SlackClient&lt;SlackClientHyperConnector&gt;
+
 async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
@@ -213,17 +215,17 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     }
    
     // Our error handler for Slack Events API
-    fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, _client: Arc&lt;SlackClient&gt;) {
+    fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, 
+       _client: Arc&lt;SlackHyperClient&gt;, 
+       _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;) {
         error!(&quot;Slack Events error: {:#?}&quot;, err);
     }
 
     // We need also a client instance. `Arc` used here because we would like 
-    // to share the the same client for all of the requests and all hyper threads
-    // For convinience there is an alias SlackHyperClient as SlackClient&lt;SlackClientHyperConnector&gt;
+    // to share the the same client for all of the requests and all hyper threads    
     
     let hyper_connector = SlackClientHyperConnector::new();
     let client: Arc&lt;SlackClient&lt;SlackClientHyperConnector&gt;&gt; = Arc::new(SlackClient::new(hyper_connector));
-    
     
 
     // In this example we're going to use all of the events handlers, but
@@ -233,17 +235,22 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     async fn slack_oauth_install_function(
         resp: SlackOAuthV2AccessTokenResponse,
         _client: Arc&lt;SlackHyperClient&gt;,
+        _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;
     ) {
         println!(&quot;{:#?}&quot;, resp);
     }
 
     // Push events handler
-    async fn slack_push_events_function(event: SlackPushEvent, _client: Arc&lt;SlackHyperClient&gt;) {
+    async fn slack_push_events_function(event: SlackPushEvent, 
+       _client: Arc&lt;SlackHyperClient&gt;, 
+       _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;) {
         println!(&quot;{:#?}&quot;, event);
     }
 
     // Interaction events handler
-    async fn slack_interaction_events_function(event: SlackInteractionEvent, _client: Arc&lt;SlackHyperClient&gt;) {
+    async fn slack_interaction_events_function(event: SlackInteractionEvent, 
+        _client: Arc&lt;SlackHyperClient&gt;,
+        _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;) {
         println!(&quot;{:#?}&quot;, event);
     }
 
@@ -251,6 +258,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     async fn slack_command_events_function(
         event: SlackCommandEvent,
         _client: Arc&lt;SlackHyperClient&gt;,
+        _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;
     ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         println!(&quot;{:#?}&quot;, event);
         Ok(SlackCommandEventResponse::new(
@@ -279,6 +287,12 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(std::env::var(
         &quot;SLACK_SIGNING_SECRET&quot;,
     )?));
+
+    // Creating a shared listener environment with an ability to share client and user state
+    let listener_environment = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler)
+    );
    
     let make_svc = make_service_fn(move |_| {
         // Because of threading model you have to create copies of configs.
@@ -288,9 +302,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         let thread_command_events_config = command_events_config.clone();
  
         // Creating listener
-        let listener_environment = SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(slack_listener_error_handler);
-        let listener = SlackClientEventsHyperListener::new(listener_environment);
+        let listener = SlackClientEventsHyperListener::new(listener_environment.clone());
         
         // Chaining all of the possible routes for Slack.
         // `chain_service_routes_fn` is an auxiliary function from Slack Morphism. 
@@ -348,7 +360,7 @@ to route implementation.</p>
                         
 
                         
-                            <a rel="next" href="limitations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="user-state-in-event-listener.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -366,7 +378,7 @@ to route implementation.</p>
                 
 
                 
-                    <a rel="next" href="limitations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="user-state-in-event-listener.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
