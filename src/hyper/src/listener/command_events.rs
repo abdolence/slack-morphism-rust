@@ -12,7 +12,7 @@ use hyper::{Method, Request, Response, StatusCode};
 pub use slack_morphism_models::events::*;
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 impl SlackClientEventsHyperListener {
     pub fn command_events_service_fn<'a, D, F, I, IF>(
@@ -34,7 +34,11 @@ impl SlackClientEventsHyperListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(SlackCommandEvent, Arc<SlackClient<SlackClientHyperConnector>>) -> IF
+        I: Fn(
+                SlackCommandEvent,
+                Arc<SlackClient<SlackClientHyperConnector>>,
+                Arc<RwLock<SlackClientEventsUserStateStorage>>,
+            ) -> IF
             + 'static
             + Send
             + Sync
@@ -53,6 +57,7 @@ impl SlackClientEventsHyperListener {
         );
         let client = self.environment.client.clone();
         let error_handler = self.environment.error_handler.clone();
+        let user_state_storage = self.environment.user_state_storage.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
@@ -60,6 +65,7 @@ impl SlackClientEventsHyperListener {
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
             let thread_error_handler = error_handler.clone();
+            let thread_user_state_storage = user_state_storage.clone();
 
             async move {
                 match (req.method(), req.uri().path()) {
@@ -107,22 +113,30 @@ impl SlackClientEventsHyperListener {
                             })
                             .and_then(|event| async move {
                                 match event {
-                                    Ok(command_event) => match serv(command_event, sc).await {
-                                        Ok(cresp) => Response::builder()
-                                            .status(StatusCode::OK)
-                                            .header(
-                                                "content-type",
-                                                "application/json; charset=utf-8",
-                                            )
-                                            .body(serde_json::to_string(&cresp).unwrap().into())
-                                            .map_err(|e| e.into()),
-                                        Err(_) => Response::builder()
-                                            .status(StatusCode::BAD_REQUEST)
-                                            .body(Body::empty())
-                                            .map_err(|e| e.into()),
-                                    },
+                                    Ok(command_event) => {
+                                        match serv(command_event, sc, thread_user_state_storage)
+                                            .await
+                                        {
+                                            Ok(cresp) => Response::builder()
+                                                .status(StatusCode::OK)
+                                                .header(
+                                                    "content-type",
+                                                    "application/json; charset=utf-8",
+                                                )
+                                                .body(serde_json::to_string(&cresp).unwrap().into())
+                                                .map_err(|e| e.into()),
+                                            Err(_) => Response::builder()
+                                                .status(StatusCode::BAD_REQUEST)
+                                                .body(Body::empty())
+                                                .map_err(|e| e.into()),
+                                        }
+                                    }
                                     Err(command_event_err) => {
-                                        thread_error_handler(command_event_err, sc);
+                                        thread_error_handler(
+                                            command_event_err,
+                                            sc,
+                                            thread_user_state_storage,
+                                        );
                                         Ok(Response::new(Body::empty()))
                                     }
                                 }

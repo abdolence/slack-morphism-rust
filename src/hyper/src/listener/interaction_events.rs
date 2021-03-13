@@ -14,7 +14,7 @@ use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 impl SlackClientEventsHyperListener {
     pub fn interaction_events_service_fn<'a, D, F, I, IF>(
@@ -36,7 +36,11 @@ impl SlackClientEventsHyperListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(SlackInteractionEvent, Arc<SlackClient<SlackClientHyperConnector>>) -> IF
+        I: Fn(
+                SlackInteractionEvent,
+                Arc<SlackClient<SlackClientHyperConnector>>,
+                Arc<RwLock<SlackClientEventsUserStateStorage>>,
+            ) -> IF
             + 'static
             + Send
             + Sync
@@ -48,6 +52,7 @@ impl SlackClientEventsHyperListener {
         );
         let client = self.environment.client.clone();
         let error_handler = self.environment.error_handler.clone();
+        let user_state_storage = self.environment.user_state_storage.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
@@ -55,6 +60,7 @@ impl SlackClientEventsHyperListener {
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
             let thread_error_handler = error_handler.clone();
+            let thread_user_state_storage = user_state_storage.clone();
 
             async move {
                 match (req.method(), req.uri().path()) {
@@ -83,18 +89,18 @@ impl SlackClientEventsHyperListener {
                             .and_then(|event| async move {
                                 match event {
                                     Ok(view_submission_event@SlackInteractionEvent::ViewSubmission(_)) => {
-                                        serv(view_submission_event, sc).await;
+                                        serv(view_submission_event, sc, thread_user_state_storage).await;
                                         Response::builder()
                                             .status(StatusCode::OK)
                                             .body("".into())
                                             .map_err(|e| e.into())
                                     }
                                     Ok(interaction_event) => {
-                                        serv(interaction_event, sc).await;
+                                        serv(interaction_event, sc, thread_user_state_storage).await;
                                         Ok(Response::new(Body::empty()))
                                     }
                                     Err(event_err) => {
-                                        thread_error_handler(event_err, sc);
+                                        thread_error_handler(event_err, sc, thread_user_state_storage);
                                         Response::builder()
                                             .status(StatusCode::FORBIDDEN)
                                             .body(Body::empty())

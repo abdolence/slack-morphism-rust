@@ -11,20 +11,20 @@ pub use oauth::*;
 pub use push_events::*;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 pub use slack_morphism::signature_verifier::*;
+use std::sync::Arc;
 
 mod command_events;
 mod interaction_events;
 mod oauth;
 mod push_events;
 
-#[derive(Clone)]
 pub struct SlackClientEventsHyperListener {
-    pub environment: SlackClientEventsListenerEnvironment<SlackClientHyperConnector>,
+    pub environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector>>,
 }
 
 impl SlackClientEventsHyperListener {
     pub fn new(
-        environment: SlackClientEventsListenerEnvironment<SlackClientHyperConnector>,
+        environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector>>,
     ) -> Self {
         Self { environment }
     }

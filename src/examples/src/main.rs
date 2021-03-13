@@ -9,7 +9,7 @@ use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response};
 use log::*;
 
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 mod templates;
 use templates::*;
@@ -63,17 +63,45 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 async fn test_oauth_install_function(
     resp: SlackOAuthV2AccessTokenResponse,
     _client: Arc<SlackHyperClient>,
+    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) {
     println!("{:#?}", resp);
 }
 
-async fn test_push_events_function(event: SlackPushEvent, _client: Arc<SlackHyperClient>) {
+async fn test_push_events_function(
+    event: SlackPushEvent,
+    _client: Arc<SlackHyperClient>,
+    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+) {
+    // Read state
+    let current_state = {
+        let states = _states.read().unwrap();
+        println!("{:#?}", states.get_user_state::<UserStateExample>());
+        println!("{:#?}", states.len());
+        UserStateExample(
+            states
+                .get_user_state::<UserStateExample>()
+                .unwrap()
+                .clone()
+                .0
+                + 1,
+        )
+    };
+
+    // Write state
+    {
+        let mut states = _states.write().unwrap();
+        states.set_user_state::<UserStateExample>(current_state);
+        println!("{:#?}", states.get_user_state::<UserStateExample>());
+    }
+
     println!("{:#?}", event);
 }
 
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
+    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) {
     println!("{:#?}", event);
 }
@@ -81,6 +109,7 @@ async fn test_interaction_events_function(
 async fn test_command_events_function(
     event: SlackCommandEvent,
     _client: Arc<SlackHyperClient>,
+    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
     Ok(SlackCommandEventResponse::new(
@@ -91,9 +120,13 @@ async fn test_command_events_function(
 fn test_error_handler(
     err: Box<dyn std::error::Error + Send + Sync>,
     _client: Arc<SlackHyperClient>,
+    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) {
     println!("{:#?}", err);
 }
+
+#[derive(Debug)]
+struct UserStateExample(u64);
 
 async fn test_server(
     client: Arc<SlackHyperClient>,
@@ -128,14 +161,18 @@ async fn test_server(
         "SLACK_SIGNING_SECRET",
     )?));
 
+    let listener_environment = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler)
+            .with_user_state(UserStateExample(0)),
+    );
+
     let make_svc = make_service_fn(move |_| {
         let thread_oauth_config = oauth_listener_config.clone();
         let thread_push_events_config = push_events_config.clone();
         let thread_interaction_events_config = interactions_events_config.clone();
         let thread_command_events_config = command_events_config.clone();
-        let listener_environment = SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(test_error_handler);
-        let listener = SlackClientEventsHyperListener::new(listener_environment);
+        let listener = SlackClientEventsHyperListener::new(listener_environment.clone());
         async move {
             let routes = chain_service_routes_fn(
                 listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
