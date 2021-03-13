@@ -27,7 +27,8 @@ async fn test_push_events_function(
     user_states_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) {
     let states = user_states_storage.read().unwrap();
-    let user_state: Option<&UserStateExample> = states.get_user_state::<UserStateExample>();
+    let user_state: Option<&UserStateExample> = 
+        states.get_user_state::<UserStateExample>();
 }
 ```
 
