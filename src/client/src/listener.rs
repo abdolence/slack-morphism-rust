@@ -12,7 +12,7 @@ where
     SCHC: SlackClientHttpConnector + Send + Clone + Sync,
 {
     pub client: Arc<SlackClient<SCHC>>,
-    pub error_handler: ErrorHandler<SCHC>,
+    pub error_handler: BoxedErrorHandler<SCHC>,
     pub user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 }
 
@@ -28,14 +28,7 @@ where
         }
     }
 
-    pub fn with_error_handler(
-        self,
-        error_handler: fn(
-            Box<dyn std::error::Error + Send + Sync + 'static>,
-            Arc<SlackClient<SCHC>>,
-            Arc<RwLock<SlackClientEventsUserStateStorage>>,
-        ),
-    ) -> Self {
+    pub fn with_error_handler(self, error_handler: ErrorHandler<SCHC>) -> Self {
         Self {
             error_handler: Box::new(error_handler),
             ..self
@@ -83,15 +76,25 @@ impl SlackClientEventsUserStateStorage {
     pub fn len(&self) -> usize {
         self.user_state_map.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.user_state_map.is_empty()
+    }
 }
 
-pub type ErrorHandler<SCHC> = Box<
+pub type BoxedErrorHandler<SCHC> = Box<
     fn(
         Box<dyn std::error::Error + Send + Sync + 'static>,
         Arc<SlackClient<SCHC>>,
         Arc<RwLock<SlackClientEventsUserStateStorage>>,
     ),
 >;
+
+pub type ErrorHandler<SCHC> = fn(
+    Box<dyn std::error::Error + Send + Sync + 'static>,
+    Arc<SlackClient<SCHC>>,
+    Arc<RwLock<SlackClientEventsUserStateStorage>>,
+);
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackCommandEventsListenerConfig {

@@ -36,7 +36,7 @@ impl SlackClientEventsHyperListener {
         client: Arc<SlackClient<SlackClientHyperConnector>>,
         user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
         install_service_fn: I,
-        error_handler: ErrorHandler<SlackClientHyperConnector>,
+        error_handler: BoxedErrorHandler<SlackClientHyperConnector>,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>>
     where
         I: Fn(

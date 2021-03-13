@@ -78,14 +78,7 @@ async fn test_push_events_function(
         let states = _states.read().unwrap();
         println!("{:#?}", states.get_user_state::<UserStateExample>());
         println!("{:#?}", states.len());
-        UserStateExample(
-            states
-                .get_user_state::<UserStateExample>()
-                .unwrap()
-                .clone()
-                .0
-                + 1,
-        )
+        UserStateExample(states.get_user_state::<UserStateExample>().unwrap().0 + 1)
     };
 
     // Write state
