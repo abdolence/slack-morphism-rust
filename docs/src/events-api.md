@@ -33,6 +33,8 @@ use hyper::{Body, Request, Response};
 // For logging
 use log::*;
 
+// For convinience there is an alias SlackHyperClient as SlackClient<SlackClientHyperConnector>
+
 async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
@@ -48,17 +50,17 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     }
    
     // Our error handler for Slack Events API
-    fn slack_listener_error_handler(err: Box<dyn std::error::Error + Send + Sync>, _client: Arc<SlackClient>) {
+    fn slack_listener_error_handler(err: Box<dyn std::error::Error + Send + Sync>, 
+       _client: Arc<SlackHyperClient>, 
+       _states: Arc<RwLock<SlackClientEventsUserStateStorage>>) {
         error!("Slack Events error: {:#?}", err);
     }
 
     // We need also a client instance. `Arc` used here because we would like 
-    // to share the the same client for all of the requests and all hyper threads
-    // For convinience there is an alias SlackHyperClient as SlackClient<SlackClientHyperConnector>
+    // to share the the same client for all of the requests and all hyper threads    
     
     let hyper_connector = SlackClientHyperConnector::new();
     let client: Arc<SlackClient<SlackClientHyperConnector>> = Arc::new(SlackClient::new(hyper_connector));
-    
     
 
     // In this example we're going to use all of the events handlers, but
@@ -68,17 +70,22 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     async fn slack_oauth_install_function(
         resp: SlackOAuthV2AccessTokenResponse,
         _client: Arc<SlackHyperClient>,
+        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>
     ) {
         println!("{:#?}", resp);
     }
 
     // Push events handler
-    async fn slack_push_events_function(event: SlackPushEvent, _client: Arc<SlackHyperClient>) {
+    async fn slack_push_events_function(event: SlackPushEvent, 
+       _client: Arc<SlackHyperClient>, 
+       _states: Arc<RwLock<SlackClientEventsUserStateStorage>>) {
         println!("{:#?}", event);
     }
 
     // Interaction events handler
-    async fn slack_interaction_events_function(event: SlackInteractionEvent, _client: Arc<SlackHyperClient>) {
+    async fn slack_interaction_events_function(event: SlackInteractionEvent, 
+        _client: Arc<SlackHyperClient>,
+        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>) {
         println!("{:#?}", event);
     }
 
@@ -86,6 +93,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     async fn slack_command_events_function(
         event: SlackCommandEvent,
         _client: Arc<SlackHyperClient>,
+        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>
     ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
         println!("{:#?}", event);
         Ok(SlackCommandEventResponse::new(
@@ -114,6 +122,12 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(std::env::var(
         "SLACK_SIGNING_SECRET",
     )?));
+
+    // Creating a shared listener environment with an ability to share client and user state
+    let listener_environment = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler)
+    );
    
     let make_svc = make_service_fn(move |_| {
         // Because of threading model you have to create copies of configs.
@@ -123,9 +137,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
         let thread_command_events_config = command_events_config.clone();
  
         // Creating listener
-        let listener_environment = SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(slack_listener_error_handler);
-        let listener = SlackClientEventsHyperListener::new(listener_environment);
+        let listener = SlackClientEventsHyperListener::new(listener_environment.clone());
         
         // Chaining all of the possible routes for Slack.
         // `chain_service_routes_fn` is an auxiliary function from Slack Morphism. 

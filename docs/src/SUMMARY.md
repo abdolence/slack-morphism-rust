@@ -6,5 +6,6 @@
   - [Pagination support](./pagination-support.md)
   - [Block Kit support](./block-kit-support.md)
 - [Events API](./events-api.md)
+  - [User state](./user-state-in-event-listener.md)
 - [Limitations](./limitations.md)
 
