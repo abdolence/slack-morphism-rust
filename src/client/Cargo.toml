@@ -32,6 +32,7 @@ hex = "0.4"
 log = "0.4"
 ring = "0.16"
 lazy_static = "1.4"
+http = "0.2"
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }

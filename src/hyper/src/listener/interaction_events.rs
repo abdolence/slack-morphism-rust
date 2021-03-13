@@ -100,9 +100,9 @@ impl SlackClientEventsHyperListener {
                                         Ok(Response::new(Body::empty()))
                                     }
                                     Err(event_err) => {
-                                        thread_error_handler(event_err, sc, thread_user_state_storage);
+                                        let status_code = thread_error_handler(event_err, sc, thread_user_state_storage);
                                         Response::builder()
-                                            .status(StatusCode::FORBIDDEN)
+                                            .status(status_code)
                                             .body(Body::empty())
                                             .map_err(|e| e.into())
                                     }

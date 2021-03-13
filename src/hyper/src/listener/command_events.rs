@@ -114,8 +114,12 @@ impl SlackClientEventsHyperListener {
                             .and_then(|event| async move {
                                 match event {
                                     Ok(command_event) => {
-                                        match serv(command_event, sc, thread_user_state_storage)
-                                            .await
+                                        match serv(
+                                            command_event,
+                                            sc.clone(),
+                                            thread_user_state_storage.clone(),
+                                        )
+                                        .await
                                         {
                                             Ok(cresp) => Response::builder()
                                                 .status(StatusCode::OK)
@@ -125,19 +129,29 @@ impl SlackClientEventsHyperListener {
                                                 )
                                                 .body(serde_json::to_string(&cresp).unwrap().into())
                                                 .map_err(|e| e.into()),
-                                            Err(_) => Response::builder()
-                                                .status(StatusCode::BAD_REQUEST)
-                                                .body(Body::empty())
-                                                .map_err(|e| e.into()),
+                                            Err(err) => {
+                                                let status_code = thread_error_handler(
+                                                    err,
+                                                    sc.clone(),
+                                                    thread_user_state_storage.clone(),
+                                                );
+                                                Response::builder()
+                                                    .status(status_code)
+                                                    .body(Body::empty())
+                                                    .map_err(|e| e.into())
+                                            }
                                         }
                                     }
                                     Err(command_event_err) => {
-                                        thread_error_handler(
+                                        let status_code = thread_error_handler(
                                             command_event_err,
                                             sc,
                                             thread_user_state_storage,
                                         );
-                                        Ok(Response::new(Body::empty()))
+                                        Response::builder()
+                                            .status(status_code)
+                                            .body(Body::empty())
+                                            .map_err(|e| e.into())
                                     }
                                 }
                             })

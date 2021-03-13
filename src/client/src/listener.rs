@@ -39,7 +39,8 @@ where
         _err: Box<dyn std::error::Error + Send + Sync>,
         _client: Arc<SlackClient<SCHC>>,
         _user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-    ) {
+    ) -> http::StatusCode {
+        http::StatusCode::BAD_REQUEST
     }
 
     pub fn with_user_state<T: Send + Sync + 'static>(self, state: T) -> Self {
@@ -82,19 +83,13 @@ impl SlackClientEventsUserStateStorage {
     }
 }
 
-pub type BoxedErrorHandler<SCHC> = Box<
-    fn(
-        Box<dyn std::error::Error + Send + Sync + 'static>,
-        Arc<SlackClient<SCHC>>,
-        Arc<RwLock<SlackClientEventsUserStateStorage>>,
-    ),
->;
+pub type BoxedErrorHandler<SCHC> = Box<ErrorHandler<SCHC>>;
 
 pub type ErrorHandler<SCHC> = fn(
     Box<dyn std::error::Error + Send + Sync + 'static>,
     Arc<SlackClient<SCHC>>,
     Arc<RwLock<SlackClientEventsUserStateStorage>>,
-);
+) -> http::StatusCode;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackCommandEventsListenerConfig {

@@ -97,13 +97,13 @@ impl SlackClientEventsHyperListener {
                                             Ok(Response::new(Body::empty()))
                                         }
                                         Err(err_oush_event) => {
-                                            thread_error_handler(
+                                            let status_code = thread_error_handler(
                                                 err_oush_event,
                                                 sc,
                                                 thread_user_state_storage,
                                             );
                                             Response::builder()
-                                                .status(StatusCode::FORBIDDEN)
+                                                .status(status_code)
                                                 .body(Body::empty())
                                                 .map_err(|e| e.into())
                                         }
