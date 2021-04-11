@@ -112,19 +112,23 @@ pub struct SlackResponseMetadata {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum SlackConversationType {
-    IM,
-    MPIM,
-    PRIVATE,
-    PUBLIC,
+    #[serde(rename = "im")]
+    Im,
+    #[serde(rename = "mpim")]
+    Mpim,
+    #[serde(rename = "private_channel")]
+    Private,
+    #[serde(rename = "public_channel")]
+    Public,
 }
 
 impl ToString for SlackConversationType {
     fn to_string(&self) -> String {
         match self {
-            SlackConversationType::IM => "im".into(),
-            SlackConversationType::MPIM => "mpim".into(),
-            SlackConversationType::PRIVATE => "private_channel".into(),
-            SlackConversationType::PUBLIC => "public_channel".into(),
+            SlackConversationType::Im => "im".into(),
+            SlackConversationType::Mpim => "mpim".into(),
+            SlackConversationType::Private => "private_channel".into(),
+            SlackConversationType::Public => "public_channel".into(),
         }
     }
 }

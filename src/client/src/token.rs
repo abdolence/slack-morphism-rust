@@ -14,19 +14,19 @@ pub struct SlackApiTokenScope(pub String);
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub enum SlackApiTokenType {
     #[serde(rename = "bot")]
-    BOT,
+    Bot,
     #[serde(rename = "user")]
-    USER,
+    User,
     #[serde(rename = "app")]
-    APP,
+    App,
 }
 
 impl ToString for SlackApiTokenType {
     fn to_string(&self) -> String {
         match self {
-            SlackApiTokenType::BOT => "bot".into(),
-            SlackApiTokenType::USER => "user".into(),
-            SlackApiTokenType::APP => "app".into(),
+            SlackApiTokenType::Bot => "bot".into(),
+            SlackApiTokenType::User => "user".into(),
+            SlackApiTokenType::App => "app".into(),
         }
     }
 }
