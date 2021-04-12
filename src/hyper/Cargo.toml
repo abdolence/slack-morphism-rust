@@ -22,7 +22,7 @@ slack-morphism = { path = "../client", version = "^0.8.0"}
 slack-morphism-models = { path = "../models", version = "^0.8.0"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_with = "1.7"
+serde_with = "1.8"
 rvstruct = "0.2"
 rsb_derive = "0.4"
 hyper = { version ="0.14", features = ["full"] }
