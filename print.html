@@ -142,13 +142,15 @@
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
                         
+                        
+
                     </div>
                 </div>
 
                 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -184,7 +186,7 @@ in asynchronous manner.</p>
 <li><code>slack-morphism</code>, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.</li>
 <li><code>slack-morphism-hyper</code>, Slack client support/binding for Hyper/Tokio.</li>
 </ul>
-<h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
 slack-morphism=&quot;0.7&quot;
@@ -205,7 +207,7 @@ use slack_morphism_models::events::*; // Slack Events Models
 
 use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 </code></pre>
-<h1 id="slack-web-api-client"><a class="header" href="#slack-web-api-client">Slack Web API client</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="slack-web-api-client"><a class="header" href="#slack-web-api-client">Slack Web API client</a></h1>
 <h2 id="create-a-client-instance"><a class="header" href="#create-a-client-instance">Create a client instance</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::*;
 // Slack Morphism Hyper/Tokio support
@@ -257,7 +259,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     Ok(())
 }
 </code></pre>
-<h1 id="pagination-support"><a class="header" href="#pagination-support">Pagination support</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="pagination-support"><a class="header" href="#pagination-support">Pagination support</a></h1>
 <p>Some Web API methods defines cursors and pagination, to give you an ability to load a lot of data continually
 (using batching and continually making many requests).</p>
 <p>Examples: <code>conversations.history</code>, <code>conversations.list</code>, <code>users.list</code>, ...</p>
@@ -304,7 +306,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 }
 
 </code></pre>
-<h1 id="block-kit-support"><a class="header" href="#block-kit-support">Block Kit support</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="block-kit-support"><a class="header" href="#block-kit-support">Block Kit support</a></h1>
 <p>To support Slack Block Kit rich messages and views, the library provides:</p>
 <ul>
 <li>Well-typed models</li>
@@ -396,7 +398,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 }
 </code></pre>
 <p>Look other examples in examples/templates.rs.</p>
-<h1 id="events-api-and-oauth"><a class="header" href="#events-api-and-oauth">Events API and OAuth</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="events-api-and-oauth"><a class="header" href="#events-api-and-oauth">Events API and OAuth</a></h1>
 <p>The library provides route implementation in <code>SlackClientEventsListener</code> based on Hyper/Tokio for:</p>
 <ul>
 <li>Push Events</li>
@@ -580,7 +582,7 @@ which is already integrated in the routes implementation for you and you don't n
 it directly. All you need is provide your client id and secret configuration 
 to route implementation.</p>
 <p>Look at the <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src">examples/test_server</a> sources for a complete ready to use example.</p>
-<h1 id="user-state-propagation-in-eventlistener-handlers"><a class="header" href="#user-state-propagation-in-eventlistener-handlers">User state propagation in EventListener handlers</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="user-state-propagation-in-eventlistener-handlers"><a class="header" href="#user-state-propagation-in-eventlistener-handlers">User state propagation in EventListener handlers</a></h1>
 <p>It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using <code>SlackClientEventsUserStateStorage</code>.</p>
 <h2 id="defining-user-state"><a class="header" href="#defining-user-state">Defining user state</a></h2>
@@ -617,7 +619,7 @@ let listener_environment = Arc::new(
     states.set_user_state(UserStateExample(555));
 }
 </code></pre>
-<h1 id="limitations"><a class="header" href="#limitations">Limitations</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="limitations"><a class="header" href="#limitations">Limitations</a></h1>
 <p>Slack Morphism doesn't provide:</p>
 <ul>
 <li>RTM API (the usage of which is slowly declining in favour of Events API)</li>
