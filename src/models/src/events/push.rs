@@ -96,6 +96,12 @@ pub enum SlackMessageEventType {
     MessageChanged,
     #[serde(rename = "message_deleted")]
     MessageDeleted,
+    #[serde(rename = "tombstone")]
+    Tombstone,
+    #[serde(rename = "joiner_notification")]
+    JoinerNotification,
+    #[serde(rename = "slackbot_response")]
+    SlackbotResponse,
 }
 
 #[skip_serializing_none]

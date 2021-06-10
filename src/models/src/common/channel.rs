@@ -47,25 +47,25 @@ pub struct SlackChannelDetails {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackChannelFlags {
-    is_channel: Option<bool>,
-    is_group: Option<bool>,
-    is_im: Option<bool>,
-    is_archived: Option<bool>,
-    is_general: Option<bool>,
-    is_shared: Option<bool>,
-    is_org_shared: Option<bool>,
-    is_member: Option<bool>,
-    is_private: Option<bool>,
-    is_mpim: Option<bool>,
-    is_user_deleted: Option<bool>,
+    pub is_channel: Option<bool>,
+    pub is_group: Option<bool>,
+    pub is_im: Option<bool>,
+    pub is_archived: Option<bool>,
+    pub is_general: Option<bool>,
+    pub is_shared: Option<bool>,
+    pub is_org_shared: Option<bool>,
+    pub is_member: Option<bool>,
+    pub is_private: Option<bool>,
+    pub is_mpim: Option<bool>,
+    pub is_user_deleted: Option<bool>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackChannelCurrentState {
-    last_read: Option<SlackTs>,
-    unread_count: Option<u64>,
-    unread_count_display: Option<u64>,
+    pub last_read: Option<SlackTs>,
+    pub unread_count: Option<u64>,
+    pub unread_count_display: Option<u64>,
 }
 
 #[skip_serializing_none]
