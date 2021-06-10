@@ -28,7 +28,7 @@ impl ToString for SlackDateTimeFormats {
     }
 }
 
-pub fn fmt_slack_date1<TZ: TimeZone>(
+pub fn fmt_slack_date<TZ: TimeZone>(
     date: DateTime<TZ>,
     token_string: &str,
     link: Option<&String>,
