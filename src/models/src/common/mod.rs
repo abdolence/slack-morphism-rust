@@ -63,7 +63,7 @@ pub struct SlackUserId(pub String);
 
 impl SlackTextFormat for SlackUserId {
     fn to_slack_format(&self) -> String {
-        format!("<@${}", self.value())
+        format!("<@{}>", self.value())
     }
 }
 

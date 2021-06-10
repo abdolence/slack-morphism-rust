@@ -28,7 +28,7 @@ impl ToString for SlackDateTimeFormats {
     }
 }
 
-pub fn fmt_slack_date<TZ: TimeZone>(
+pub fn fmt_slack_date1<TZ: TimeZone>(
     date: DateTime<TZ>,
     token_string: &str,
     link: Option<&String>,
@@ -37,11 +37,11 @@ where
     <TZ as chrono::offset::TimeZone>::Offset: std::fmt::Display,
 {
     let link_part = link
-        .map(|value| format!("^${}", value))
+        .map(|value| format!("^{}", value))
         .unwrap_or_else(|| "".into());
     let fallback = date.to_rfc2822();
     format!(
-        "<!date^${timestamp}^${token_string}${link_part}|${fallback}>",
+        "<!date^{timestamp}^{token_string}{link_part}|{fallback}>",
         timestamp = date.timestamp(),
         token_string = token_string,
         link_part = link_part,
