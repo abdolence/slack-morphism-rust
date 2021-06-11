@@ -1,10 +1,12 @@
 use futures::future::BoxFuture;
-use futures::{FutureExt, TryStreamExt};
+use futures::stream::BoxStream;
+use futures::TryStreamExt;
 use slack_morphism::{
     ClientResult, SlackApiResponseScroller, SlackApiScrollableResponse, SlackClientHttpConnector,
     SlackClientSession,
 };
 use std::time::Duration;
+use tokio_stream::StreamExt;
 
 pub trait SlackApiResponseScrollerExt<SCHC, CT, RT, RIT>:
     SlackApiResponseScroller<SCHC, CursorType = CT, ResponseType = RT, ResponseItemType = RIT>
@@ -18,6 +20,12 @@ where
         session: &'a SlackClientSession<'s, SCHC>,
         throttle_duration: Duration,
     ) -> BoxFuture<'a, ClientResult<Vec<RIT>>>;
+
+    fn to_items_throttled_stream<'a, 's>(
+        &'a self,
+        session: &'a SlackClientSession<'s, SCHC>,
+        throttle_duration: Duration,
+    ) -> BoxStream<'a, ClientResult<Vec<Self::ResponseItemType>>>;
 }
 
 impl<SCHC, CT, RT, RIT> SlackApiResponseScrollerExt<SCHC, CT, RT, RIT>
@@ -37,15 +45,17 @@ where
         session: &'a SlackClientSession<'s, SCHC>,
         throttle_duration: Duration,
     ) -> BoxFuture<'a, ClientResult<Vec<RIT>>> {
-        use tokio_stream::StreamExt;
-        self.to_stream(session)
-            .throttle(throttle_duration)
-            .map_ok(|rs| {
-                rs.scrollable_items()
-                    .cloned()
-                    .collect::<Vec<Self::ResponseItemType>>()
-            })
-            .try_concat()
-            .boxed()
+        Box::pin(
+            self.to_items_throttled_stream(&session, throttle_duration)
+                .try_concat(),
+        )
+    }
+
+    fn to_items_throttled_stream<'a, 's>(
+        &'a self,
+        session: &'a SlackClientSession<'s, SCHC>,
+        throttle_duration: Duration,
+    ) -> BoxStream<'a, ClientResult<Vec<Self::ResponseItemType>>> {
+        Box::pin(self.to_items_stream(&session).throttle(throttle_duration))
     }
 }

@@ -57,6 +57,12 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!("res: {:#?}", items);
     }
 
+    let mut items_throttled_stream =
+        scroller.to_items_throttled_stream(&session, Duration::from_millis(500));
+    while let Some(items) = items_throttled_stream.try_next().await? {
+        println!("res: {:#?}", items);
+    }
+
     Ok(())
 }
 
