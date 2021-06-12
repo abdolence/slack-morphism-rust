@@ -46,6 +46,14 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let collected_members: Vec<SlackUser> = scroller
         .collect_items_stream(&session, Duration::from_millis(1000))
         .await?;
+
+    // Option 3: Throttling scrolling with Tokio/Hyper:
+    let mut items_throttled_stream =
+        scroller.to_items_throttled_stream(&session, Duration::from_millis(500));
+    while let Some(items) = items_throttled_stream.try_next().await? {
+        println!("res: {:#?}", items);
+    }
+
     Ok(())
 }
 
