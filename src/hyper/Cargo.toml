@@ -1,6 +1,6 @@
 [package]
 name = "slack-morphism-hyper"
-version = "0.8.2"
+version = "0.8.3"
 authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
 edition = "2018"
 license = "Apache-2.0"
