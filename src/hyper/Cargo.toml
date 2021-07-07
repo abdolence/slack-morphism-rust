@@ -26,7 +26,7 @@ serde_with = "1.9"
 rvstruct = "0.2"
 rsb_derive = "0.4"
 hyper = { version ="0.14", features = ["full"] }
-tokio = { version = "1.7", features = ["full"] }
+tokio = { version = "1.8", features = ["full"] }
 tokio-stream = { version = "0.1.7" }
 hyper-rustls = "0.22"
 #hyper-tls = "0.4"
