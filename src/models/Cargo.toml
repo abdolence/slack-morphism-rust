@@ -1,7 +1,7 @@
 [package]
 name = "slack-morphism-models"
 version = "0.8.5"
-authors = ["Abdulla Abdurakhmanov <abdulla@latestbit.com>"]
+authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
 edition = "2018"
 license = "Apache-2.0"
 description = "Slack Morphism Models"
