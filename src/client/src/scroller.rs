@@ -48,7 +48,7 @@ where
                 ResponseType = Self::ResponseType,
                 CursorType = Self::CursorType,
                 ResponseItemType = Self::ResponseItemType,
-            > + 'b,
+            > + 'b + Send + Sync,
     >
     where
         Self: Send + Clone + Sync + 'b,

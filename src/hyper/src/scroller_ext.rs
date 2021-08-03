@@ -34,7 +34,7 @@ impl<SCHC, CT, RT, RIT> SlackApiResponseScrollerExt<SCHC, CT, RT, RIT>
         CursorType = CT,
         ResponseType = RT,
         ResponseItemType = RIT,
-    >
+    >  + Send + Sync
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
     RT: Send + Clone + Sync + SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT>,
