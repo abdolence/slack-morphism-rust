@@ -162,9 +162,9 @@ impl SlackClientHyperConnector {
                     .and_then(|body| async {
                         signature_verifier
                             .verify(
-                                &received_hash.to_str().unwrap(),
+                                received_hash.to_str().unwrap(),
                                 &body,
-                                &received_ts.to_str().unwrap(),
+                                received_ts.to_str().unwrap(),
                             )
                             .map(|_| body)
                             .map_err(|e| e.into())
@@ -211,8 +211,8 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
         async move {
             let http_request = Self::setup_basic_auth_header(
                 Self::create_http_request(full_uri, hyper::http::Method::GET),
-                &client_id.value(),
-                &client_secret.value(),
+                client_id.value(),
+                client_secret.value(),
             )
             .body(Body::empty())?;
 

@@ -209,7 +209,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.users_conversations(&self).await }.boxed()
+        async move { session.users_conversations(self).await }.boxed()
     }
 }
 
@@ -260,7 +260,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.users_list(&self).await }.boxed()
+        async move { session.users_list(self).await }.boxed()
     }
 }
 

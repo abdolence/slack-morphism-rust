@@ -72,7 +72,7 @@ pub trait SlackClientHttpConnector {
         TS: std::string::ToString + 'p + 'a + Send,
     {
         let full_uri = SlackClientHttpApiUri::create_url_with_params(
-            &SlackClientHttpApiUri::create_method_uri_path(&method_relative_uri),
+            &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
             params,
         );
 
@@ -89,7 +89,7 @@ pub trait SlackClientHttpConnector {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p + 'a + Send,
     {
-        self.http_get_token(&method_relative_uri, params, None)
+        self.http_get_token(method_relative_uri, params, None)
     }
 
     fn http_post_uri<'a, RQ, RS>(
@@ -113,7 +113,7 @@ pub trait SlackClientHttpConnector {
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
     {
         let full_uri = SlackClientHttpApiUri::create_url(
-            &SlackClientHttpApiUri::create_method_uri_path(&method_relative_uri),
+            &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
         );
 
         self.http_post_uri(full_uri, request, token)
@@ -225,7 +225,7 @@ where
         self.client
             .http_api
             .connector
-            .http_get_uri(full_uri, Some(&self.token))
+            .http_get_uri(full_uri, Some(self.token))
             .await
     }
 
@@ -242,7 +242,7 @@ where
         self.client
             .http_api
             .connector
-            .http_get_token(&method_relative_uri, params, Some(&self.token))
+            .http_get_token(method_relative_uri, params, Some(self.token))
             .await
     }
 
@@ -258,7 +258,7 @@ where
         self.client
             .http_api
             .connector
-            .http_post_token(&method_relative_uri, &request, Some(&self.token))
+            .http_post_token(method_relative_uri, &request, Some(self.token))
             .await
     }
 
@@ -270,7 +270,7 @@ where
         self.client
             .http_api
             .connector
-            .http_post_uri(full_uri, &request, Some(&self.token))
+            .http_post_uri(full_uri, &request, Some(self.token))
             .await
     }
 }

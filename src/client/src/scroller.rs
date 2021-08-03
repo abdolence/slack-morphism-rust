@@ -162,7 +162,7 @@ where
 
             async move {
                 updated_request
-                    .scroll(&session)
+                    .scroll(session)
                     .map_ok(|res| {
                         self.last_response = Some(res.clone());
                         self.last_cursor = res.next_cursor().cloned();

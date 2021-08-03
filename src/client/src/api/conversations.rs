@@ -351,7 +351,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.conversations_history(&self).await }.boxed()
+        async move { session.conversations_history(self).await }.boxed()
     }
 }
 
@@ -466,7 +466,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.conversations_list(&self).await }.boxed()
+        async move { session.conversations_list(self).await }.boxed()
     }
 }
 
@@ -517,7 +517,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.conversations_members(&self).await }.boxed()
+        async move { session.conversations_members(self).await }.boxed()
     }
 }
 
@@ -605,7 +605,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.conversations_replies(&self).await }.boxed()
+        async move { session.conversations_replies(self).await }.boxed()
     }
 }
 

@@ -317,7 +317,7 @@ where
         &'a self,
         session: &'a SlackClientSession<'s, SCHC>,
     ) -> BoxFuture<'a, ClientResult<Self::ResponseType>> {
-        async move { session.chat_scheduled_messages_list(&self).await }.boxed()
+        async move { session.chat_scheduled_messages_list(self).await }.boxed()
     }
 }
 

@@ -43,7 +43,7 @@ where
         throttle_duration: Duration,
     ) -> BoxFuture<'a, ClientResult<Vec<RIT>>> {
         Box::pin(
-            self.to_items_throttled_stream(&session, throttle_duration)
+            self.to_items_throttled_stream(session, throttle_duration)
                 .try_concat(),
         )
     }
@@ -53,6 +53,6 @@ where
         session: &'a SlackClientSession<'s, SCHC>,
         throttle_duration: Duration,
     ) -> BoxStream<'a, ClientResult<Vec<Self::ResponseItemType>>> {
-        Box::pin(self.to_items_stream(&session).throttle(throttle_duration))
+        Box::pin(self.to_items_stream(session).throttle(throttle_duration))
     }
 }
