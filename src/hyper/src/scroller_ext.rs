@@ -29,12 +29,9 @@ where
 }
 
 impl<SCHC, CT, RT, RIT> SlackApiResponseScrollerExt<SCHC, CT, RT, RIT>
-    for dyn SlackApiResponseScroller<
-        SCHC,
-        CursorType = CT,
-        ResponseType = RT,
-        ResponseItemType = RIT,
-    >  + Send + Sync
+    for dyn SlackApiResponseScroller<SCHC, CursorType = CT, ResponseType = RT, ResponseItemType = RIT>
+        + Send
+        + Sync
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
     RT: Send + Clone + Sync + SlackApiScrollableResponse<CursorType = CT, ResponseItemType = RIT>,
