@@ -18,7 +18,7 @@ pub struct SlackChannelInfo {
     pub topic: Option<SlackChannelTopicInfo>,
     pub purpose: Option<SlackChannelPurposeInfo>,
     pub previous_names: Option<Vec<String>>,
-    pub priority: Option<f64>,
+    pub priority: Option<SlackChannelPriority>,
     pub num_members: Option<u64>,
     pub locale: Option<SlackLocale>,
     #[serde(flatten)]
@@ -80,3 +80,6 @@ impl HasChannelInfo for SlackBasicChannelInfo {
         &self.id
     }
 }
+
+#[derive(Debug, PartialEq, PartialOrd, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackChannelPriority(pub f64);
