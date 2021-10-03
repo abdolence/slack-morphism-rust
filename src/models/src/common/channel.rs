@@ -18,7 +18,7 @@ pub struct SlackChannelInfo {
     pub topic: Option<SlackChannelTopicInfo>,
     pub purpose: Option<SlackChannelPurposeInfo>,
     pub previous_names: Option<Vec<String>>,
-    pub priority: Option<u64>,
+    pub priority: Option<f64>,
     pub num_members: Option<u64>,
     pub locale: Option<SlackLocale>,
     #[serde(flatten)]
