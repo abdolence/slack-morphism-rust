@@ -1,3 +1,4 @@
+mod apps;
 mod bots;
 mod chat;
 mod conversations;

@@ -12,7 +12,7 @@ pub struct SlackCommandEvent {
     pub user_id: SlackUserId,
     pub command: SlackCommandId,
     pub text: Option<String>,
-    pub response_url: String,
+    pub response_url: SlackResponseUrl,
     pub trigger_id: SlackTriggerId,
 }
 

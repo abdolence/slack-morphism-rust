@@ -10,6 +10,7 @@ use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
 pub use slack_morphism_models::events::*;
+pub use slack_morphism_models::SlackResponseUrl;
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, RwLock};
@@ -99,7 +100,7 @@ impl SlackClientEventsHyperListener {
                                         channel_id.into(),
                                         user_id.into(),
                                         command.into(),
-                                        response_url.clone(),
+                                        response_url.into(),
                                         trigger_id.into(),
                                     )
                                     .opt_text(text.cloned())),
