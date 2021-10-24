@@ -40,6 +40,10 @@ hex = "0.4"
 log = "0.4"
 ring = "0.16"
 lazy_static = "1.4"
+async-trait = "0.1.51"
+http = "0.2"
+tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
+rand = "0.8.4"
 
 [package.metadata.release]
 disable-tag=true

@@ -16,7 +16,7 @@ use templates::*;
 
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let hyper_connector = SlackClientHyperConnector::new();
+    let hyper_connector = Arc::new(SlackClientHyperConnector::new());
     let client = SlackClient::new(hyper_connector);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
@@ -130,9 +130,11 @@ fn test_error_handler(
 #[derive(Debug)]
 struct UserStateExample(u64);
 
-async fn test_server(
-    client: Arc<SlackHyperClient>,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+#[allow(dead_code)]
+async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let hyper_connector = Arc::new(SlackClientHyperConnector::new());
+    let client: Arc<SlackHyperClient> = Arc::new(SlackClient::new(hyper_connector));
+
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
 
@@ -210,6 +212,34 @@ async fn test_server(
     })
 }
 
+#[allow(dead_code)]
+async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let hyper_connector = Arc::new(SlackClientHyperConnector::new());
+    let client = Arc::new(SlackClient::new(hyper_connector));
+
+    let listener_environment = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler)
+            .with_user_state(UserStateExample(0)),
+    );
+
+    let sm_manager = SlackClientSocketModeManager::new(
+        &SlackClientSocketModeConfig::new(),
+        listener_environment.clone(),
+    );
+
+    let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();
+    let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
+    let app_session = client.open_session(&app_token);
+    info!("{:#?}", app_session);
+
+    sm_manager.start(&app_session).await?;
+
+    sm_manager.serve().await;
+
+    Ok(())
+}
+
 fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use fern::colors::{Color, ColoredLevelConfig};
 
@@ -236,6 +266,7 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .level(log::LevelFilter::Debug)
         // - and per-module overrides
         .level_for("hyper", log::LevelFilter::Info)
+        .level_for("rustls", log::LevelFilter::Info)
         // Output to stdout, files, and other Dispatch configurations
         .chain(std::io::stdout())
         // Apply globally
@@ -251,9 +282,9 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     init_log()?;
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client: Arc<SlackHyperClient> = Arc::new(SlackClient::new(hyper_connector));
-    test_server(client.clone()).await?;
+    //test_server().await?;
+
+    test_client_with_socket_mode().await?;
 
     Ok(())
 }

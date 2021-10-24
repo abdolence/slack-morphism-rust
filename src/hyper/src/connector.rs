@@ -11,7 +11,7 @@ use rvstruct::ValueStruct;
 use slack_morphism::errors::*;
 use slack_morphism::signature_verifier::SlackEventAbsentSignatureError;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
-use slack_morphism::{ClientResult, SlackApiToken, SlackClientHttpConnector, SlackEnvelopeMessage};
+use slack_morphism::*;
 use slack_morphism_models::{SlackClientId, SlackClientSecret};
 use std::collections::HashMap;
 use std::io::Read;
@@ -140,8 +140,7 @@ impl SlackClientHyperConnector {
             }
             StatusCode::OK => serde_json::from_str("{}").map_err(|e| e.into()),
             _ => Err(SlackClientError::HttpError(
-                SlackClientHttpError::new(http_status.as_u16())
-                    .with_http_response_body(http_body_str),
+                SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )
             .into()),
         }

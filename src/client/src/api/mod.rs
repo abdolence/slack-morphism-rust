@@ -9,6 +9,7 @@ mod users;
 mod views;
 mod webhook;
 
+pub use apps::*;
 pub use bots::*;
 pub use chat::*;
 pub use conversations::*;
