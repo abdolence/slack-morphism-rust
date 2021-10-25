@@ -195,9 +195,9 @@ impl<SCHC> SlackClient<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
 {
-    pub fn new(http_connector: Arc<SCHC>) -> Self {
+    pub fn new(http_connector: SCHC) -> Self {
         Self {
-            http_api: SlackClientHttpApi::new(http_connector),
+            http_api: SlackClientHttpApi::new(Arc::new(http_connector)),
         }
     }
 

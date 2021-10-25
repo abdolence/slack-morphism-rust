@@ -3,18 +3,23 @@ use async_trait::async_trait;
 use futures::{SinkExt, StreamExt};
 use log::*;
 use rvstruct::*;
-use slack_morphism::errors::*;
-use slack_morphism::socket_mode_connector::{
-    SlackClientSocketModeConnector, SlackSocketModeWssClient,
+use slack_morphism::clients::{
+    SlackSocketModeWssClient, SlackSocketModeWssClientId, SlackSocketModeWssClientListener,
+    SlackSocketModeWssClientsFactory,
 };
+use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;
+use std::sync::Arc;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::*;
 use url::Url;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SlackTungsteniteWssClient {
+    id: SlackSocketModeWssClientId,
+    token: SlackApiToken,
+    client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     url: Url,
     command_writer: Option<UnboundedSender<SlackTungsteniteWssClientCommand>>,
 }
@@ -28,25 +33,35 @@ enum SlackTungsteniteWssClientCommand {
 }
 
 impl SlackTungsteniteWssClient {
-    pub fn new(wss_url: &SlackWebSocketsUrl) -> Self {
+    pub fn new(
+        wss_url: &SlackWebSocketsUrl,
+        id: SlackSocketModeWssClientId,
+        token: SlackApiToken,
+        client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
+    ) -> Self {
         let url_to_connect = Url::parse(wss_url.value()).unwrap();
 
         SlackTungsteniteWssClient {
+            id,
+            token,
+            client_listener,
             url: url_to_connect,
             command_writer: None,
         }
     }
 
     pub async fn connect(&mut self) -> ClientResult<()> {
-        debug!("Connecting to {}", self.url);
+        debug!("Connecting to {}. Id: {:?}", self.url, self.id);
         let (wss_stream, response) = connect_async(&self.url).await?;
-
         if !response.status().is_success() && !response.status().is_informational() {
-            Err(Box::new(SlackClientError::HttpError(
-                SlackClientHttpError::new(response.status()),
-            )))
+            return Err(
+                Box::new(SlackClientError::HttpError(SlackClientHttpError::new(
+                    response.status(),
+                )))
+                .into(),
+            );
         } else {
-            debug!("Connected to {}", self.url);
+            debug!("Connected to {}. Id: {:?}", self.url, self.id);
 
             let (mut writer, mut reader) = wss_stream.split();
 
@@ -75,7 +90,7 @@ impl SlackTungsteniteWssClient {
                                     .unwrap();
                             }
                             SlackTungsteniteWssClientCommand::Ping => {
-                                let body: [u8; 30] = rand::random();
+                                let body: [u8; 5] = rand::random();
                                 debug!("Ping to Slack: {:?}", body);
 
                                 writer
@@ -97,7 +112,7 @@ impl SlackTungsteniteWssClient {
             {
                 let ping_tx = tx.clone();
                 tokio::spawn(async move {
-                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(10));
 
                     loop {
                         interval.tick().await;
@@ -115,11 +130,14 @@ impl SlackTungsteniteWssClient {
                 });
             }
 
+            let thread_listener = self.client_listener.clone();
+            let thread_client_id = self.id.clone();
+
             tokio::spawn(async move {
                 while let Some(message) = reader.next().await {
                     match message {
                         Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
-                            debug!("{}", body);
+                            thread_listener.on_message(&thread_client_id, body).await
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Ping(body)) => {
                             debug!("Ping from Slack: {:?}", body);
@@ -130,24 +148,21 @@ impl SlackTungsteniteWssClient {
                             debug!("Pong from Slack: {:?}", body);
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
-                            debug!("{:?}", body);
+                            warn!("Unexpected binary received from Slack: {:?}", body);
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Close(body)) => {
-                            debug!("{:?}", body);
-                            tx.send(SlackTungsteniteWssClientCommand::Exit)
-                                .unwrap_or(());
+                            debug!("Shutting down WSS channel: {:?}", body);
+                            thread_listener.on_disconnect(&thread_client_id).await
                         }
                         Err(err) => {
-                            debug!("{:?}", err);
-                            tx.send(SlackTungsteniteWssClientCommand::Exit)
-                                .unwrap_or(());
+                            error!("Slack WSS error: {:?}", err);
+                            thread_listener.on_disconnect(&thread_client_id).await
                         }
                     }
                 }
             });
-
-            Ok(())
         }
+        Ok(())
     }
 
     async fn shutdown_channel(&mut self) {
@@ -162,6 +177,18 @@ impl SlackTungsteniteWssClient {
 
 #[async_trait]
 impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
+    fn id(&self) -> &SlackSocketModeWssClientId {
+        &self.id
+    }
+
+    fn token(&self) -> &SlackApiToken {
+        &self.token
+    }
+
+    fn listener(&self) -> Arc<dyn SlackSocketModeWssClientListener + Sync + Send> {
+        self.client_listener.clone()
+    }
+
     async fn message(&mut self, message_body: String) -> ClientResult<()> {
         if let Some(sender) = self.command_writer.clone() {
             if !sender.is_closed() {
@@ -184,18 +211,21 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
     }
 
     async fn destroy(&mut self) {
-        debug!("Destroying {}", self.url);
+        debug!("Destroying {}. Id: {:?}", self.url, self.id);
         self.shutdown_channel().await;
     }
 }
 
 #[async_trait]
-impl SlackClientSocketModeConnector<SlackTungsteniteWssClient> for SlackClientHyperConnector {
-    async fn create_wss_client(
-        &self,
-        wss_url: &SlackWebSocketsUrl,
+impl SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient> for SlackClientHyperConnector {
+    async fn create_wss_client<'a>(
+        &'a self,
+        wss_url: &'a SlackWebSocketsUrl,
+        client_id: SlackSocketModeWssClientId,
+        token: SlackApiToken,
+        client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
     ) -> ClientResult<SlackTungsteniteWssClient> {
-        let mut client = SlackTungsteniteWssClient::new(wss_url);
+        let mut client = SlackTungsteniteWssClient::new(wss_url, client_id, token, client_listener);
         client.connect().await?;
         Ok(client)
     }

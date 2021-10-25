@@ -16,8 +16,7 @@ use templates::*;
 
 #[allow(dead_code)]
 async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let hyper_connector = Arc::new(SlackClientHyperConnector::new());
-    let client = SlackClient::new(hyper_connector);
+    let client = SlackClient::new(SlackClientHyperConnector::new());
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
@@ -132,8 +131,8 @@ struct UserStateExample(u64);
 
 #[allow(dead_code)]
 async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let hyper_connector = Arc::new(SlackClientHyperConnector::new());
-    let client: Arc<SlackHyperClient> = Arc::new(SlackClient::new(hyper_connector));
+    let client: Arc<SlackHyperClient> =
+        Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
@@ -214,8 +213,10 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 #[allow(dead_code)]
 async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let hyper_connector = Arc::new(SlackClientHyperConnector::new());
-    let client = Arc::new(SlackClient::new(hyper_connector));
+    let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+
+    let socket_mode_callbacks =
+        SlackSocketModeListenerCallbacks::new().with_command_events(test_command_events_function);
 
     let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
@@ -223,20 +224,18 @@ async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error 
             .with_user_state(UserStateExample(0)),
     );
 
-    let sm_manager = SlackClientSocketModeManager::new(
+    let socket_mode_listener = SlackClientSocketModeListener::new(
         &SlackClientSocketModeConfig::new(),
         listener_environment.clone(),
-        SlackClientSocketModeCallbacks::new().with_command_events(test_command_events_function),
+        socket_mode_callbacks,
     );
 
     let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();
     let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
-    let app_session = client.open_session(&app_token);
-    info!("{:#?}", app_session);
 
-    sm_manager.start(&app_session).await?;
+    socket_mode_listener.start_for(&app_token).await?;
 
-    sm_manager.serve().await;
+    socket_mode_listener.serve().await;
 
     Ok(())
 }
