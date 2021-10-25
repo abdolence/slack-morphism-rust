@@ -158,3 +158,6 @@ impl SlackOAuthListenerConfig {
         )
     }
 }
+
+pub type UserCallbackFunction<E, IF, SCHC> =
+    fn(E, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> IF;

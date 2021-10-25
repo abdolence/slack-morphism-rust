@@ -30,26 +30,18 @@ impl SlackClientEventsHyperListener {
         SlackClientHyperConnector::hyper_redirect_to(&full_uri.to_string())
     }
 
-    async fn slack_oauth_callback_service<I, IF>(
+    async fn slack_oauth_callback_service(
         req: Request<Body>,
         config: &SlackOAuthListenerConfig,
         client: Arc<SlackClient<SlackClientHyperConnector>>,
         user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-        install_service_fn: I,
+        install_service_fn: UserCallbackFunction<
+            SlackOAuthV2AccessTokenResponse,
+            impl Future<Output = ()> + 'static + Send,
+            SlackClientHyperConnector,
+        >,
         error_handler: BoxedErrorHandler<SlackClientHyperConnector>,
-    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>>
-    where
-        I: Fn(
-                SlackOAuthV2AccessTokenResponse,
-                Arc<SlackClient<SlackClientHyperConnector>>,
-                Arc<RwLock<SlackClientEventsUserStateStorage>>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
-        IF: Future<Output = ()> + 'static + Send,
-    {
+    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
         let params = SlackClientHyperConnector::parse_query_params(&req);
         debug!("Received Slack OAuth callback: {:?}", &params);
 
@@ -121,10 +113,14 @@ impl SlackClientEventsHyperListener {
         }
     }
 
-    pub fn oauth_service_fn<'a, D, F, I, IF>(
+    pub fn oauth_service_fn<'a, D, F>(
         &self,
         config: Arc<SlackOAuthListenerConfig>,
-        install_service_fn: I,
+        install_service_fn: UserCallbackFunction<
+            SlackOAuthV2AccessTokenResponse,
+            impl Future<Output = ()> + 'static + Send,
+            SlackClientHyperConnector,
+        >,
     ) -> impl Fn(
         Request<Body>,
         D,
@@ -140,16 +136,6 @@ impl SlackClientEventsHyperListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                SlackOAuthV2AccessTokenResponse,
-                Arc<SlackClient<SlackClientHyperConnector>>,
-                Arc<RwLock<SlackClientEventsUserStateStorage>>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
-        IF: Future<Output = ()> + 'static + Send,
     {
         let client = self.environment.client.clone();
         let listener_error_handler = self.environment.error_handler.clone();
@@ -157,7 +143,6 @@ impl SlackClientEventsHyperListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let install_fn = install_service_fn.clone();
             let sc = client.clone();
             let error_handler = listener_error_handler.clone();
             let thread_user_state_storage = user_state_storage.clone();
@@ -172,7 +157,7 @@ impl SlackClientEventsHyperListener {
                             &cfg,
                             sc,
                             thread_user_state_storage,
-                            install_fn,
+                            install_service_fn,
                             error_handler,
                         )
                         .await
