@@ -16,9 +16,7 @@ where
 
 #[async_trait]
 pub trait SlackSocketModeWssClient {
-    async fn message<RQ>(&mut self, message_body: &RQ) -> ClientResult<()>
-    where
-        RQ: serde::ser::Serialize + Send + Sync;
+    async fn message(&mut self, message_body: String) -> ClientResult<()>;
 
     async fn destroy(&mut self);
 }

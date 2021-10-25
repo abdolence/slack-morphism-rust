@@ -3,7 +3,6 @@ use async_trait::async_trait;
 use futures::{SinkExt, StreamExt};
 use log::*;
 use rvstruct::*;
-use serde::Serialize;
 use slack_morphism::errors::*;
 use slack_morphism::socket_mode_connector::{
     SlackClientSocketModeConnector, SlackSocketModeWssClient,
@@ -163,18 +162,11 @@ impl SlackTungsteniteWssClient {
 
 #[async_trait]
 impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
-    async fn message<RQ>(&mut self, message_body: &RQ) -> ClientResult<()>
-    where
-        RQ: Serialize + Send + Sync,
-    {
-        let message_json_string = serde_json::to_string(&message_body)?;
-
+    async fn message(&mut self, message_body: String) -> ClientResult<()> {
         if let Some(sender) = self.command_writer.clone() {
             if !sender.is_closed() {
                 tokio::spawn(async move {
-                    sender.send(SlackTungsteniteWssClientCommand::Message(
-                        message_json_string,
-                    ))
+                    sender.send(SlackTungsteniteWssClientCommand::Message(message_body))
                 });
 
                 Ok(())
