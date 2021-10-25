@@ -226,6 +226,7 @@ async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error 
     let sm_manager = SlackClientSocketModeManager::new(
         &SlackClientSocketModeConfig::new(),
         listener_environment.clone(),
+        SlackClientSocketModeCallbacks::new().with_command_events(test_command_events_function),
     );
 
     let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();

@@ -13,6 +13,7 @@ where
     config: SlackClientSocketModeConfig,
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     clients: SlackClientSocketModeClientsStorage<SCWSS>,
+    _callbacks: SlackClientSocketModeCallbacks<SCHC, SCWSS>,
 }
 
 impl<SCHC, SCWSS> SlackClientSocketModeManager<SCHC, SCWSS>
@@ -23,11 +24,13 @@ where
     pub fn new(
         config: &SlackClientSocketModeConfig,
         listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
+        callbacks: SlackClientSocketModeCallbacks<SCHC, SCWSS>,
     ) -> Self {
         SlackClientSocketModeManager {
             config: config.clone(),
             listener_environment,
             clients: Arc::new(RwLock::new(SlackClientSocketModeClients::new())),
+            _callbacks: callbacks,
         }
     }
 

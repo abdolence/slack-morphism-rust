@@ -1,4 +1,5 @@
-use crate::{SlackClient, SlackClientHttpConnector};
+use crate::{ClientResult, SlackClient, SlackClientHttpConnector};
+use futures::future::BoxFuture;
 use rsb_derive::Builder;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
@@ -161,3 +162,9 @@ impl SlackOAuthListenerConfig {
 
 pub type UserCallbackFunction<E, IF, SCHC> =
     fn(E, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> IF;
+
+pub type UserCallbackFunctionType<E, R, SCHC> = dyn Fn(
+    E,
+    Arc<SlackClient<SCHC>>,
+    Arc<RwLock<SlackClientEventsUserStateStorage>>,
+) -> BoxFuture<'static, ClientResult<R>>;
