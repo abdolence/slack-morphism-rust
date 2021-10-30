@@ -1,6 +1,6 @@
 use crate::errors::*;
 use crate::listener::SlackClientEventsUserStateStorage;
-use crate::prelude::{SlackEventCallback, SlackInteractionEvent, UserCallbackFunction};
+use crate::prelude::{SlackInteractionEvent, SlackPushEventCallback, UserCallbackFunction};
 use crate::{ClientResult, SlackClient, SlackClientHttpConnector};
 use futures::future::BoxFuture;
 use log::*;
@@ -60,7 +60,7 @@ where
     pub interaction_callback:
         Box<dyn SlackSocketModeListenerCallback<SCHC, SlackInteractionEvent, ()> + Send + Sync>,
     pub push_events_callback:
-        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackEventCallback, ()> + Send + Sync>,
+        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackPushEventCallback, ()> + Send + Sync>,
 }
 
 impl<SCHC> SlackSocketModeListenerCallbacks<SCHC>
@@ -76,14 +76,14 @@ where
         }
     }
 
-    pub fn with_command_events<F>(
+    pub fn with_hello_events<F>(
         mut self,
-        command_events_fn: UserCallbackFunction<SlackCommandEvent, F, SCHC>,
+        hello_events_fn: UserCallbackFunction<SlackSocketModeHelloEvent, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ClientResult<SlackCommandEventResponse>> + Send + Sync + 'static,
+        F: Future<Output = ()> + Send + Sync + 'static,
     {
-        self.command_callback = Box::new(command_events_fn);
+        self.hello_callback = Box::new(hello_events_fn);
         self
     }
 
@@ -93,6 +93,17 @@ where
         _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
     ) {
         debug!("Received Slack hello for socket mode: {:?}", event);
+    }
+
+    pub fn with_command_events<F>(
+        mut self,
+        command_events_fn: UserCallbackFunction<SlackCommandEvent, F, SCHC>,
+    ) -> Self
+    where
+        F: Future<Output = ClientResult<SlackCommandEventResponse>> + Send + Sync + 'static,
+    {
+        self.command_callback = Box::new(command_events_fn);
+        self
     }
 
     async fn empty_command_events_callback(
@@ -106,6 +117,17 @@ where
         )))
     }
 
+    pub fn with_interaction_events<F>(
+        mut self,
+        interaction_events_fn: UserCallbackFunction<SlackInteractionEvent, F, SCHC>,
+    ) -> Self
+    where
+        F: Future<Output = ()> + Send + Sync + 'static,
+    {
+        self.interaction_callback = Box::new(interaction_events_fn);
+        self
+    }
+
     async fn empty_interaction_events_callback(
         event: SlackInteractionEvent,
         _client: Arc<SlackClient<SCHC>>,
@@ -117,8 +139,19 @@ where
         );
     }
 
+    pub fn with_push_events<F>(
+        mut self,
+        push_events_fn: UserCallbackFunction<SlackPushEventCallback, F, SCHC>,
+    ) -> Self
+    where
+        F: Future<Output = ()> + Send + Sync + 'static,
+    {
+        self.push_events_callback = Box::new(push_events_fn);
+        self
+    }
+
     async fn empty_push_events_callback(
-        event: SlackEventCallback,
+        event: SlackPushEventCallback,
         _client: Arc<SlackClient<SCHC>>,
         _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
     ) {

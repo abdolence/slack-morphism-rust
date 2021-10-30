@@ -4,7 +4,7 @@ use serde_with::skip_serializing_none;
 
 use crate::common::*;
 use crate::events::{
-    SlackCommandEvent, SlackCommandEventResponse, SlackEventCallback, SlackInteractionEvent,
+    SlackCommandEvent, SlackCommandEventResponse, SlackInteractionEvent, SlackPushEventCallback,
 };
 use rvstruct::*;
 
@@ -74,7 +74,7 @@ pub struct SlackSocketModeInteractiveEvent {
 pub struct SlackSocketModeEventsApiEvent {
     #[serde(flatten)]
     pub envelope_params: SlackSocketModeEventEnvelopeParams,
-    pub payload: SlackEventCallback,
+    pub payload: SlackPushEventCallback,
 }
 
 #[skip_serializing_none]

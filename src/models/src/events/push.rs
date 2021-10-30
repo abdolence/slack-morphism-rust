@@ -14,7 +14,7 @@ pub enum SlackPushEvent {
     #[serde(rename = "url_verification")]
     UrlVerification(SlackUrlVerificationEvent),
     #[serde(rename = "event_callback")]
-    EventCallback(SlackEventCallback),
+    EventCallback(SlackPushEventCallback),
     #[serde(rename = "app_rate_limited")]
     AppRateLimited(SlackAppRateLimitedEvent),
 }
@@ -35,7 +35,7 @@ pub struct SlackAppRateLimitedEvent {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackEventCallback {
+pub struct SlackPushEventCallback {
     pub team_id: SlackTeamId,
     pub api_app_id: SlackAppId,
     pub event: SlackEventCallbackBody,
