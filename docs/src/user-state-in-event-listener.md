@@ -1,4 +1,4 @@
-# User state propagation in EventListener handlers
+# User state propagation in user event listener handlers
 
 It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using `SlackClientEventsUserStateStorage`.

@@ -1,6 +1,6 @@
 [package]
 name = "slack-morphism-hyper"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -18,8 +18,8 @@ name = "slack_morphism_hyper"
 path = "src/lib.rs"
 
 [dependencies]
-slack-morphism = { path = "../client", version = "^0.9.0"}
-slack-morphism-models = { path = "../models", version = "^0.9.0"}
+slack-morphism = { path = "../client", version = "^0.10.0"}
+slack-morphism-models = { path = "../models", version = "^0.10.0"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_with = "1.11"
@@ -40,6 +40,15 @@ hex = "0.4"
 log = "0.4"
 ring = "0.16"
 lazy_static = "1.4"
+async-trait = "0.1.51"
+http = "0.2"
+tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
+rand = "0.8.4"
+
+[dev-dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+fern = { version = "0.6", features = ["colored"] }
 
 [package.metadata.release]
 disable-tag=true

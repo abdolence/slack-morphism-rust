@@ -4,9 +4,9 @@ Cargo.toml dependencies example:
 
 ```toml
 [dependencies]
-slack-morphism="0.9"
-slack-morphism-models="0.9"
-slack-morphism-hyper="0.9"
+slack-morphism="0.10"
+slack-morphism-models="0.10"
+slack-morphism-hyper="0.10"
 ```
 
 All imports you need:
@@ -27,3 +27,11 @@ use slack_morphism_models::events::*; // Slack Events Models
 
 use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 ```
+
+## Ready to use examples
+- 
+- Slack Web API client 
+- Events API
+- Slack Web API client with Socket Mode
+
+You can find them on [github](https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples)

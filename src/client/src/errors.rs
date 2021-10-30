@@ -66,7 +66,7 @@ impl Error for SlackClientApiError {}
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackClientHttpError {
-    pub status_code: u16,
+    pub status_code: http::StatusCode,
     pub http_response_body: Option<String>,
 }
 

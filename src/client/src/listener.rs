@@ -9,7 +9,7 @@ type UserStatesMap = HashMap<TypeId, Box<dyn Any + Send + Sync + 'static>>;
 
 pub struct SlackClientEventsListenerEnvironment<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Clone + Sync,
+    SCHC: SlackClientHttpConnector + Send + Sync,
 {
     pub client: Arc<SlackClient<SCHC>>,
     pub error_handler: BoxedErrorHandler<SCHC>,
@@ -18,7 +18,7 @@ where
 
 impl<SCHC> SlackClientEventsListenerEnvironment<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Clone + Sync,
+    SCHC: SlackClientHttpConnector + Send + Sync,
 {
     pub fn new(client: Arc<SlackClient<SCHC>>) -> Self {
         Self {
@@ -158,3 +158,6 @@ impl SlackOAuthListenerConfig {
         )
     }
 }
+
+pub type UserCallbackFunction<E, IF, SCHC> =
+    fn(E, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> IF;

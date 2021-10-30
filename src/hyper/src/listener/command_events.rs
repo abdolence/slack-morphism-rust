@@ -4,21 +4,32 @@ use crate::connector::SlackClientHyperConnector;
 use slack_morphism::errors::*;
 use slack_morphism::listener::*;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
-use slack_morphism::SlackClient;
 
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
 pub use slack_morphism_models::events::*;
+pub use slack_morphism_models::SlackResponseUrl;
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 impl SlackClientEventsHyperListener {
-    pub fn command_events_service_fn<'a, D, F, I, IF>(
+    pub fn command_events_service_fn<'a, D, F>(
         &self,
         config: Arc<SlackCommandEventsListenerConfig>,
-        command_service_fn: I,
+        command_service_fn: UserCallbackFunction<
+            SlackCommandEvent,
+            impl Future<
+                    Output = Result<
+                        SlackCommandEventResponse,
+                        Box<dyn std::error::Error + Send + Sync + 'static>,
+                    >,
+                >
+                + 'static
+                + Send,
+            SlackClientHyperConnector,
+        >,
     ) -> impl Fn(
         Request<Body>,
         D,
@@ -34,23 +45,6 @@ impl SlackClientEventsHyperListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                SlackCommandEvent,
-                Arc<SlackClient<SlackClientHyperConnector>>,
-                Arc<RwLock<SlackClientEventsUserStateStorage>>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
-        IF: Future<
-                Output = Result<
-                    SlackCommandEventResponse,
-                    Box<dyn std::error::Error + Send + Sync + 'static>,
-                >,
-            >
-            + 'static
-            + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -61,7 +55,6 @@ impl SlackClientEventsHyperListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let serv = command_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
             let thread_error_handler = error_handler.clone();
@@ -99,7 +92,7 @@ impl SlackClientEventsHyperListener {
                                         channel_id.into(),
                                         user_id.into(),
                                         command.into(),
-                                        response_url.clone(),
+                                        response_url.into(),
                                         trigger_id.into(),
                                     )
                                     .opt_text(text.cloned())),
@@ -114,7 +107,7 @@ impl SlackClientEventsHyperListener {
                             .and_then(|event| async move {
                                 match event {
                                     Ok(command_event) => {
-                                        match serv(
+                                        match command_service_fn(
                                             command_event,
                                             sc.clone(),
                                             thread_user_state_storage.clone(),

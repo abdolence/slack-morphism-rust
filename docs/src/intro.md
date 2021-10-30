@@ -1,5 +1,7 @@
 # Intro and motivation
 
+Slack Morphism is a modern client library for Slack Web/Events API/Sockets Mode and Block Kit.
+
 ## Type-safety 
 All of the models, API and Block Kit support in Slack Morphism are well-typed.
 
@@ -15,4 +17,4 @@ in asynchronous manner.
 This library provided as multiple modules:
 - `slack-morphism-models`, gives you access to all type/models definitions that used for Slack Web/Events APIs.
 - `slack-morphism`, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.
-- `slack-morphism-hyper`, Slack client support/binding for Hyper/Tokio.
+- `slack-morphism-hyper`, Slack client support/binding for Hyper/Tokio/Tungstenite.

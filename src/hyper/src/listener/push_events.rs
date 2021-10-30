@@ -4,7 +4,6 @@ use crate::listener::SlackClientEventsHyperListener;
 use slack_morphism::errors::*;
 use slack_morphism::listener::*;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
-use slack_morphism::SlackClient;
 
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
@@ -12,13 +11,17 @@ use hyper::{Method, Request, Response, StatusCode};
 use log::*;
 pub use slack_morphism_models::events::*;
 use std::future::Future;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 impl SlackClientEventsHyperListener {
-    pub fn push_events_service_fn<'a, D, F, I, IF>(
+    pub fn push_events_service_fn<'a, D, F>(
         &self,
         config: Arc<SlackPushEventsListenerConfig>,
-        push_service_fn: I,
+        push_service_fn: UserCallbackFunction<
+            SlackPushEvent,
+            impl Future<Output = ()> + 'static + Send,
+            SlackClientHyperConnector,
+        >,
     ) -> impl Fn(
         Request<Body>,
         D,
@@ -34,16 +37,6 @@ impl SlackClientEventsHyperListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                SlackPushEvent,
-                Arc<SlackClient<SlackClientHyperConnector>>,
-                Arc<RwLock<SlackClientEventsUserStateStorage>>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
-        IF: Future<Output = ()> + 'static + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -54,7 +47,6 @@ impl SlackClientEventsHyperListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let push_serv = push_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
             let thread_error_handler = error_handler.clone();
@@ -79,7 +71,7 @@ impl SlackClientEventsHyperListener {
                                             "Received Slack URL push verification challenge: {}",
                                             url_ver.challenge
                                         );
-                                        push_serv(
+                                        push_service_fn(
                                             SlackPushEvent::UrlVerification(url_ver.clone()),
                                             sc,
                                             thread_user_state_storage,
@@ -92,8 +84,12 @@ impl SlackClientEventsHyperListener {
                                     }
                                     other => match other {
                                         Ok(push_event) => {
-                                            push_serv(push_event, sc, thread_user_state_storage)
-                                                .await;
+                                            push_service_fn(
+                                                push_event,
+                                                sc,
+                                                thread_user_state_storage,
+                                            )
+                                            .await;
                                             Ok(Response::new(Body::empty()))
                                         }
                                         Err(err_oush_event) => {

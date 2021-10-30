@@ -35,7 +35,7 @@ pub struct SlackInteractionBlockActionsEvent {
     pub channel: Option<SlackBasicChannelInfo>,
     pub message: Option<SlackHistoryMessage>,
     pub view: Option<SlackView>,
-    pub response_url: Option<String>,
+    pub response_url: Option<SlackResponseUrl>,
     pub actions: Option<Vec<SlackInteractionActionInfo>>,
 }
 
@@ -97,7 +97,7 @@ pub struct SlackInteractionMessageActionEvent {
     pub message: Option<SlackHistoryMessage>,
     pub callback_id: SlackCallbackId,
     pub trigger_id: SlackTriggerId,
-    pub response_url: String,
+    pub response_url: SlackResponseUrl,
     pub actions: Option<Vec<SlackInteractionActionInfo>>,
 }
 

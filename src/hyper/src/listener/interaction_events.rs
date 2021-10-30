@@ -7,20 +7,23 @@ use crate::connector::SlackClientHyperConnector;
 use slack_morphism::errors::*;
 use slack_morphism::listener::*;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
-use slack_morphism::SlackClient;
 
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 impl SlackClientEventsHyperListener {
-    pub fn interaction_events_service_fn<'a, D, F, I, IF>(
+    pub fn interaction_events_service_fn<'a, D, F>(
         &self,
         config: Arc<SlackInteractionEventsListenerConfig>,
-        interaction_service_fn: I,
+        interaction_service_fn: UserCallbackFunction<
+            SlackInteractionEvent,
+            impl Future<Output = ()> + 'static + Send,
+            SlackClientHyperConnector,
+        >,
     ) -> impl Fn(
         Request<Body>,
         D,
@@ -36,16 +39,6 @@ impl SlackClientEventsHyperListener {
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
-        I: Fn(
-                SlackInteractionEvent,
-                Arc<SlackClient<SlackClientHyperConnector>>,
-                Arc<RwLock<SlackClientEventsUserStateStorage>>,
-            ) -> IF
-            + 'static
-            + Send
-            + Sync
-            + Clone,
-        IF: Future<Output = ()> + 'static + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -56,7 +49,6 @@ impl SlackClientEventsHyperListener {
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();
-            let serv = interaction_service_fn.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
             let thread_error_handler = error_handler.clone();
@@ -89,14 +81,14 @@ impl SlackClientEventsHyperListener {
                             .and_then(|event| async move {
                                 match event {
                                     Ok(view_submission_event@SlackInteractionEvent::ViewSubmission(_)) => {
-                                        serv(view_submission_event, sc, thread_user_state_storage).await;
+                                        interaction_service_fn(view_submission_event, sc, thread_user_state_storage).await;
                                         Response::builder()
                                             .status(StatusCode::OK)
                                             .body("".into())
                                             .map_err(|e| e.into())
                                     }
                                     Ok(interaction_event) => {
-                                        serv(interaction_event, sc, thread_user_state_storage).await;
+                                        interaction_service_fn(interaction_event, sc, thread_user_state_storage).await;
                                         Ok(Response::new(Body::empty()))
                                     }
                                     Err(event_err) => {

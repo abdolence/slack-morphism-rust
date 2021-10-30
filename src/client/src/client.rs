@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 use crate::token::*;
 
@@ -20,7 +21,7 @@ pub struct SlackClientHttpApi<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send,
 {
-    pub connector: SCHC,
+    pub connector: Arc<SCHC>,
 }
 
 #[derive(Debug)]
@@ -150,7 +151,7 @@ impl<SCHC> SlackClientHttpApi<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
 {
-    fn new(http_connector: SCHC) -> Self {
+    fn new(http_connector: Arc<SCHC>) -> Self {
         Self {
             connector: http_connector,
         }
@@ -196,7 +197,7 @@ where
 {
     pub fn new(http_connector: SCHC) -> Self {
         Self {
-            http_api: SlackClientHttpApi::new(http_connector),
+            http_api: SlackClientHttpApi::new(Arc::new(http_connector)),
         }
     }
 

@@ -86,6 +86,7 @@
 
 pub use client::*;
 pub use scroller::*;
+pub use socket_mode::*;
 pub use token::*;
 
 pub mod api;
@@ -94,6 +95,7 @@ pub mod errors;
 pub mod listener;
 mod scroller;
 pub mod signature_verifier;
+mod socket_mode;
 mod token;
 
 pub mod prelude;
