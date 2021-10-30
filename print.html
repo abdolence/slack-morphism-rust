@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">4.1.</strong> User state</a></li></ol></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">5.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket_Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -139,6 +139,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="intro-and-motivation"><a class="header" href="#intro-and-motivation">Intro and motivation</a></h1>
+<p>Slack Morphism is a modern client library for Slack Web/Events API/Sockets Mode and Block Kit.</p>
 <h2 id="type-safety"><a class="header" href="#type-safety">Type-safety</a></h2>
 <p>All of the models, API and Block Kit support in Slack Morphism are well-typed.</p>
 <h2 id="easy-to-use"><a class="header" href="#easy-to-use">Easy to use</a></h2>
@@ -151,14 +152,14 @@ in asynchronous manner.</p>
 <ul>
 <li><code>slack-morphism-models</code>, gives you access to all type/models definitions that used for Slack Web/Events APIs.</li>
 <li><code>slack-morphism</code>, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.</li>
-<li><code>slack-morphism-hyper</code>, Slack client support/binding for Hyper/Tokio.</li>
+<li><code>slack-morphism-hyper</code>, Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
-slack-morphism=&quot;0.9&quot;
-slack-morphism-models=&quot;0.9&quot;
-slack-morphism-hyper=&quot;0.9&quot;
+slack-morphism=&quot;0.10&quot;
+slack-morphism-models=&quot;0.10&quot;
+slack-morphism-hyper=&quot;0.10&quot;
 </code></pre>
 <p>All imports you need:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
@@ -174,14 +175,22 @@ use slack_morphism_models::events::*; // Slack Events Models
 
 use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 </code></pre>
+<h2 id="ready-to-use-examples"><a class="header" href="#ready-to-use-examples">Ready to use examples</a></h2>
+<ul>
+<li></li>
+<li>Slack Web API client </li>
+<li>Events API</li>
+<li>Slack Web API client with Socket Mode</li>
+</ul>
+<p>You can find them on <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples">github</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="slack-web-api-client"><a class="header" href="#slack-web-api-client">Slack Web API client</a></h1>
 <h2 id="create-a-client-instance"><a class="header" href="#create-a-client-instance">Create a client instance</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::*;
 // Slack Morphism Hyper/Tokio support
 use slack_morphism_hyper::*;
 
-let hyper_connector = SlackClientHyperConnector::new();
-let client = SlackClient::new(hyper_connector);
+let client = SlackClient::new( SlackClientHyperConnector::new() );
+
 </code></pre>
 <h3 id="make-web-api-methods-calls"><a class="header" href="#make-web-api-methods-calls">Make Web API methods calls</a></h3>
 <p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
@@ -200,8 +209,7 @@ use slack_morphism_hyper::*;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
    
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client = SlackClient::new(hyper_connector);
+    let client = SlackClient::new(SlackClientHyperConnector::new());
     
     // Create our Slack API token
     let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
@@ -433,8 +441,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // We need also a client instance. `Arc` used here because we would like 
     // to share the the same client for all of the requests and all hyper threads    
     
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client: Arc&lt;SlackClient&lt;SlackClientHyperConnector&gt;&gt; = Arc::new(SlackClient::new(hyper_connector));
+    let client = SlackClient::new(SlackClientHyperConnector::new());
     
 
     // In this example we're going to use all of the events handlers, but
@@ -502,6 +509,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(test_error_handler)
     );
+    
    
     let make_svc = make_service_fn(move |_| {
         // Because of threading model you have to create copies of configs.
@@ -557,7 +565,82 @@ which is already integrated in the routes implementation for you and you don't n
 it directly. All you need is provide your client id and secret configuration 
 to route implementation.</p>
 <p>Look at the <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src">examples/test_server</a> sources for a complete ready to use example.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="user-state-propagation-in-eventlistener-handlers"><a class="header" href="#user-state-propagation-in-eventlistener-handlers">User state propagation in EventListener handlers</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="slack-socket-mode-support"><a class="header" href="#slack-socket-mode-support">Slack Socket Mode support</a></h1>
+<p>Slack Morphism supports <a href="https://api.slack.com/apis/connections/socket">Slack Socket Mode</a> starting with 0.10.x.
+Socket Mode allows your app to use the Events API and interactive components 
+without exposing a public HTTP endpoint.</p>
+<p>The mode is useful if you want to create an app that works with few workspaces 
+and don't want to work with HTTP endpoints yourself. </p>
+<h2 id="register-your-event-callback-functions"><a class="header" href="#register-your-event-callback-functions">Register your event callback functions</a></h2>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+use slack_morphism_hyper::*;
+
+
+async fn test_interaction_events_function(
+    event: SlackInteractionEvent,
+    _client: Arc&lt;SlackHyperClient&gt;,
+    _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+) {
+    println!(&quot;{:#?}&quot;, event);
+}
+
+async fn test_command_events_function(
+    event: SlackCommandEvent,
+    _client: Arc&lt;SlackHyperClient&gt;,
+    _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+    println!(&quot;{:#?}&quot;, event);
+    Ok(SlackCommandEventResponse::new(
+        SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+    ))
+}
+
+async fn test_push_events_sm_function(
+    event: SlackPushEventCallback,
+    _client: Arc&lt;SlackHyperClient&gt;,
+    _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+) {
+    println!(&quot;{:#?}&quot;, event);
+}
+
+let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+
+let socket_mode_callbacks = SlackSocketModeListenerCallbacks::new()
+    .with_command_events(test_command_events_function)
+    .with_interaction_events(test_interaction_events_function)
+    .with_interaction_events(test_interaction_events_function)
+    .with_push_events(test_push_events_sm_function);   
+
+let listener_environment = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+);
+
+</code></pre>
+<h2 id="connect-using-socket-mode-to-slack"><a class="header" href="#connect-using-socket-mode-to-slack">Connect using socket mode to Slack</a></h2>
+<p>The following code initiates Web-sockets based connections to Slack endpoints using Slack Web methods 
+and provided user token.</p>
+<p>Slack Morphism supports multiple web-socket connections per one token to <a href="https://api.slack.com/apis/connections/socket-implement#disconnect">gracefully handle disconnects</a>.
+By default it uses 2 connections to one token. To configure it see <code>SlackClientSocketModeConfig</code>;</p>
+<pre><code class="language-rust noplaypen">
+let socket_mode_listener = SlackClientSocketModeListener::new(
+      &amp;SlackClientSocketModeConfig::new(),
+      listener_environment.clone(),
+      socket_mode_callbacks,
+);
+
+// Need to specify App token for Socket Mode:
+let app_token_value: SlackApiTokenValue = config_env_var(&quot;SLACK_TEST_APP_TOKEN&quot;)?.into();
+let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
+
+// Register a specified token value to work with.
+socket_mode_listener.listen_for(&amp;app_token).await?;
+
+// Wait for Ctrl-C
+// There is also .start()/.shutdown() available to manually manage the lifecycle of socket_mode_listener
+socket_mode_listener.serve().await;
+
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-state-propagation-in-user-event-listener-handlers"><a class="header" href="#user-state-propagation-in-user-event-listener-handlers">User state propagation in user event listener handlers</a></h1>
 <p>It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using <code>SlackClientEventsUserStateStorage</code>.</p>
 <h2 id="defining-user-state"><a class="header" href="#defining-user-state">Defining user state</a></h2>
