@@ -37,7 +37,7 @@ fn test_error_handler(
 ) -> http::StatusCode {
     println!("{:#?}", err);
 
-    // Defines what we return Slack server
+    // This return value isn't used for Socket Mode (only for Events API)
     http::StatusCode::BAD_REQUEST
 }
 
