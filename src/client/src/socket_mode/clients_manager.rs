@@ -145,8 +145,7 @@ where
                 client_id.clone(),
                 token.clone(),
                 client_listener.clone(),
-            )
-            .await?;
+            )?;
 
         Ok(SlackSocketModeClient {
             id: client_id.clone(),

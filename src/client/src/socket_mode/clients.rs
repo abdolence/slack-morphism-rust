@@ -35,12 +35,11 @@ impl ToString for SlackSocketModeWssClientId {
     }
 }
 
-#[async_trait]
 pub trait SlackSocketModeWssClientsFactory<SCWSS>
 where
     SCWSS: SlackSocketModeWssClient + Send + Sync,
 {
-    async fn create_wss_client<'a>(
+    fn create_wss_client<'a>(
         &'a self,
         wss_url: &'a SlackWebSocketsUrl,
         client_id: SlackSocketModeWssClientId,

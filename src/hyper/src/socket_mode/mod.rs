@@ -386,11 +386,10 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
     }
 }
 
-#[async_trait]
 impl SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient> for SlackClientHyperConnector {
-    async fn create_wss_client<'a>(
-        &'a self,
-        wss_url: &'a SlackWebSocketsUrl,
+    fn create_wss_client(
+        &self,
+        wss_url: &SlackWebSocketsUrl,
         client_id: SlackSocketModeWssClientId,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
