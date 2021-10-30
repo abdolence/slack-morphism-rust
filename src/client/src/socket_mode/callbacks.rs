@@ -1,6 +1,6 @@
 use crate::errors::*;
 use crate::listener::SlackClientEventsUserStateStorage;
-use crate::prelude::UserCallbackFunction;
+use crate::prelude::{SlackEventCallback, SlackInteractionEvent, UserCallbackFunction};
 use crate::{ClientResult, SlackClient, SlackClientHttpConnector};
 use futures::future::BoxFuture;
 use log::*;
@@ -57,6 +57,10 @@ where
             > + Send
             + Sync,
     >,
+    pub interaction_callback:
+        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackInteractionEvent, ()> + Send + Sync>,
+    pub push_events_callback:
+        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackEventCallback, ()> + Send + Sync>,
 }
 
 impl<SCHC> SlackSocketModeListenerCallbacks<SCHC>
@@ -67,6 +71,8 @@ where
         Self {
             hello_callback: Box::new(Self::empty_hello_callback),
             command_callback: Box::new(Self::empty_command_events_callback),
+            interaction_callback: Box::new(Self::empty_interaction_events_callback),
+            push_events_callback: Box::new(Self::empty_push_events_callback),
         }
     }
 
@@ -98,5 +104,24 @@ where
         Err(Box::new(SlackClientError::SystemError(
             SlackClientSystemError::new("No callback is specified for a command event".to_string()),
         )))
+    }
+
+    async fn empty_interaction_events_callback(
+        event: SlackInteractionEvent,
+        _client: Arc<SlackClient<SCHC>>,
+        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    ) {
+        warn!(
+            "No callback is specified for a interactive event: {:?}",
+            event
+        );
+    }
+
+    async fn empty_push_events_callback(
+        event: SlackEventCallback,
+        _client: Arc<SlackClient<SCHC>>,
+        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    ) {
+        warn!("No callback is specified for a push event: {:?}", event);
     }
 }

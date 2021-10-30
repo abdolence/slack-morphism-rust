@@ -37,6 +37,10 @@ pub trait SlackSocketModeWssClient {
 
 #[async_trait]
 pub trait SlackSocketModeWssClientListener {
-    async fn on_message(&self, client_id: &SlackSocketModeWssClientId, message_body: String);
+    async fn on_message(
+        &self,
+        client_id: &SlackSocketModeWssClientId,
+        message_body: String,
+    ) -> Option<String>;
     async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId);
 }

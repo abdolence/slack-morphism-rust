@@ -83,7 +83,7 @@ impl SlackTungsteniteWssClient {
                                     .unwrap();
                             }
                             SlackTungsteniteWssClientCommand::Pong(body) => {
-                                debug!("Pong to Slack: {:?}", body);
+                                trace!("Pong to Slack: {:?}", body);
                                 writer
                                     .send(tokio_tungstenite::tungstenite::Message::Pong(body))
                                     .await
@@ -91,7 +91,7 @@ impl SlackTungsteniteWssClient {
                             }
                             SlackTungsteniteWssClientCommand::Ping => {
                                 let body: [u8; 5] = rand::random();
-                                debug!("Ping to Slack: {:?}", body);
+                                trace!("Ping to Slack: {:?}", body);
 
                                 writer
                                     .send(tokio_tungstenite::tungstenite::Message::Ping(
@@ -137,15 +137,22 @@ impl SlackTungsteniteWssClient {
                 while let Some(message) = reader.next().await {
                     match message {
                         Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
-                            thread_listener.on_message(&thread_client_id, body).await
+                            trace!("Received from Slack: {:?}", body);
+                            if let Some(reply) =
+                                thread_listener.on_message(&thread_client_id, body).await
+                            {
+                                trace!("Sending reply to Slack: {:?}", reply);
+                                tx.send(SlackTungsteniteWssClientCommand::Message(reply))
+                                    .unwrap_or(());
+                            }
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Ping(body)) => {
-                            debug!("Ping from Slack: {:?}", body);
+                            trace!("Ping from Slack: {:?}", body);
                             tx.send(SlackTungsteniteWssClientCommand::Pong(body))
                                 .unwrap_or(());
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
-                            debug!("Pong from Slack: {:?}", body);
+                            trace!("Pong from Slack: {:?}", body);
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
                             warn!("Unexpected binary received from Slack: {:?}", body);
