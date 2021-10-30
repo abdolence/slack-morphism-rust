@@ -13,6 +13,8 @@ https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src
 
 The example bot requires to work the following environment variables (from your Slack bot profile in api.slack.com):
 - `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_BOT_SCOPE`, `SLACK_REDIRECT_HOST` - for OAuth
+- `SLACK_TEST_TOKEN` - for Slack client example
+- `SLACK_TEST_APP_TOKEN` - for Slack client with Socket Mode example
 - `SLACK_SIGNING_SECRET` for all routes
 
 Routes for this example are available on http://<your-host>:8080:

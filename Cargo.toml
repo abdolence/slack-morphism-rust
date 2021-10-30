@@ -4,5 +4,5 @@ members = [
     "src/models",
     "src/client",
     "src/hyper",
-    "src/examples"
+    "src/examples",
 ]

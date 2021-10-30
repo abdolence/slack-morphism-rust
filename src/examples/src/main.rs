@@ -295,8 +295,8 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     init_log()?;
-    //test_server().await?;
 
+    //test_server().await?;
     test_client_with_socket_mode().await?;
 
     Ok(())
