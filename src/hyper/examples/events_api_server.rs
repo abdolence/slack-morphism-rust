@@ -1,69 +1,11 @@
 use slack_morphism::prelude::*;
 use slack_morphism_hyper::*;
 
-use futures::stream::BoxStream;
-use futures::TryStreamExt;
-use std::time::Duration;
-
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response};
 use log::*;
 
 use std::sync::{Arc, RwLock};
-
-mod templates;
-use templates::*;
-
-#[allow(dead_code)]
-async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
-    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-    let session = client.open_session(&token);
-    println!("{:#?}", session);
-
-    let test: SlackApiTestResponse = session
-        .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
-        .await?;
-
-    println!("{:#?}", test);
-
-    let message = WelcomeMessageTemplateParams::new("".into());
-
-    let post_chat_req =
-        SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
-
-    let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
-    println!("post chat resp: {:#?}", &post_chat_resp);
-
-    let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
-    let scroller = scroller_req.scroller();
-
-    let mut resp_stream: BoxStream<ClientResult<SlackApiUsersListResponse>> =
-        scroller.to_stream(&session);
-
-    while let Some(item) = resp_stream.try_next().await? {
-        println!("res: {:#?}", item.members);
-    }
-
-    let collected_members: Vec<SlackUser> = scroller
-        .collect_items_stream(&session, Duration::from_millis(1000))
-        .await?;
-    println!("collected res: {:#?}", collected_members);
-
-    let mut items_stream = scroller.to_items_stream(&session);
-    while let Some(items) = items_stream.try_next().await? {
-        println!("res: {:#?}", items);
-    }
-
-    let mut items_throttled_stream =
-        scroller.to_items_throttled_stream(&session, Duration::from_millis(500));
-    while let Some(items) = items_throttled_stream.try_next().await? {
-        println!("res: {:#?}", items);
-    }
-
-    Ok(())
-}
 
 async fn test_oauth_install_function(
     resp: SlackOAuthV2AccessTokenResponse,
@@ -115,14 +57,6 @@ async fn test_command_events_function(
     ))
 }
 
-async fn test_push_events_sm_function(
-    event: SlackPushEventCallback,
-    _client: Arc<SlackHyperClient>,
-    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
-    println!("{:#?}", event);
-}
-
 fn test_error_handler(
     err: Box<dyn std::error::Error + Send + Sync>,
     _client: Arc<SlackHyperClient>,
@@ -137,7 +71,6 @@ fn test_error_handler(
 #[derive(Debug)]
 struct UserStateExample(u64);
 
-#[allow(dead_code)]
 async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client: Arc<SlackHyperClient> =
         Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
@@ -219,38 +152,6 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     })
 }
 
-#[allow(dead_code)]
-async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
-
-    let socket_mode_callbacks = SlackSocketModeListenerCallbacks::new()
-        .with_command_events(test_command_events_function)
-        .with_interaction_events(test_interaction_events_function)
-        .with_interaction_events(test_interaction_events_function)
-        .with_push_events(test_push_events_sm_function);
-
-    let listener_environment = Arc::new(
-        SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(test_error_handler)
-            .with_user_state(UserStateExample(0)),
-    );
-
-    let socket_mode_listener = SlackClientSocketModeListener::new(
-        &SlackClientSocketModeConfig::new(),
-        listener_environment.clone(),
-        socket_mode_callbacks,
-    );
-
-    let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();
-    let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
-
-    socket_mode_listener.listen_for(&app_token).await?;
-
-    socket_mode_listener.serve().await;
-
-    Ok(())
-}
-
 fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use fern::colors::{Color, ColoredLevelConfig};
 
@@ -296,8 +197,7 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     init_log()?;
 
-    //test_server().await?;
-    test_client_with_socket_mode().await?;
+    test_server().await?;
 
     Ok(())
 }

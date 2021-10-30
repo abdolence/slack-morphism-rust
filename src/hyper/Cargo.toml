@@ -45,5 +45,10 @@ http = "0.2"
 tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
 rand = "0.8.4"
 
+[dev-dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+fern = { version = "0.6", features = ["colored"] }
+
 [package.metadata.release]
 disable-tag=true
