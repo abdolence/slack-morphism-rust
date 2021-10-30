@@ -44,7 +44,7 @@ where
         }
     }
 
-    pub async fn start_for(&self, token: &SlackApiToken) -> ClientResult<()> {
+    pub async fn listen_for(&self, token: &SlackApiToken) -> ClientResult<()> {
         self.clients_manager
             .create_all_clients(
                 self.config.clone(),
@@ -56,12 +56,18 @@ where
         Ok(())
     }
 
+    pub async fn start(&self) {
+        self.clients_manager.start_clients(&self.config).await;
+    }
+
     pub async fn shutdown(&self) {
         self.clients_manager.shutdown().await;
     }
 
     pub async fn serve(&self) -> i32 {
         let (p, c) = channel();
+
+        self.start().await;
 
         ctrlc::set_handler(move || p.send(1).unwrap()).expect("Error setting Ctrl-C handler");
 

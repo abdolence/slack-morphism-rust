@@ -75,11 +75,11 @@ let socket_mode_listener = SlackClientSocketModeListener::new(
 let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();
 let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
 
-// Start connections for the specified token value
-socket_mode_listener.start_for(&app_token).await?;
+// Register a specified token value to work with.
+socket_mode_listener.listen_for(&app_token).await?;
 
 // Wait for Ctrl-C
-// There is also .shutdown() available to manually manage the lifecycle of socket_mode_listener
+// There is also .start()/.shutdown() available to manually manage the lifecycle of socket_mode_listener
 socket_mode_listener.serve().await;
 
 ```

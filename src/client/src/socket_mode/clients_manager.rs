@@ -4,6 +4,7 @@ use crate::socket_mode::clients::*;
 use crate::*;
 use async_trait::async_trait;
 use slack_morphism_models::socket_mode::*;
+use std::ops::Range;
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::errors::*;
@@ -62,31 +63,51 @@ where
         }
     }
 
+    fn get_next_clients_range_indices(&self, config: &SlackClientSocketModeConfig) -> Range<u32> {
+        let clients_read = self.active_clients.read().unwrap();
+        let last_client_id_value = clients_read.len();
+        last_client_id_value as u32
+            ..(last_client_id_value as u32 + config.max_connections_count) as u32
+    }
+
     pub async fn create_all_clients(
         &self,
         config: SlackClientSocketModeConfig,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     ) -> ClientResult<()> {
-        let mut clients_write = self.active_clients.write().unwrap();
-        let last_client_id_value = clients_write.len();
-
-        for client_id_value in last_client_id_value as u32
-            ..(last_client_id_value as u32 + config.max_connections_count) as u32
+        let new_clients_range = self.get_next_clients_range_indices(&config);
         {
-            let wss_client_result = self
-                .create_new_wss_client(
-                    SlackSocketModeWssClientId::new(client_id_value, 0),
-                    token.clone(),
-                    client_listener.clone(),
-                    config.clone(),
-                    client_id_value as u64 * config.initial_backoff_in_seconds as u64,
-                )
-                .await?;
-            clients_write.push(wss_client_result)
+            let mut clients_write = self.active_clients.write().unwrap();
+
+            for client_id_value in new_clients_range {
+                let wss_client_result = self
+                    .create_new_wss_client(
+                        SlackSocketModeWssClientId::new(client_id_value, 0),
+                        token.clone(),
+                        client_listener.clone(),
+                        config.clone(),
+                    )
+                    .await?;
+
+                clients_write.push(wss_client_result);
+            }
         }
 
         Ok(())
+    }
+
+    pub async fn start_clients(&self, config: &SlackClientSocketModeConfig) {
+        let clients_read = self.active_clients.read().unwrap();
+        for client_id_value in 0..clients_read.len() {
+            clients_read[client_id_value]
+                .wss_client
+                .start(
+                    client_id_value as u64 * config.initial_backoff_in_seconds,
+                    config.reconnect_timeout_in_seconds,
+                )
+                .await
+        }
     }
 
     async fn create_new_wss_client(
@@ -95,7 +116,6 @@ where
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
         config: SlackClientSocketModeConfig,
-        initial_wait_timeout: u64,
     ) -> ClientResult<SlackSocketModeClient<SCWSS>> {
         let session = self.listener_environment.client.open_session(&token);
 
@@ -110,9 +130,8 @@ where
         };
 
         trace!(
-            "Creating a new WSS client: {:?}. Initial backoff timeout: {}. Url: {}",
+            "Creating a new WSS client: {:?}. Url: {}",
             client_id,
-            initial_wait_timeout,
             open_connection_res_url.value()
         );
 
@@ -126,7 +145,6 @@ where
                 client_id.clone(),
                 token.clone(),
                 client_listener.clone(),
-                initial_wait_timeout,
             )
             .await?;
 
@@ -169,13 +187,16 @@ where
                     removed_client.token.clone(),
                     removed_client.listener.clone(),
                     removed_client.config.clone(),
-                    0,
                 )
                 .await
             {
-                Ok(wss_client) => {
+                Ok(client) => {
+                    client
+                        .wss_client
+                        .start(0, removed_client.config.reconnect_timeout_in_seconds)
+                        .await;
                     let mut clients_write = self.active_clients.write().unwrap();
-                    clients_write.push(wss_client);
+                    clients_write.push(client);
                 }
                 Err(err) => {
                     error!(

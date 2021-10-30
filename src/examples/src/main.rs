@@ -244,7 +244,7 @@ async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error 
     let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();
     let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
 
-    socket_mode_listener.start_for(&app_token).await?;
+    socket_mode_listener.listen_for(&app_token).await?;
 
     socket_mode_listener.serve().await;
 

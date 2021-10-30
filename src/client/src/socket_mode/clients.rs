@@ -46,7 +46,6 @@ where
         client_id: SlackSocketModeWssClientId,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
-        initial_wait_timeout: u64,
     ) -> ClientResult<SCWSS>;
 }
 
@@ -54,6 +53,7 @@ where
 pub trait SlackSocketModeWssClient {
     async fn message(&self, message_body: String) -> ClientResult<()>;
 
+    async fn start(&self, initial_wait_timeout: u64, reconnect_timeout: u64);
     async fn destroy(&mut self);
 }
 
