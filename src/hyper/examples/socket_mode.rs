@@ -41,7 +41,6 @@ fn test_error_handler(
     http::StatusCode::BAD_REQUEST
 }
 
-#[allow(dead_code)]
 async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
 
