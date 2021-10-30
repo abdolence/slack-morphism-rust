@@ -7,8 +7,8 @@ use slack_morphism::*;
 // Slack Morphism Hyper/Tokio support
 use slack_morphism_hyper::*;
 
-let hyper_connector = SlackClientHyperConnector::new();
-let client = SlackClient::new(hyper_connector);
+let client = SlackClient::new( SlackClientHyperConnector::new() );
+
 ```
 
 ### Make Web API methods calls
@@ -32,8 +32,7 @@ use slack_morphism_hyper::*;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client = SlackClient::new(hyper_connector);
+    let client = SlackClient::new(SlackClientHyperConnector::new());
     
     // Create our Slack API token
     let token_value: SlackApiTokenValue = "xoxb-89.....".into();

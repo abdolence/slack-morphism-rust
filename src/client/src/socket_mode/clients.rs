@@ -1,14 +1,39 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use rvstruct::*;
+use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use slack_morphism_models::*;
 
 use crate::*;
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
-pub struct SlackSocketModeWssClientId(pub u8);
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackSocketModeWssClientId {
+    pub initial_index: u32,
+    pub reconnected: u64,
+}
+
+impl SlackSocketModeWssClientId {
+    pub fn new_reconnected_id(&self) -> Self {
+        if self.reconnected < 64 {
+            Self {
+                reconnected: self.reconnected + 1,
+                ..self.clone()
+            }
+        } else {
+            Self {
+                reconnected: 0,
+                ..self.clone()
+            }
+        }
+    }
+}
+
+impl ToString for SlackSocketModeWssClientId {
+    fn to_string(&self) -> String {
+        format!("{}/{}", self.initial_index, self.reconnected)
+    }
+}
 
 #[async_trait]
 pub trait SlackSocketModeWssClientsFactory<SCWSS>
@@ -21,16 +46,13 @@ where
         client_id: SlackSocketModeWssClientId,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
+        initial_wait_timeout: u64,
     ) -> ClientResult<SCWSS>;
 }
 
 #[async_trait]
 pub trait SlackSocketModeWssClient {
-    fn id(&self) -> &SlackSocketModeWssClientId;
-    fn token(&self) -> &SlackApiToken;
-    fn listener(&self) -> Arc<dyn SlackSocketModeWssClientListener + Sync + Send>;
-
-    async fn message(&mut self, message_body: String) -> ClientResult<()>;
+    async fn message(&self, message_body: String) -> ClientResult<()>;
 
     async fn destroy(&mut self);
 }

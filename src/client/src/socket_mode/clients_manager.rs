@@ -8,6 +8,7 @@ use std::sync::{Arc, RwLock, Weak};
 
 use crate::errors::*;
 use log::*;
+use rvstruct::*;
 use slack_morphism_models::socket_mode::SlackSocketModeEvent;
 
 pub(crate) struct SlackSocketModeClientsManager<SCHC, SCWSS>
@@ -17,8 +18,19 @@ where
     SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
 {
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
-    active_clients: Arc<RwLock<Vec<SCWSS>>>,
+    active_clients: Arc<RwLock<Vec<SlackSocketModeClient<SCWSS>>>>,
     callbacks: Arc<SlackSocketModeListenerCallbacks<SCHC>>,
+}
+
+struct SlackSocketModeClient<SCWSS>
+where
+    SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
+{
+    id: SlackSocketModeWssClientId,
+    wss_client: SCWSS,
+    token: SlackApiToken,
+    config: SlackClientSocketModeConfig,
+    listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
 }
 
 impl<SCHC, SCWSS> SlackSocketModeClientsManager<SCHC, SCWSS>
@@ -39,31 +51,36 @@ where
     }
 
     pub async fn shutdown(&self) {
-        let mut drained_clients: Vec<SCWSS> = {
+        let mut drained_clients: Vec<SlackSocketModeClient<SCWSS>> = {
             let mut clients_write = self.active_clients.write().unwrap();
             let existing_vec = clients_write.drain(..).collect();
             existing_vec
         };
 
         for client in drained_clients.iter_mut() {
-            client.destroy().await;
+            client.wss_client.destroy().await;
         }
     }
 
     pub async fn create_all_clients(
         &self,
-        connections_count: u8,
+        config: SlackClientSocketModeConfig,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     ) -> ClientResult<()> {
         let mut clients_write = self.active_clients.write().unwrap();
+        let last_client_id_value = clients_write.len();
 
-        for client_id_value in 0..connections_count {
+        for client_id_value in last_client_id_value as u32
+            ..(last_client_id_value as u32 + config.max_connections_count) as u32
+        {
             let wss_client_result = self
                 .create_new_wss_client(
-                    client_id_value.into(),
+                    SlackSocketModeWssClientId::new(client_id_value, 0),
                     token.clone(),
                     client_listener.clone(),
+                    config.clone(),
+                    client_id_value as u64 * config.initial_backoff_in_seconds as u64,
                 )
                 .await?;
             clients_write.push(wss_client_result)
@@ -77,45 +94,82 @@ where
         client_id: SlackSocketModeWssClientId,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
-    ) -> ClientResult<SCWSS> {
+        config: SlackClientSocketModeConfig,
+        initial_wait_timeout: u64,
+    ) -> ClientResult<SlackSocketModeClient<SCWSS>> {
         let session = self.listener_environment.client.open_session(&token);
 
         let open_connection_res = session
             .apps_connections_open(&SlackApiAppsConnectionOpenRequest::new())
             .await?;
 
-        self.listener_environment
+        let open_connection_res_url = if config.debug_connections {
+            format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
+        } else {
+            open_connection_res.url
+        };
+
+        trace!(
+            "Creating a new WSS client: {:?}. Initial backoff timeout: {}. Url: {}",
+            client_id,
+            initial_wait_timeout,
+            open_connection_res_url.value()
+        );
+
+        let wss_client = self
+            .listener_environment
             .client
             .http_api
             .connector
-            .create_wss_client(&open_connection_res.url, client_id, token, client_listener)
-            .await
+            .create_wss_client(
+                &open_connection_res_url,
+                client_id.clone(),
+                token.clone(),
+                client_listener.clone(),
+                initial_wait_timeout,
+            )
+            .await?;
+
+        Ok(SlackSocketModeClient {
+            id: client_id.clone(),
+            wss_client,
+            token: token.clone(),
+            config: config.clone(),
+            listener: client_listener.clone(),
+        })
     }
 
     async fn remove_client(&self, client_id: &SlackSocketModeWssClientId) {
+        debug!("[{}] Removing client", client_id.to_string());
+
         let mut removed_clients = {
             let mut clients_write = self.active_clients.write().unwrap();
 
             match clients_write
                 .iter()
                 .enumerate()
-                .find(|(_, client)| *client.id() == *client_id)
+                .find(|(_, client)| client.id == *client_id)
             {
-                Some((index, _)) => clients_write.drain(index..index).collect::<Vec<SCWSS>>(),
+                Some((index, _)) => clients_write
+                    .drain(index..=index)
+                    .collect::<Vec<SlackSocketModeClient<SCWSS>>>(),
                 None => vec![],
             }
         };
 
         if !removed_clients.is_empty() {
             let removed_client = &mut removed_clients[0];
-            removed_client.destroy().await;
+            removed_client.wss_client.destroy().await;
 
             // Reconnect
+            trace!("[{}] Reconnecting...", client_id.to_string());
             match self
                 .create_new_wss_client(
-                    removed_client.id().clone(),
-                    removed_client.token().clone(),
-                    removed_client.listener(),
+                    removed_client.id.new_reconnected_id(),
+                    removed_client.token.clone(),
+                    removed_client.listener.clone(),
+                    removed_client.config.clone(),
+                    0,
                 )
                 .await
             {
@@ -124,9 +178,18 @@ where
                     clients_write.push(wss_client);
                 }
                 Err(err) => {
-                    error!("Unable to recreate WSS client: {}", err);
+                    error!(
+                        "[{}] Unable to recreate WSS client: {}",
+                        client_id.to_string(),
+                        err
+                    );
                 }
             }
+        } else {
+            trace!(
+                "[{}] No need to reconnect for client",
+                client_id.to_string()
+            )
         }
     }
 }
@@ -163,7 +226,7 @@ where
 {
     async fn on_message(
         &self,
-        _client_id: &SlackSocketModeWssClientId,
+        client_id: &SlackSocketModeWssClientId,
         message_body: String,
     ) -> Option<String> {
         if let Some(clients_manager) = self.clients_manager.upgrade() {
@@ -188,6 +251,15 @@ where
                                     .clone(),
                             )
                             .await;
+                        None
+                    }
+                    SlackSocketModeEvent::Disconnect(event) => {
+                        trace!(
+                            "[{}] Received socket mode disconnected event: {:?}",
+                            client_id.to_string(),
+                            event
+                        );
+                        clients_manager.remove_client(client_id).await;
                         None
                     }
                     SlackSocketModeEvent::Interactive(event) => {

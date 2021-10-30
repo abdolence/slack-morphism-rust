@@ -62,8 +62,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     // We need also a client instance. `Arc` used here because we would like 
     // to share the the same client for all of the requests and all hyper threads    
     
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client: Arc<SlackClient<SlackClientHyperConnector>> = Arc::new(SlackClient::new(hyper_connector));
+    let client = SlackClient::new(SlackClientHyperConnector::new());
     
 
     // In this example we're going to use all of the events handlers, but
@@ -131,6 +130,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(test_error_handler)
     );
+    
    
     let make_svc = make_service_fn(move |_| {
         // Because of threading model you have to create copies of configs.

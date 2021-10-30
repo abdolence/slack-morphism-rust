@@ -14,6 +14,8 @@ use rvstruct::*;
 pub enum SlackSocketModeEvent {
     #[serde(rename = "hello")]
     Hello(SlackSocketModeHelloEvent),
+    #[serde(rename = "disconnect")]
+    Disconnect(SlackSocketModeDisconnectEvent),
     #[serde(rename = "interactive")]
     Interactive(SlackSocketModeInteractiveEvent),
     #[serde(rename = "events_api")]
@@ -41,8 +43,15 @@ pub struct SlackSocketModeConnectionInfo {
 pub struct SlackSocketModeDebugInfo {
     pub host: String,
     pub started: Option<String>,
-    pub build_number: u64,
-    pub approximate_connection_time: u64,
+    pub build_number: Option<u64>,
+    pub approximate_connection_time: Option<u64>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackSocketModeDisconnectEvent {
+    pub reason: String,
+    pub debug_info: SlackSocketModeDebugInfo,
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]

@@ -47,7 +47,7 @@ where
     pub async fn start_for(&self, token: &SlackApiToken) -> ClientResult<()> {
         self.clients_manager
             .create_all_clients(
-                self.config.max_connections_count,
+                self.config.clone(),
                 token.clone(),
                 self.clients_manager_listener.clone(),
             )

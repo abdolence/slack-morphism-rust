@@ -10,7 +10,8 @@ use slack_morphism::clients::{
 use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
+use std::time::SystemTime;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::*;
 use url::Url;
@@ -21,7 +22,7 @@ pub struct SlackTungsteniteWssClient {
     token: SlackApiToken,
     client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     url: Url,
-    command_writer: Option<UnboundedSender<SlackTungsteniteWssClientCommand>>,
+    command_writer: Arc<RwLock<Option<UnboundedSender<SlackTungsteniteWssClientCommand>>>>,
 }
 
 #[derive(Clone, Debug)]
@@ -46,12 +47,24 @@ impl SlackTungsteniteWssClient {
             token,
             client_listener,
             url: url_to_connect,
-            command_writer: None,
+            command_writer: Arc::new(RwLock::new(None)),
         }
     }
 
-    pub async fn connect(&mut self) -> ClientResult<()> {
-        debug!("Connecting to {}. Id: {:?}", self.url, self.id);
+    pub async fn connect(&self, initial_wait_timeout: u64) -> ClientResult<()> {
+        debug!("[{}] Connecting to {}", self.id.to_string(), self.url);
+        if initial_wait_timeout > 0 {
+            trace!(
+                "[{}] Delayed connection for {} seconds (backoff timeout for multiple connections)",
+                self.id.to_string(),
+                initial_wait_timeout
+            );
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(initial_wait_timeout));
+
+            interval.tick().await;
+            interval.tick().await;
+        }
         let (wss_stream, response) = connect_async(&self.url).await?;
         if !response.status().is_success() && !response.status().is_informational() {
             return Err(
@@ -61,7 +74,7 @@ impl SlackTungsteniteWssClient {
                 .into(),
             );
         } else {
-            debug!("Connected to {}. Id: {:?}", self.url, self.id);
+            debug!("[{}] Connected to {}", self.id.to_string(), self.url);
 
             let (mut writer, mut reader) = wss_stream.split();
 
@@ -70,35 +83,88 @@ impl SlackTungsteniteWssClient {
                 UnboundedReceiver<SlackTungsteniteWssClientCommand>,
             ) = tokio::sync::mpsc::unbounded_channel();
 
-            self.command_writer = Some(tx.clone());
+            {
+                let mut self_command_writer = self.command_writer.write().unwrap();
+                self_command_writer.replace(tx.clone());
+            };
+
+            let ping_interval_in_seconds = 10;
+
+            struct PongState {
+                time: SystemTime,
+            }
+            let last_time_pong_received: Arc<RwLock<PongState>> =
+                Arc::new(RwLock::new(PongState {
+                    time: SystemTime::now(),
+                }));
 
             {
+                let thread_last_time_pong_received = last_time_pong_received.clone();
+                let thread_client_id = self.id.clone();
+
                 tokio::spawn(async move {
                     while let Some(message) = rx.recv().await {
                         match message {
                             SlackTungsteniteWssClientCommand::Message(body) => {
-                                writer
+                                if writer
                                     .send(tokio_tungstenite::tungstenite::Message::Text(body))
                                     .await
-                                    .unwrap();
+                                    .is_err()
+                                {
+                                    rx.close()
+                                }
                             }
                             SlackTungsteniteWssClientCommand::Pong(body) => {
-                                trace!("Pong to Slack: {:?}", body);
-                                writer
+                                trace!(
+                                    "[{}] Pong to Slack: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
+                                if writer
                                     .send(tokio_tungstenite::tungstenite::Message::Pong(body))
                                     .await
-                                    .unwrap();
+                                    .is_err()
+                                {
+                                    rx.close()
+                                }
                             }
                             SlackTungsteniteWssClientCommand::Ping => {
                                 let body: [u8; 5] = rand::random();
-                                trace!("Ping to Slack: {:?}", body);
+                                trace!(
+                                    "[{}] Ping to Slack: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
 
-                                writer
+                                let seen_pong_time_in_secs = {
+                                    let last_pong = thread_last_time_pong_received.read().unwrap();
+
+                                    SystemTime::now()
+                                        .duration_since(last_pong.time)
+                                        .unwrap()
+                                        .as_secs()
+                                };
+
+                                if seen_pong_time_in_secs > ping_interval_in_seconds * 5 {
+                                    warn!(
+                                        "[{}] Haven't seen any pong from Slack since {} seconds ago",
+                                        thread_client_id.to_string(),
+                                        seen_pong_time_in_secs
+                                    );
+                                    rx.close()
+                                } else if let Err(err) = writer
                                     .send(tokio_tungstenite::tungstenite::Message::Ping(
                                         body.to_vec(),
                                     ))
                                     .await
-                                    .unwrap();
+                                {
+                                    warn!(
+                                        "[{}] Ping slack failed with: {:?}",
+                                        thread_client_id.to_string(),
+                                        err
+                                    );
+                                    rx.close()
+                                }
                             }
                             SlackTungsteniteWssClientCommand::Exit => {
                                 writer.close().await.unwrap_or(());
@@ -110,9 +176,13 @@ impl SlackTungsteniteWssClient {
             }
 
             {
+                let thread_listener = self.client_listener.clone();
+                let thread_client_id = self.id.clone();
                 let ping_tx = tx.clone();
                 tokio::spawn(async move {
-                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(10));
+                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(
+                        ping_interval_in_seconds,
+                    ));
 
                     loop {
                         interval.tick().await;
@@ -124,80 +194,111 @@ impl SlackTungsteniteWssClient {
                                 break;
                             }
                         } else {
+                            thread_listener.on_disconnect(&thread_client_id).await;
                             break;
                         }
                     }
                 });
             }
 
-            let thread_listener = self.client_listener.clone();
-            let thread_client_id = self.id.clone();
+            {
+                let thread_listener = self.client_listener.clone();
+                let thread_client_id = self.id.clone();
+                let thread_last_time_pong_received = last_time_pong_received.clone();
 
-            tokio::spawn(async move {
-                while let Some(message) = reader.next().await {
-                    match message {
-                        Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
-                            trace!("Received from Slack: {:?}", body);
-                            if let Some(reply) =
-                                thread_listener.on_message(&thread_client_id, body).await
-                            {
-                                trace!("Sending reply to Slack: {:?}", reply);
-                                tx.send(SlackTungsteniteWssClientCommand::Message(reply))
+                tokio::spawn(async move {
+                    while let Some(message) = reader.next().await {
+                        match message {
+                            Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
+                                trace!(
+                                    "[{}] Received from Slack: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
+                                if let Some(reply) =
+                                    thread_listener.on_message(&thread_client_id, body).await
+                                {
+                                    trace!(
+                                        "[{}] Sending reply to Slack: {:?}",
+                                        thread_client_id.to_string(),
+                                        reply
+                                    );
+                                    tx.send(SlackTungsteniteWssClientCommand::Message(reply))
+                                        .unwrap_or(());
+                                }
+                            }
+                            Ok(tokio_tungstenite::tungstenite::Message::Ping(body)) => {
+                                trace!(
+                                    "[{}] Ping from Slack: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
+                                tx.send(SlackTungsteniteWssClientCommand::Pong(body))
                                     .unwrap_or(());
                             }
-                        }
-                        Ok(tokio_tungstenite::tungstenite::Message::Ping(body)) => {
-                            trace!("Ping from Slack: {:?}", body);
-                            tx.send(SlackTungsteniteWssClientCommand::Pong(body))
-                                .unwrap_or(());
-                        }
-                        Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
-                            trace!("Pong from Slack: {:?}", body);
-                        }
-                        Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
-                            warn!("Unexpected binary received from Slack: {:?}", body);
-                        }
-                        Ok(tokio_tungstenite::tungstenite::Message::Close(body)) => {
-                            debug!("Shutting down WSS channel: {:?}", body);
-                            thread_listener.on_disconnect(&thread_client_id).await
-                        }
-                        Err(err) => {
-                            error!("Slack WSS error: {:?}", err);
-                            thread_listener.on_disconnect(&thread_client_id).await
+                            Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
+                                trace!(
+                                    "[{}] Pong from Slack: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
+                                let mut last_pong = thread_last_time_pong_received.write().unwrap();
+                                last_pong.time = SystemTime::now();
+                            }
+                            Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
+                                warn!(
+                                    "[{}] Unexpected binary received from Slack: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
+                            }
+                            Ok(tokio_tungstenite::tungstenite::Message::Close(body)) => {
+                                debug!(
+                                    "[{}] Shutting down WSS channel: {:?}",
+                                    thread_client_id.to_string(),
+                                    body
+                                );
+                                thread_listener.on_disconnect(&thread_client_id).await
+                            }
+                            Err(err) => {
+                                error!(
+                                    "[{}] Slack WSS error: {:?}",
+                                    thread_client_id.to_string(),
+                                    err
+                                );
+                                thread_listener.on_disconnect(&thread_client_id).await
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         }
         Ok(())
     }
 
     async fn shutdown_channel(&mut self) {
-        if let Some(sender) = self.command_writer.clone() {
+        let maybe_sender = {
+            let mut commands_writer = self.command_writer.write().unwrap().clone();
+            commands_writer.take()
+        };
+
+        if let Some(sender) = maybe_sender {
             sender
                 .send(SlackTungsteniteWssClientCommand::Exit)
                 .unwrap_or(());
-            self.command_writer = None;
         }
     }
 }
 
 #[async_trait]
 impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
-    fn id(&self) -> &SlackSocketModeWssClientId {
-        &self.id
-    }
+    async fn message(&self, message_body: String) -> ClientResult<()> {
+        let maybe_sender = {
+            let commands_writer = self.command_writer.read().unwrap().clone();
+            commands_writer.map(|x| x.clone())
+        };
 
-    fn token(&self) -> &SlackApiToken {
-        &self.token
-    }
-
-    fn listener(&self) -> Arc<dyn SlackSocketModeWssClientListener + Sync + Send> {
-        self.client_listener.clone()
-    }
-
-    async fn message(&mut self, message_body: String) -> ClientResult<()> {
-        if let Some(sender) = self.command_writer.clone() {
+        if let Some(sender) = maybe_sender {
             if !sender.is_closed() {
                 tokio::spawn(async move {
                     sender.send(SlackTungsteniteWssClientCommand::Message(message_body))
@@ -205,7 +306,6 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
 
                 Ok(())
             } else {
-                self.destroy().await;
                 Err(Box::new(SlackClientError::EndOfStream(
                     SlackClientEndOfStreamError::new(),
                 )))
@@ -231,9 +331,11 @@ impl SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient> for SlackClient
         client_id: SlackSocketModeWssClientId,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
+        initial_wait_timeout: u64,
     ) -> ClientResult<SlackTungsteniteWssClient> {
-        let mut client = SlackTungsteniteWssClient::new(wss_url, client_id, token, client_listener);
-        client.connect().await?;
+        let client = SlackTungsteniteWssClient::new(wss_url, client_id, token, client_listener);
+
+        client.connect(initial_wait_timeout).await?;
         Ok(client)
     }
 }
