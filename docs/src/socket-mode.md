@@ -13,7 +13,6 @@ and don't want to work with HTTP endpoints yourself.
 use slack_morphism::prelude::*;
 use slack_morphism_hyper::*;
 
-
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
@@ -53,6 +52,12 @@ let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
 );
 
+let socket_mode_listener = SlackClientSocketModeListener::new(
+      &SlackClientSocketModeConfig::new(),
+      listener_environment.clone(),
+      socket_mode_callbacks,
+);
+
 ```
 
 ## Connect using socket mode to Slack
@@ -65,21 +70,16 @@ By default it uses 2 connections to one token. To configure it see `SlackClientS
 
 ```rust,noplaypen
 
-let socket_mode_listener = SlackClientSocketModeListener::new(
-      &SlackClientSocketModeConfig::new(),
-      listener_environment.clone(),
-      socket_mode_callbacks,
-);
-
 // Need to specify App token for Socket Mode:
-let app_token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_APP_TOKEN")?.into();
+let app_token_value: SlackApiTokenValue = 
+    config_env_var("SLACK_TEST_APP_TOKEN")?.into();
 let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
 
-// Register a specified token value to work with.
+// Register an app token to listen for.
 socket_mode_listener.listen_for(&app_token).await?;
 
 // Wait for Ctrl-C
-// There is also .start()/.shutdown() available to manually manage the lifecycle of socket_mode_listener
+// There are also `.start()`/`.shutdown()` available to manage manually 
 socket_mode_listener.serve().await;
 
 ```
