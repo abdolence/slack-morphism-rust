@@ -5,6 +5,7 @@ use crate::{ClientResult, SlackClient, SlackClientHttpConnector};
 use futures::future::BoxFuture;
 use log::*;
 use slack_morphism_models::events::{SlackCommandEvent, SlackCommandEventResponse};
+use slack_morphism_models::socket_mode::SlackSocketModeHelloEvent;
 use std::future::Future;
 use std::sync::{Arc, RwLock};
 
@@ -46,6 +47,8 @@ pub struct SlackSocketModeListenerCallbacks<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
 {
+    pub hello_callback:
+        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackSocketModeHelloEvent, ()> + Send + Sync>,
     pub command_callback: Box<
         dyn SlackSocketModeListenerCallback<
                 SCHC,
@@ -62,6 +65,7 @@ where
 {
     pub fn new() -> Self {
         Self {
+            hello_callback: Box::new(Self::empty_hello_callback),
             command_callback: Box::new(Self::empty_command_events_callback),
         }
     }
@@ -75,6 +79,14 @@ where
     {
         self.command_callback = Box::new(command_events_fn);
         self
+    }
+
+    async fn empty_hello_callback(
+        event: SlackSocketModeHelloEvent,
+        _client: Arc<SlackClient<SCHC>>,
+        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    ) {
+        debug!("Received Slack hello for socket mode: {:?}", event);
     }
 
     async fn empty_command_events_callback(

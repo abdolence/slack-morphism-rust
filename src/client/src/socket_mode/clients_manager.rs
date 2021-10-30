@@ -5,7 +5,9 @@ use crate::*;
 use async_trait::async_trait;
 use std::sync::{Arc, RwLock, Weak};
 
+use crate::errors::*;
 use log::*;
+use slack_morphism_models::socket_mode::SlackSocketModeEvent;
 
 pub(crate) struct SlackSocketModeClientsManager<SCHC, SCWSS>
 where
@@ -158,7 +160,44 @@ where
         SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
     SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
 {
-    async fn on_message(&self, _client_id: &SlackSocketModeWssClientId, _message_body: String) {}
+    async fn on_message(&self, _client_id: &SlackSocketModeWssClientId, message_body: String) {
+        if let Some(clients_manager) = self.clients_manager.upgrade() {
+            match serde_json::from_str::<SlackSocketModeEvent>(message_body.as_str()).map_err(|e| {
+                SlackClientProtocolError {
+                    json_error: e,
+                    http_response_body: message_body.clone(),
+                }
+                .into()
+            }) {
+                Ok(sm_event) => match sm_event {
+                    SlackSocketModeEvent::Hello(event) => {
+                        clients_manager
+                            .callbacks
+                            .hello_callback
+                            .call(
+                                event,
+                                clients_manager.listener_environment.client.clone(),
+                                clients_manager
+                                    .listener_environment
+                                    .user_state_storage
+                                    .clone(),
+                            )
+                            .await;
+                    }
+                },
+                Err(err) => {
+                    clients_manager.listener_environment.error_handler.clone()(
+                        err,
+                        clients_manager.listener_environment.client.clone(),
+                        clients_manager
+                            .listener_environment
+                            .user_state_storage
+                            .clone(),
+                    );
+                }
+            }
+        }
+    }
 
     async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId) {
         if let Some(clients_manager) = self.clients_manager.upgrade() {

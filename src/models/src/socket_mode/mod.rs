@@ -30,7 +30,7 @@ pub struct SlackSocketModeConnectionInfo {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackSocketModeDebugInfo {
     pub host: String,
-    pub started: String,
+    pub started: Option<String>,
     pub build_number: u64,
     pub approximate_connection_time: u64,
 }
