@@ -29,9 +29,8 @@ use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 ```
 
 ## Ready to use examples
-- 
-- Slack Web API client 
-- Events API
+- Slack Web API client and Block kit example
+- Events API server example
 - Slack Web API client with Socket Mode
 
 You can find them on [github](https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples)
