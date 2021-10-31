@@ -157,9 +157,9 @@ in asynchronous manner.</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
-slack-morphism=&quot;0.10&quot;
-slack-morphism-models=&quot;0.10&quot;
-slack-morphism-hyper=&quot;0.10&quot;
+slack-morphism=&quot;0.11&quot;
+slack-morphism-models=&quot;0.11&quot;
+slack-morphism-hyper=&quot;0.11&quot;
 </code></pre>
 <p>All imports you need:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
@@ -360,6 +360,9 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
                     some_into(SlackImageBlock::new(
                         &quot;https://www.gstatic.com/webp/gallery3/2_webp_ll.png&quot;.into(),
                         &quot;Test Image&quot;.into()
+                    )),
+                    some_into(SlackHeaderBlock::new(
+                        pt!(&quot;Simple header&quot;)
                     )),
                     some_into(SlackActionsBlock::new(slack_blocks![some_into(
                         SlackBlockButtonElement::new(
@@ -564,7 +567,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
 which is already integrated in the routes implementation for you and you don't need to use 
 it directly. All you need is provide your client id and secret configuration 
 to route implementation.</p>
-<p>Look at the <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/examples/src">examples/test_server</a> sources for a complete ready to use example.</p>
+<p>Look at the <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples/events_api_server.rs">complete example here</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="slack-socket-mode-support"><a class="header" href="#slack-socket-mode-support">Slack Socket Mode support</a></h1>
 <p>Slack Morphism supports <a href="https://api.slack.com/apis/connections/socket">Slack Socket Mode</a> starting with 0.10.x.
 Socket Mode allows your app to use the Events API and interactive components 

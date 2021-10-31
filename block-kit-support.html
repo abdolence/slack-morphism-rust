@@ -209,6 +209,9 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
                         &quot;https://www.gstatic.com/webp/gallery3/2_webp_ll.png&quot;.into(),
                         &quot;Test Image&quot;.into()
                     )),
+                    some_into(SlackHeaderBlock::new(
+                        pt!(&quot;Simple header&quot;)
+                    )),
                     some_into(SlackActionsBlock::new(slack_blocks![some_into(
                         SlackBlockButtonElement::new(
                             &quot;simple-message-button&quot;.into(),
