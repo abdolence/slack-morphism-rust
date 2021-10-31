@@ -14,6 +14,8 @@ pub struct SlackBlockId(pub String);
 pub enum SlackBlock {
     #[serde(rename = "section")]
     Section(SlackSectionBlock),
+    #[serde(rename = "header")]
+    Header(SlackHeaderBlock),
     #[serde(rename = "divider")]
     Divider(SlackDividerBlock),
     #[serde(rename = "image")]
@@ -44,6 +46,19 @@ pub struct SlackSectionBlock {
 impl From<SlackSectionBlock> for SlackBlock {
     fn from(block: SlackSectionBlock) -> Self {
         SlackBlock::Section(block)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackHeaderBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub text: SlackBlockText,
+}
+
+impl From<SlackHeaderBlock> for SlackBlock {
+    fn from(block: SlackHeaderBlock) -> Self {
+        SlackBlock::Header(block)
     }
 }
 
