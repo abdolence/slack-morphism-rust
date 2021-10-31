@@ -51,9 +51,7 @@ where
                 token.clone(),
                 self.clients_manager_listener.clone(),
             )
-            .await?;
-
-        Ok(())
+            .await
     }
 
     pub async fn start(&self) {

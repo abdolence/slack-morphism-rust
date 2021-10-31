@@ -74,12 +74,14 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                         .with_text(md!("Hey {}", self.user_id.to_slack_format()))
                 ),
                 some_into(SlackDividerBlock::new()),
+                some_into(SlackHeaderBlock::new(pt!("Simple header"))),
+                some_into(SlackDividerBlock::new()),
                 some_into(SlackContextBlock::new(slack_blocks![
                     some(md!("This is an example of block message")),
                     some(md!(
                         "Current time is: {}",
                         fmt_slack_date(
-                            Local::now(),
+                            &Local::now(),
                             SlackDateTimeFormats::DatePretty.to_string().as_str(),
                             None
                         )
@@ -125,7 +127,7 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                 some(md!(
                     "Current time is: {}",
                     fmt_slack_date(
-                        Local::now(),
+                        &Local::now(),
                         SlackDateTimeFormats::DatePretty.to_string().as_str(),
                         None
                     )
@@ -160,8 +162,8 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Add blanket level filter -
         .level(log::LevelFilter::Debug)
         // - and per-module overrides
-        .level_for("slack_morphism", log::LevelFilter::Trace)
-        .level_for("slack_morphism_hyper", log::LevelFilter::Trace)
+        .level_for("slack_morphism", log::LevelFilter::Debug)
+        .level_for("slack_morphism_hyper", log::LevelFilter::Debug)
         .level_for("hyper", log::LevelFilter::Info)
         .level_for("rustls", log::LevelFilter::Info)
         // Output to stdout, files, and other Dispatch configurations

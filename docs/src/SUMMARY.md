@@ -9,4 +9,3 @@
 - [Socket Mode](./socket-mode.md)
 - [User state](./user-state-in-event-listener.md)
 - [Limitations](./limitations.md)
-

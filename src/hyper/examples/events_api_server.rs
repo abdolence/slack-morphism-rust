@@ -177,8 +177,8 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Add blanket level filter -
         .level(log::LevelFilter::Debug)
         // - and per-module overrides
-        .level_for("slack_morphism", log::LevelFilter::Trace)
-        .level_for("slack_morphism_hyper", log::LevelFilter::Trace)
+        .level_for("slack_morphism", log::LevelFilter::Debug)
+        .level_for("slack_morphism_hyper", log::LevelFilter::Debug)
         .level_for("hyper", log::LevelFilter::Info)
         .level_for("rustls", log::LevelFilter::Info)
         // Output to stdout, files, and other Dispatch configurations

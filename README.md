@@ -3,16 +3,17 @@
 
 # Slack Morphism for Rust
 
-Slack Morphism is a modern client library for Slack Web/Events API/Sockets Mode and Block Kit.
+Slack Morphism is a modern client library for Slack Web/Events API/Socket Mode and Block Kit.
 
 ## Documentation
-Please follow to the official website: https://slack-rust.abdolence.dev
+Please follow to the official website: https://slack-rust.abdolence.dev.
 
 ## Examples
 
 https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples
 
 The examples require to work the following environment variables (from your Slack bot profile in api.slack.com):
+
 - `SLACK_TEST_TOKEN` - for Slack client example
 - `SLACK_TEST_APP_TOKEN` - for Slack client with Socket Mode example
 - `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_BOT_SCOPE`, `SLACK_REDIRECT_HOST` - for OAuth routes for Events API example

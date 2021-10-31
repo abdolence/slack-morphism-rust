@@ -1,3 +1,4 @@
+use crate::SlackTextFormat;
 use chrono::prelude::*;
 
 pub enum SlackDateTimeFormats {
@@ -29,7 +30,7 @@ impl ToString for SlackDateTimeFormats {
 }
 
 pub fn fmt_slack_date<TZ: TimeZone>(
-    date: DateTime<TZ>,
+    date: &DateTime<TZ>,
     token_string: &str,
     link: Option<&String>,
 ) -> String
@@ -47,4 +48,17 @@ where
         link_part = link_part,
         fallback = fallback
     )
+}
+
+impl<TZ: TimeZone> SlackTextFormat for DateTime<TZ>
+where
+    <TZ as chrono::offset::TimeZone>::Offset: std::fmt::Display,
+{
+    fn to_slack_format(&self) -> String {
+        fmt_slack_date(
+            self,
+            SlackDateTimeFormats::DatePretty.to_string().as_str(),
+            None,
+        )
+    }
 }

@@ -79,6 +79,9 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
                         "Test Image".into()
                     )),
+                    some_into(SlackHeaderBlock::new(
+                        pt!("Simple header")
+                    )),
                     some_into(SlackActionsBlock::new(slack_blocks![some_into(
                         SlackBlockButtonElement::new(
                             "simple-message-button".into(),
