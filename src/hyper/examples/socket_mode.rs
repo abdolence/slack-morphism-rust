@@ -17,6 +17,15 @@ async fn test_command_events_function(
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
+
+    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = _client.open_session(&token);
+
+    session
+        .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
+        .await?;
+
     Ok(SlackCommandEventResponse::new(
         SlackMessageContent::new().with_text("Working on it".into()),
     ))

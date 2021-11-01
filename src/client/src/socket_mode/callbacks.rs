@@ -28,7 +28,7 @@ where
     T: Send
         + Sync
         + Fn(RQ, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> F,
-    F: Future<Output = RS> + Send + Sync + 'static,
+    F: Future<Output = RS> + Send + 'static,
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
     RQ: Send + Sync + 'static,
     RS: Send + Sync + 'static,
@@ -81,7 +81,7 @@ where
         hello_events_fn: UserCallbackFunction<SlackSocketModeHelloEvent, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ()> + Send + Sync + 'static,
+        F: Future<Output = ()> + Send + 'static,
     {
         self.hello_callback = Box::new(hello_events_fn);
         self
@@ -100,7 +100,7 @@ where
         command_events_fn: UserCallbackFunction<SlackCommandEvent, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ClientResult<SlackCommandEventResponse>> + Send + Sync + 'static,
+        F: Future<Output = ClientResult<SlackCommandEventResponse>> + Send + 'static,
     {
         self.command_callback = Box::new(command_events_fn);
         self
@@ -122,7 +122,7 @@ where
         interaction_events_fn: UserCallbackFunction<SlackInteractionEvent, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ()> + Send + Sync + 'static,
+        F: Future<Output = ()> + Send + 'static,
     {
         self.interaction_callback = Box::new(interaction_events_fn);
         self
@@ -144,7 +144,7 @@ where
         push_events_fn: UserCallbackFunction<SlackPushEventCallback, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ()> + Send + Sync + 'static,
+        F: Future<Output = ()> + Send + 'static,
     {
         self.push_events_callback = Box::new(push_events_fn);
         self
