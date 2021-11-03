@@ -158,10 +158,12 @@ let listener_environment = Arc::new(
     event: SlackPushEvent,
     client: Arc&lt;SlackHyperClient&gt;,
     user_states_storage: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
-) {
+) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
     let states = user_states_storage.read().unwrap();
     let user_state: Option&lt;&amp;UserStateExample&gt; = 
         states.get_user_state::&lt;UserStateExample&gt;();
+
+    Ok(())
 }
 </code></pre>
 <h2 id="updating-user-state-in-listeners"><a class="header" href="#updating-user-state-in-listeners">Updating user state in listeners</a></h2>
@@ -169,9 +171,11 @@ let listener_environment = Arc::new(
     event: SlackPushEvent,
     client: Arc&lt;SlackHyperClient&gt;,
     user_states_storage: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
-) {
+) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
     let states = user_states_storage.write().unwrap();
     states.set_user_state(UserStateExample(555));
+
+    Ok(())
 }
 </code></pre>
 
