@@ -7,8 +7,9 @@ async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
+    Ok(())
 }
 
 async fn test_command_events_function(
@@ -35,8 +36,9 @@ async fn test_push_events_sm_function(
     event: SlackPushEventCallback,
     _client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
+    Ok(())
 }
 
 fn test_error_handler(
@@ -46,8 +48,10 @@ fn test_error_handler(
 ) -> http::StatusCode {
     println!("{:#?}", err);
 
-    // This return value isn't used for Socket Mode (only for Events API)
-    http::StatusCode::BAD_REQUEST
+    // This return value should be OK if we want to return successful ack to the Slack server using Web-sockets
+    // https://api.slack.com/apis/connections/socket-implement#acknowledge
+    // so that Slack knows whether to retry
+    http::StatusCode::OK
 }
 
 async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

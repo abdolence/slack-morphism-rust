@@ -49,6 +49,7 @@ where
 {
     pub hello_callback:
         Box<dyn SlackSocketModeListenerCallback<SCHC, SlackSocketModeHelloEvent, ()> + Send + Sync>,
+
     pub command_callback: Box<
         dyn SlackSocketModeListenerCallback<
                 SCHC,
@@ -57,10 +58,16 @@ where
             > + Send
             + Sync,
     >,
-    pub interaction_callback:
-        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackInteractionEvent, ()> + Send + Sync>,
-    pub push_events_callback:
-        Box<dyn SlackSocketModeListenerCallback<SCHC, SlackPushEventCallback, ()> + Send + Sync>,
+    pub interaction_callback: Box<
+        dyn SlackSocketModeListenerCallback<SCHC, SlackInteractionEvent, ClientResult<()>>
+            + Send
+            + Sync,
+    >,
+    pub push_events_callback: Box<
+        dyn SlackSocketModeListenerCallback<SCHC, SlackPushEventCallback, ClientResult<()>>
+            + Send
+            + Sync,
+    >,
 }
 
 impl<SCHC> SlackSocketModeListenerCallbacks<SCHC>
@@ -122,7 +129,7 @@ where
         interaction_events_fn: UserCallbackFunction<SlackInteractionEvent, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ()> + Send + 'static,
+        F: Future<Output = ClientResult<()>> + Send + 'static,
     {
         self.interaction_callback = Box::new(interaction_events_fn);
         self
@@ -132,11 +139,16 @@ where
         event: SlackInteractionEvent,
         _client: Arc<SlackClient<SCHC>>,
         _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-    ) {
+    ) -> ClientResult<()> {
         warn!(
-            "No callback is specified for a interactive event: {:?}",
+            "No callback is specified for interactive events: {:?}",
             event
         );
+        Err(Box::new(SlackClientError::SystemError(
+            SlackClientSystemError::new(
+                "No callback is specified for interactive events".to_string(),
+            ),
+        )))
     }
 
     pub fn with_push_events<F>(
@@ -144,7 +156,7 @@ where
         push_events_fn: UserCallbackFunction<SlackPushEventCallback, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = ()> + Send + 'static,
+        F: Future<Output = ClientResult<()>> + Send + 'static,
     {
         self.push_events_callback = Box::new(push_events_fn);
         self
@@ -154,7 +166,11 @@ where
         event: SlackPushEventCallback,
         _client: Arc<SlackClient<SCHC>>,
         _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-    ) {
+    ) -> ClientResult<()> {
         warn!("No callback is specified for a push event: {:?}", event);
+
+        Err(Box::new(SlackClientError::SystemError(
+            SlackClientSystemError::new("No callback is specified for push events".to_string()),
+        )))
     }
 }

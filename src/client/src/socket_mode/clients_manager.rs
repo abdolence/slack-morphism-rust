@@ -283,7 +283,13 @@ where
                         None
                     }
                     SlackSocketModeEvent::Interactive(event) => {
-                        clients_manager
+                        let reply =
+                            serde_json::to_string(&SlackSocketModeEventCommonAcknowledge::new(
+                                event.envelope_params.envelope_id,
+                            ))
+                            .unwrap();
+
+                        match clients_manager
                             .callbacks
                             .interaction_callback
                             .call(
@@ -294,16 +300,35 @@ where
                                     .user_state_storage
                                     .clone(),
                             )
-                            .await;
-                        Some(
+                            .await
+                        {
+                            Ok(_) => Some(reply),
+                            Err(err) => {
+                                if clients_manager.listener_environment.error_handler.clone()(
+                                    err,
+                                    clients_manager.listener_environment.client.clone(),
+                                    clients_manager
+                                        .listener_environment
+                                        .user_state_storage
+                                        .clone(),
+                                )
+                                .is_success()
+                                {
+                                    Some(reply)
+                                } else {
+                                    None
+                                }
+                            }
+                        }
+                    }
+                    SlackSocketModeEvent::EventsApi(event) => {
+                        let reply =
                             serde_json::to_string(&SlackSocketModeEventCommonAcknowledge::new(
                                 event.envelope_params.envelope_id,
                             ))
-                            .unwrap(),
-                        )
-                    }
-                    SlackSocketModeEvent::EventsApi(event) => {
-                        clients_manager
+                            .unwrap();
+
+                        match clients_manager
                             .callbacks
                             .push_events_callback
                             .call(
@@ -314,17 +339,30 @@ where
                                     .user_state_storage
                                     .clone(),
                             )
-                            .await;
-                        Some(
-                            serde_json::to_string(&SlackSocketModeEventCommonAcknowledge::new(
-                                event.envelope_params.envelope_id,
-                            ))
-                            .unwrap(),
-                        )
+                            .await
+                        {
+                            Ok(_) => Some(reply),
+                            Err(err) => {
+                                if clients_manager.listener_environment.error_handler.clone()(
+                                    err,
+                                    clients_manager.listener_environment.client.clone(),
+                                    clients_manager
+                                        .listener_environment
+                                        .user_state_storage
+                                        .clone(),
+                                )
+                                .is_success()
+                                {
+                                    Some(reply)
+                                } else {
+                                    None
+                                }
+                            }
+                        }
                     }
 
                     SlackSocketModeEvent::SlashCommands(event) => {
-                        if let Ok(response) = clients_manager
+                        match clients_manager
                             .callbacks
                             .command_callback
                             .call(
@@ -337,19 +375,42 @@ where
                             )
                             .await
                         {
-                            Some(
+                            Ok(reply) => Some(
                                 serde_json::to_string(
                                     &SlackSocketModeCommandEventAck::new(
                                         SlackSocketModeEventCommonAcknowledge::new(
                                             event.envelope_params.envelope_id,
                                         ),
                                     )
-                                    .with_payload(response),
+                                    .with_payload(reply),
                                 )
                                 .unwrap(),
-                            )
-                        } else {
-                            None
+                            ),
+                            Err(err) => {
+                                if clients_manager.listener_environment.error_handler.clone()(
+                                    err,
+                                    clients_manager.listener_environment.client.clone(),
+                                    clients_manager
+                                        .listener_environment
+                                        .user_state_storage
+                                        .clone(),
+                                )
+                                .is_success()
+                                {
+                                    Some(
+                                        serde_json::to_string(
+                                            &SlackSocketModeCommandEventAck::new(
+                                                SlackSocketModeEventCommonAcknowledge::new(
+                                                    event.envelope_params.envelope_id,
+                                                ),
+                                            ),
+                                        )
+                                        .unwrap(),
+                                    )
+                                } else {
+                                    None
+                                }
+                            }
                         }
                     }
                 },
@@ -367,6 +428,19 @@ where
             }
         } else {
             None
+        }
+    }
+
+    async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>) {
+        if let Some(clients_manager) = self.clients_manager.upgrade() {
+            clients_manager.listener_environment.error_handler.clone()(
+                error,
+                clients_manager.listener_environment.client.clone(),
+                clients_manager
+                    .listener_environment
+                    .user_state_storage
+                    .clone(),
+            );
         }
     }
 

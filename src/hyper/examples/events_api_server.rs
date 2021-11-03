@@ -19,7 +19,7 @@ async fn test_push_events_function(
     event: SlackPushEvent,
     _client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Read state
     let current_state = {
         let states = _states.read().unwrap();
@@ -36,14 +36,16 @@ async fn test_push_events_function(
     }
 
     println!("{:#?}", event);
+    Ok(())
 }
 
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
+    Ok(())
 }
 
 async fn test_command_events_function(

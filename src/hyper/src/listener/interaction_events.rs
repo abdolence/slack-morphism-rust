@@ -11,6 +11,7 @@ use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
+use slack_morphism::ClientResult;
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
@@ -21,7 +22,7 @@ impl SlackClientEventsHyperListener {
         config: Arc<SlackInteractionEventsListenerConfig>,
         interaction_service_fn: UserCallbackFunction<
             SlackInteractionEvent,
-            impl Future<Output = ()> + 'static + Send,
+            impl Future<Output = ClientResult<()>> + 'static + Send,
             SlackClientHyperConnector,
         >,
     ) -> impl Fn(
@@ -81,15 +82,37 @@ impl SlackClientEventsHyperListener {
                             .and_then(|event| async move {
                                 match event {
                                     Ok(view_submission_event@SlackInteractionEvent::ViewSubmission(_)) => {
-                                        interaction_service_fn(view_submission_event, sc, thread_user_state_storage).await;
-                                        Response::builder()
-                                            .status(StatusCode::OK)
-                                            .body("".into())
-                                            .map_err(|e| e.into())
+                                        match interaction_service_fn(view_submission_event, sc.clone(), thread_user_state_storage.clone()).await {
+                                            Ok(_) => {
+                                                Response::builder()
+                                                    .status(StatusCode::OK)
+                                                    .body("".into())
+                                                    .map_err(|e| e.into())
+                                            }
+                                            Err(err) => {
+                                                let status_code = thread_error_handler(err, sc, thread_user_state_storage);
+                                                Response::builder()
+                                                    .status(status_code)
+                                                    .body(Body::empty())
+                                                    .map_err(|e| e.into())
+                                            }
+                                        }
+
                                     }
                                     Ok(interaction_event) => {
-                                        interaction_service_fn(interaction_event, sc, thread_user_state_storage).await;
-                                        Ok(Response::new(Body::empty()))
+                                        match interaction_service_fn(interaction_event, sc.clone(), thread_user_state_storage.clone()).await {
+                                            Ok(_) => Response::builder()
+                                                .status(StatusCode::OK)
+                                                .body(Body::empty())
+                                                .map_err(|e| e.into()),
+                                            Err(err) => {
+                                                let status_code = thread_error_handler(err, sc, thread_user_state_storage);
+                                                Response::builder()
+                                                    .status(status_code)
+                                                    .body(Body::empty())
+                                                    .map_err(|e| e.into())
+                                            }
+                                        }
                                     }
                                     Err(event_err) => {
                                         let status_code = thread_error_handler(event_err, sc, thread_user_state_storage);

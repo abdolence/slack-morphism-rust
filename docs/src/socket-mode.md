@@ -17,8 +17,9 @@ async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
+    Ok(())
 }
 
 async fn test_command_events_function(
@@ -36,8 +37,9 @@ async fn test_push_events_sm_function(
     event: SlackPushEventCallback,
     _client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
+    Ok(())
 }
 
 let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));

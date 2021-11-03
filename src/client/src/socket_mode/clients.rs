@@ -63,5 +63,8 @@ pub trait SlackSocketModeWssClientListener {
         client_id: &SlackSocketModeWssClientId,
         message_body: String,
     ) -> Option<String>;
+
+    async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>);
+
     async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId);
 }

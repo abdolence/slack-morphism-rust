@@ -306,6 +306,14 @@ impl SlackTungsteniteWssClient {
                                 thread_client_id.to_string(),
                                 body
                             );
+                            thread_listener
+                                .on_error(Box::new(SlackClientError::SocketModeProtocolError(
+                                    SlackClientSocketModeProtocolError::new(format!(
+                                        "Unexpected binary received from Slack: {:?}",
+                                        body
+                                    )),
+                                )))
+                                .await;
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Close(body)) => {
                             debug!(
@@ -321,6 +329,14 @@ impl SlackTungsteniteWssClient {
                                 thread_client_id.to_string(),
                                 err
                             );
+                            thread_listener
+                                .on_error(Box::new(SlackClientError::SocketModeProtocolError(
+                                    SlackClientSocketModeProtocolError::new(format!(
+                                        "Unexpected binary received from Slack: {:?}",
+                                        err
+                                    )),
+                                )))
+                                .await;
                             thread_listener.on_disconnect(&thread_client_id).await
                         }
                     }

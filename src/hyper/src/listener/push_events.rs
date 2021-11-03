@@ -7,7 +7,7 @@ use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
-use hyper::{Method, Request, Response, StatusCode};
+use hyper::{Method, Request, Response};
 use log::*;
 pub use slack_morphism_models::events::*;
 use std::future::Future;
@@ -19,7 +19,9 @@ impl SlackClientEventsHyperListener {
         config: Arc<SlackPushEventsListenerConfig>,
         push_service_fn: UserCallbackFunction<
             SlackPushEvent,
-            impl Future<Output = ()> + 'static + Send,
+            impl Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>>
+                + 'static
+                + Send,
             SlackClientHyperConnector,
         >,
     ) -> impl Fn(
@@ -71,26 +73,49 @@ impl SlackClientEventsHyperListener {
                                             "Received Slack URL push verification challenge: {}",
                                             url_ver.challenge
                                         );
-                                        push_service_fn(
+                                        match push_service_fn(
                                             SlackPushEvent::UrlVerification(url_ver.clone()),
-                                            sc,
-                                            thread_user_state_storage,
+                                            sc.clone(),
+                                            thread_user_state_storage.clone(),
                                         )
-                                        .await;
-                                        Response::builder()
-                                            .status(StatusCode::OK)
-                                            .body(url_ver.challenge.into())
-                                            .map_err(|e| e.into())
+                                        .await
+                                        {
+                                            Ok(_) => Ok(Response::new(Body::empty())),
+                                            Err(err) => {
+                                                let status_code = thread_error_handler(
+                                                    err,
+                                                    sc,
+                                                    thread_user_state_storage,
+                                                );
+                                                Response::builder()
+                                                    .status(status_code)
+                                                    .body(Body::empty())
+                                                    .map_err(|e| e.into())
+                                            }
+                                        }
                                     }
                                     other => match other {
                                         Ok(push_event) => {
-                                            push_service_fn(
+                                            match push_service_fn(
                                                 push_event,
-                                                sc,
-                                                thread_user_state_storage,
+                                                sc.clone(),
+                                                thread_user_state_storage.clone(),
                                             )
-                                            .await;
-                                            Ok(Response::new(Body::empty()))
+                                            .await
+                                            {
+                                                Ok(_) => Ok(Response::new(Body::empty())),
+                                                Err(err) => {
+                                                    let status_code = thread_error_handler(
+                                                        err,
+                                                        sc,
+                                                        thread_user_state_storage,
+                                                    );
+                                                    Response::builder()
+                                                        .status(status_code)
+                                                        .body(Body::empty())
+                                                        .map_err(|e| e.into())
+                                                }
+                                            }
                                         }
                                         Err(err_oush_event) => {
                                             let status_code = thread_error_handler(
