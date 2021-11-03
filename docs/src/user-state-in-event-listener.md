@@ -25,10 +25,12 @@ async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc<SlackHyperClient>,
     user_states_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let states = user_states_storage.read().unwrap();
     let user_state: Option<&UserStateExample> = 
         states.get_user_state::<UserStateExample>();
+
+    Ok(())
 }
 ```
 
@@ -39,8 +41,10 @@ async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc<SlackHyperClient>,
     user_states_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
-) {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let states = user_states_storage.write().unwrap();
     states.set_user_state(UserStateExample(555));
+
+    Ok(())
 }
 ```
