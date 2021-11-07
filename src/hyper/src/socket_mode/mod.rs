@@ -122,7 +122,7 @@ impl SlackTungsteniteWssClient {
     ) -> ClientResult<()> {
         debug!("[{}] Connecting to {}", self.id.to_string(), self.url);
         if initial_wait_timeout > 0 {
-            trace!(
+            debug!(
                 "[{}] Delayed connection for {} seconds (backoff timeout for multiple connections)",
                 self.id.to_string(),
                 initial_wait_timeout
