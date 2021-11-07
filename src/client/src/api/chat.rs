@@ -3,7 +3,7 @@
 //!
 
 use rsb_derive::Builder;
-use rvstruct::ValueStruct;
+use rvstruct::*;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
