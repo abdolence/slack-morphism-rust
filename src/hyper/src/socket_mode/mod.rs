@@ -117,6 +117,8 @@ impl SlackTungsteniteWssClient {
         &self,
         initial_wait_timeout: u64,
         reconnect_timeout: u64,
+        ping_interval: u64,
+        ping_failure_threshold: u64,
     ) -> ClientResult<()> {
         debug!("[{}] Connecting to {}", self.id.to_string(), self.url);
         if initial_wait_timeout > 0 {
@@ -146,8 +148,6 @@ impl SlackTungsteniteWssClient {
             let mut self_command_writer = self.command_writer.write().unwrap();
             self_command_writer.replace(tx.clone());
         };
-
-        let ping_interval_in_seconds = 10;
 
         struct PongState {
             time: SystemTime,
@@ -203,7 +203,7 @@ impl SlackTungsteniteWssClient {
                                     .as_secs()
                             };
 
-                            if seen_pong_time_in_secs > ping_interval_in_seconds * 5 {
+                            if seen_pong_time_in_secs > ping_interval * ping_failure_threshold {
                                 warn!(
                                     "[{}] Haven't seen any pong from Slack since {} seconds ago",
                                     thread_client_id.to_string(),
@@ -237,7 +237,7 @@ impl SlackTungsteniteWssClient {
             let ping_tx = tx.clone();
             tokio::spawn(async move {
                 let mut interval =
-                    tokio::time::interval(std::time::Duration::from_secs(ping_interval_in_seconds));
+                    tokio::time::interval(std::time::Duration::from_secs(ping_interval));
 
                 loop {
                     interval.tick().await;
@@ -390,14 +390,25 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
         }
     }
 
-    async fn start(&self, initial_wait_timeout: u64, reconnect_timeout: u64) {
-        self.connect(initial_wait_timeout, reconnect_timeout)
-            .await
-            .unwrap_or(());
+    async fn start(
+        &self,
+        initial_wait_timeout: u64,
+        reconnect_timeout: u64,
+        ping_interval: u64,
+        ping_failure_threshold: u64,
+    ) {
+        self.connect(
+            initial_wait_timeout,
+            reconnect_timeout,
+            ping_interval,
+            ping_failure_threshold,
+        )
+        .await
+        .unwrap_or(());
     }
 
     async fn destroy(&mut self) {
-        debug!("Destroying {}. Id: {:?}", self.url, self.id);
+        debug!("[{}] Destroying {}", self.id.to_string(), self.url);
         self.shutdown_channel().await;
     }
 }

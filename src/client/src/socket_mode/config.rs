@@ -13,6 +13,12 @@ pub struct SlackClientSocketModeConfig {
 
     #[default = "SlackClientSocketModeConfig::DEFAULT_RECONNECT_TIMEOUT_IN_SECONDS"]
     pub reconnect_timeout_in_seconds: u64,
+
+    #[default = "SlackClientSocketModeConfig::DEFAULT_PING_INTERVAL_IN_SECONDS"]
+    pub ping_interval_in_seconds: u64,
+
+    #[default = "SlackClientSocketModeConfig::DEFAULT_PING_FAILURE_THRESHOLD_TIMES"]
+    pub ping_failure_threshold_times: u64,
 }
 
 impl SlackClientSocketModeConfig {
@@ -23,4 +29,8 @@ impl SlackClientSocketModeConfig {
     pub const DEFAULT_INITIAL_BACKOFF_IN_SECONDS: u64 = 5;
 
     pub const DEFAULT_RECONNECT_TIMEOUT_IN_SECONDS: u64 = 30;
+
+    pub const DEFAULT_PING_INTERVAL_IN_SECONDS: u64 = 15;
+
+    pub const DEFAULT_PING_FAILURE_THRESHOLD_TIMES: u64 = 5;
 }

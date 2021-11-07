@@ -52,7 +52,13 @@ where
 pub trait SlackSocketModeWssClient {
     async fn message(&self, message_body: String) -> ClientResult<()>;
 
-    async fn start(&self, initial_wait_timeout: u64, reconnect_timeout: u64);
+    async fn start(
+        &self,
+        initial_wait_timeout: u64,
+        reconnect_timeout: u64,
+        ping_interval: u64,
+        ping_failure_threshold: u64,
+    );
     async fn destroy(&mut self);
 }
 

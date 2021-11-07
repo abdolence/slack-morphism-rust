@@ -105,6 +105,8 @@ where
                 .start(
                     client_id_value as u64 * config.initial_backoff_in_seconds,
                     config.reconnect_timeout_in_seconds,
+                    config.ping_interval_in_seconds,
+                    config.ping_failure_threshold_times,
                 )
                 .await
         }
@@ -130,8 +132,8 @@ where
         };
 
         trace!(
-            "Creating a new WSS client: {:?}. Url: {}",
-            client_id,
+            "[{}] Creating a new WSS client. Url: {}",
+            client_id.to_string(),
             open_connection_res_url.value()
         );
 
@@ -192,7 +194,12 @@ where
                 Ok(client) => {
                     client
                         .wss_client
-                        .start(0, removed_client.config.reconnect_timeout_in_seconds)
+                        .start(
+                            0,
+                            removed_client.config.reconnect_timeout_in_seconds,
+                            removed_client.config.ping_interval_in_seconds,
+                            removed_client.config.ping_failure_threshold_times,
+                        )
                         .await;
                     let mut clients_write = self.active_clients.write().unwrap();
                     clients_write.push(client);
