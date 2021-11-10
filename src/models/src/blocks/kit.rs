@@ -119,7 +119,7 @@ impl From<SlackContextBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackInputBlock {
     pub block_id: Option<SlackBlockId>,
-    pub label: SlackBlockPlainText,
+    pub label: SlackBlockText,
     pub element: SlackInputBlockElement,
     pub hint: Option<SlackBlockPlainText>,
     pub optional: Option<bool>,
