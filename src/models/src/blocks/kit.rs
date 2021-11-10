@@ -123,6 +123,7 @@ pub struct SlackInputBlock {
     pub element: SlackInputBlockElement,
     pub hint: Option<SlackBlockPlainText>,
     pub optional: Option<bool>,
+    pub dispatch_action: Option<bool>,
 }
 
 impl From<SlackInputBlock> for SlackBlock {
