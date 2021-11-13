@@ -158,8 +158,7 @@ impl SlackClientHyperConnector {
                 .map_err(|err| SlackClientHyperConnector::map_serde_error(err, Some("{}"))),
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
-            )
-            .into()),
+            )),
         }
     }
 
