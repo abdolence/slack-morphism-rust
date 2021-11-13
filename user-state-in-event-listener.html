@@ -137,7 +137,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="user-state-propagation-in-user-event-listener-handlers"><a class="header" href="#user-state-propagation-in-user-event-listener-handlers">User state propagation in user event listener handlers</a></h1>
+                        <h1 id="user-state-propagation-for-event-listeners-and-callback-functions"><a class="header" href="#user-state-propagation-for-event-listeners-and-callback-functions">User state propagation for event listeners and callback functions</a></h1>
 <p>It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using <code>SlackClientEventsUserStateStorage</code>.</p>
 <h2 id="defining-user-state"><a class="header" href="#defining-user-state">Defining user state</a></h2>
@@ -157,9 +157,12 @@ let listener_environment = Arc::new(
 <pre><code class="language-rust noplaypen">async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc&lt;SlackHyperClient&gt;,
-    user_states_storage: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+    user_states_storage: Arc&lt;SlackClientEventsUserState&gt;,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    // SlackClientEventsUserState is an alias for RwLock&lt;SlackClientEventsUserStateStorage&gt;
     let states = user_states_storage.read().unwrap();
+
     let user_state: Option&lt;&amp;UserStateExample&gt; = 
         states.get_user_state::&lt;UserStateExample&gt;();
 
@@ -170,9 +173,12 @@ let listener_environment = Arc::new(
 <pre><code class="language-rust noplaypen">async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc&lt;SlackHyperClient&gt;,
-    user_states_storage: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+    user_states_storage: Arc&lt;SlackClientEventsUserState&gt;,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+
+    // SlackClientEventsUserState is an alias for RwLock&lt;SlackClientEventsUserStateStorage&gt;
     let states = user_states_storage.write().unwrap();
+
     states.set_user_state(UserStateExample(555));
 
     Ok(())

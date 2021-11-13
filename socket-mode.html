@@ -150,7 +150,7 @@ use slack_morphism_hyper::*;
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc&lt;SlackHyperClient&gt;,
-    _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+    _states: Arc&lt;SlackClientEventsUserState&gt;,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
     println!(&quot;{:#?}&quot;, event);
     Ok(())
@@ -159,7 +159,7 @@ async fn test_interaction_events_function(
 async fn test_command_events_function(
     event: SlackCommandEvent,
     _client: Arc&lt;SlackHyperClient&gt;,
-    _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+    _states: Arc&lt;SlackClientEventsUserState&gt;,
 ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
     println!(&quot;{:#?}&quot;, event);
     Ok(SlackCommandEventResponse::new(
@@ -170,7 +170,7 @@ async fn test_command_events_function(
 async fn test_push_events_sm_function(
     event: SlackPushEventCallback,
     _client: Arc&lt;SlackHyperClient&gt;,
-    _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;,
+    _states: Arc&lt;SlackClientEventsUserState&gt;,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
     println!(&quot;{:#?}&quot;, event);
     Ok(())
