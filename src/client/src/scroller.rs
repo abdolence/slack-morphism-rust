@@ -151,10 +151,9 @@ where
 
         if !&self.has_next() {
             async {
-                Err(Box::new(SlackClientError::EndOfStream(
+                Err(SlackClientError::EndOfStream(
                     SlackClientEndOfStreamError::new(),
                 ))
-                .into())
             }
             .boxed()
         } else {

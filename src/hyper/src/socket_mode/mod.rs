@@ -105,10 +105,9 @@ impl SlackTungsteniteWssClient {
 
                 maybe_stream = self.try_to_connect().await;
             } else {
-                return Err(Box::new(SlackClientError::EndOfStream(
+                return Err(SlackClientError::EndOfStream(
                     SlackClientEndOfStreamError::new(),
-                )))
-                .map_err(|err| err.into());
+                ));
             }
         }
     }
@@ -379,14 +378,14 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
 
                 Ok(())
             } else {
-                Err(Box::new(SlackClientError::EndOfStream(
+                Err(SlackClientError::EndOfStream(
                     SlackClientEndOfStreamError::new(),
-                )))
+                ))
             }
         } else {
-            Err(Box::new(SlackClientError::EndOfStream(
+            Err(SlackClientError::EndOfStream(
                 SlackClientEndOfStreamError::new(),
-            )))
+            ))
         }
     }
 

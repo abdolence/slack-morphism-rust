@@ -88,7 +88,7 @@ impl SlackClientHyperConnector {
             .header("accept-charset", "utf-8")
     }
 
-    async fn http_body_to_string<T>(body: T) -> ClientResult<String>
+    async fn http_body_to_string<T>(body: T) -> AnyStdResult<String>
     where
         T: HttpBody,
         T::Error: std::error::Error + Sync + Send + 'static,
@@ -112,10 +112,16 @@ impl SlackClientHyperConnector {
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
-        let http_res = self.hyper_connector.request(request).await?;
+        let http_res = self
+            .hyper_connector
+            .request(request)
+            .await
+            .map_err(SlackClientHyperConnector::map_http_error)?;
         let http_status = http_res.status();
         let http_content_type = Self::http_response_content_type(&http_res);
-        let http_body_str = Self::http_body_to_string(http_res).await?;
+        let http_body_str = Self::http_body_to_string(http_res)
+            .map_err(SlackClientHyperConnector::map_system_error)
+            .await?;
 
         match http_status {
             StatusCode::OK
@@ -125,20 +131,31 @@ impl SlackClientHyperConnector {
                 }) =>
             {
                 let slack_message: SlackEnvelopeMessage =
-                    serde_json::from_str(http_body_str.as_str())?;
+                    serde_json::from_str(http_body_str.as_str()).map_err(|err| {
+                        SlackClientHyperConnector::map_serde_error(
+                            err,
+                            Some(http_body_str.as_str()),
+                        )
+                    })?;
                 if slack_message.error.is_none() {
-                    let decoded_body = serde_json::from_str(http_body_str.as_str())?;
+                    let decoded_body =
+                        serde_json::from_str(http_body_str.as_str()).map_err(|err| {
+                            SlackClientHyperConnector::map_serde_error(
+                                err,
+                                Some(http_body_str.as_str()),
+                            )
+                        })?;
                     Ok(decoded_body)
                 } else {
                     Err(SlackClientError::ApiError(
                         SlackClientApiError::new(slack_message.error.unwrap())
                             .opt_warnings(slack_message.warnings)
                             .with_http_response_body(http_body_str),
-                    )
-                    .into())
+                    ))
                 }
             }
-            StatusCode::OK => serde_json::from_str("{}").map_err(|e| e.into()),
+            StatusCode::OK => serde_json::from_str("{}")
+                .map_err(|err| SlackClientHyperConnector::map_serde_error(err, Some("{}"))),
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )
@@ -149,7 +166,7 @@ impl SlackClientHyperConnector {
     pub(crate) async fn decode_signed_response(
         req: Request<Body>,
         signature_verifier: &SlackEventSignatureVerifier,
-    ) -> ClientResult<String> {
+    ) -> AnyStdResult<String> {
         let headers = &req.headers().clone();
         let req_body = req.into_body();
         match (
@@ -173,6 +190,33 @@ impl SlackClientHyperConnector {
             _ => Err(Box::new(SlackEventAbsentSignatureError::new())),
         }
     }
+
+    pub(crate) fn map_http_error(hyper_err: hyper::Error) -> SlackClientError {
+        SlackClientError::HttpProtocolError(
+            SlackClientHttpProtocolError::new().with_cause(Box::new(hyper_err)),
+        )
+    }
+
+    pub(crate) fn map_hyper_http_error(hyper_err: hyper::http::Error) -> SlackClientError {
+        SlackClientError::HttpProtocolError(
+            SlackClientHttpProtocolError::new().with_cause(Box::new(hyper_err)),
+        )
+    }
+
+    pub(crate) fn map_serde_error(
+        err: serde_json::Error,
+        tried_to_parse: Option<&str>,
+    ) -> SlackClientError {
+        SlackClientError::ProtocolError(
+            SlackClientProtocolError::new(err).opt_json_body(tried_to_parse.map(|s| s.to_string())),
+        )
+    }
+
+    pub(crate) fn map_system_error(
+        err: Box<dyn std::error::Error + Sync + Send>,
+    ) -> SlackClientError {
+        SlackClientError::SystemError(SlackClientSystemError::new().with_cause(err))
+    }
 }
 
 impl SlackClientHttpConnector for SlackClientHyperConnector {
@@ -190,7 +234,11 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
             let http_request = Self::setup_token_auth_header(base_http_request, token);
 
             let body = self
-                .send_webapi_request(http_request.body(Body::empty())?)
+                .send_webapi_request(
+                    http_request
+                        .body(Body::empty())
+                        .map_err(SlackClientHyperConnector::map_hyper_http_error)?,
+                )
                 .await?;
 
             Ok(body)
@@ -213,7 +261,8 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
                 client_id.value(),
                 client_secret.value(),
             )
-            .body(Body::empty())?;
+            .body(Body::empty())
+            .map_err(SlackClientHyperConnector::map_hyper_http_error)?;
 
             self.send_webapi_request(http_request).await
         }
@@ -231,7 +280,8 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
     {
         async move {
-            let post_json = serde_json::to_string(&request_body)?;
+            let post_json = serde_json::to_string(&request_body)
+                .map_err(|err| SlackClientHyperConnector::map_serde_error(err, None))?;
 
             let base_http_request = Self::create_http_request(full_uri, hyper::http::Method::POST)
                 .header("content-type", "application/json; charset=utf-8");
@@ -239,7 +289,11 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
             let http_request = Self::setup_token_auth_header(base_http_request, token);
 
             let response_body = self
-                .send_webapi_request(http_request.body(post_json.into())?)
+                .send_webapi_request(
+                    http_request
+                        .body(post_json.into())
+                        .map_err(SlackClientHyperConnector::map_hyper_http_error)?,
+                )
                 .await?;
 
             Ok(response_body)
