@@ -80,7 +80,7 @@ pub struct SlackImageBlock {
     pub block_id: Option<SlackBlockId>,
     pub image_url: String,
     pub alt_text: String,
-    pub title: Option<SlackBlockPlainText>,
+    pub title: Option<SlackBlockPlainTextOnly>,
 }
 
 impl From<SlackImageBlock> for SlackBlock {
@@ -119,9 +119,9 @@ impl From<SlackContextBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackInputBlock {
     pub block_id: Option<SlackBlockId>,
-    pub label: SlackBlockPlainText,
+    pub label: SlackBlockPlainTextOnly,
     pub element: SlackInputBlockElement,
-    pub hint: Option<SlackBlockPlainText>,
+    pub hint: Option<SlackBlockPlainTextOnly>,
     pub optional: Option<bool>,
 }
 
