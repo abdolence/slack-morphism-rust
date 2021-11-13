@@ -215,6 +215,8 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let token: SlackApiToken = SlackApiToken::new(token_value);
     
     // Create a Slack session with this token
+    // A session is just a lightweight wrapper around your token
+    // not to specify it all the time for series of calls.
     let session = client.open_session(&amp;token);
     
     // Make your first API call (which is `api.test` here)
