@@ -9,6 +9,7 @@ use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response};
 use log::*;
+use slack_morphism::UserCallbackResult;
 pub use slack_morphism_models::events::*;
 use std::future::Future;
 use std::sync::Arc;
@@ -19,9 +20,7 @@ impl SlackClientEventsHyperListener {
         config: Arc<SlackPushEventsListenerConfig>,
         push_service_fn: UserCallbackFunction<
             SlackPushEvent,
-            impl Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>>
-                + 'static
-                + Send,
+            impl Future<Output = UserCallbackResult<()>> + 'static + Send,
             SlackClientHyperConnector,
         >,
     ) -> impl Fn(
@@ -59,11 +58,9 @@ impl SlackClientEventsHyperListener {
                         SlackClientHyperConnector::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 serde_json::from_str::<SlackPushEvent>(body.as_str()).map_err(|e| {
-                                    SlackClientProtocolError {
-                                        json_error: e,
-                                        http_response_body: body.clone(),
-                                    }
-                                    .into()
+                                    SlackClientProtocolError::new(e)
+                                        .with_json_body(body.clone())
+                                        .into()
                                 })
                             })
                             .and_then(|event| async move {

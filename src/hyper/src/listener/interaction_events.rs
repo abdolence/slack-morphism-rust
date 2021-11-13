@@ -11,7 +11,7 @@ use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
-use slack_morphism::ClientResult;
+use slack_morphism::UserCallbackResult;
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
@@ -22,7 +22,7 @@ impl SlackClientEventsHyperListener {
         config: Arc<SlackInteractionEventsListenerConfig>,
         interaction_service_fn: UserCallbackFunction<
             SlackInteractionEvent,
-            impl Future<Output = ClientResult<()>> + 'static + Send,
+            impl Future<Output = UserCallbackResult<()>> + 'static + Send,
             SlackClientHyperConnector,
         >,
     ) -> impl Fn(
@@ -68,7 +68,7 @@ impl SlackClientEventsHyperListener {
                                 let payload = body_params
                                     .get("payload")
                                     .ok_or_else( || SlackClientError::SystemError(
-                                        SlackClientSystemError::new(
+                                        SlackClientSystemError::new().with_message(
                                             "Absent payload in the request from Slack".into(),
                                         ),
                                     ))
@@ -76,7 +76,7 @@ impl SlackClientEventsHyperListener {
 
                                 payload.and_then(|payload_value| {
                                     serde_json::from_str::<SlackInteractionEvent>(payload_value)
-                                        .map_err(|e| SlackClientProtocolError{ json_error: e, http_response_body: payload_value.clone() }.into())
+                                        .map_err(|e| SlackClientProtocolError::new(e).with_json_body(payload_value.clone()).into())
                                 })
                             })
                             .and_then(|event| async move {

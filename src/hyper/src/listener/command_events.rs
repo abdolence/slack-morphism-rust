@@ -8,6 +8,7 @@ use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::{Method, Request, Response, StatusCode};
+use slack_morphism::UserCallbackResult;
 pub use slack_morphism_models::events::*;
 pub use slack_morphism_models::SlackResponseUrl;
 use std::collections::HashMap;
@@ -20,14 +21,7 @@ impl SlackClientEventsHyperListener {
         config: Arc<SlackCommandEventsListenerConfig>,
         command_service_fn: UserCallbackFunction<
             SlackCommandEvent,
-            impl Future<
-                    Output = Result<
-                        SlackCommandEventResponse,
-                        Box<dyn std::error::Error + Send + Sync + 'static>,
-                    >,
-                >
-                + 'static
-                + Send,
+            impl Future<Output = UserCallbackResult<SlackCommandEventResponse>> + 'static + Send,
             SlackClientHyperConnector,
         >,
     ) -> impl Fn(
@@ -97,7 +91,7 @@ impl SlackClientEventsHyperListener {
                                     )
                                     .opt_text(text.cloned())),
                                     _ => Err(SlackClientError::SystemError(
-                                        SlackClientSystemError::new(
+                                        SlackClientSystemError::new().with_message(
                                             "Absent payload in the request from Slack".into(),
                                         ),
                                     ))

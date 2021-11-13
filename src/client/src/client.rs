@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::token::*;
 
+use crate::errors::SlackClientError;
 use futures_util::future::BoxFuture;
 use lazy_static::*;
 use slack_morphism_models::{SlackClientId, SlackClientSecret};
@@ -133,7 +134,11 @@ pub trait SlackClientHttpConnector {
     }
 }
 
-pub type ClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub type UserCallbackResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+pub type ClientResult<T> = std::result::Result<T, SlackClientError>;
+
+pub type AnyStdResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct SlackEnvelopeMessage {

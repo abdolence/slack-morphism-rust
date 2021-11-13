@@ -6,6 +6,7 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::errors::*;
 use crate::SlackClient;
 use crate::{ClientResult, SlackClientHttpConnector};
 use slack_morphism_models::*;
@@ -24,7 +25,15 @@ where
     ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
         self.http_api
             .connector
-            .http_post_uri(hook_url.parse()?, req, None)
+            .http_post_uri(
+                hook_url.parse().map_err(|cause| {
+                    SlackClientError::SystemError(
+                        SlackClientSystemError::new().with_cause(Box::new(cause)),
+                    )
+                })?,
+                req,
+                None,
+            )
             .await
     }
 }

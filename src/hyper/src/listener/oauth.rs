@@ -76,7 +76,7 @@ impl SlackClientEventsHyperListener {
                     }
                     Err(err) => {
                         error!("Slack OAuth error: {}", &err);
-                        error_handler(err, client, user_state_storage);
+                        error_handler(Box::new(err), client, user_state_storage);
                         SlackClientHyperConnector::hyper_redirect_to(
                             &config.redirect_error_redirect_url,
                         )
@@ -102,9 +102,10 @@ impl SlackClientEventsHyperListener {
             _ => {
                 error!("Slack OAuth cancelled with unknown reason");
                 error_handler(
-                    Box::new(SlackClientError::SystemError(SlackClientSystemError::new(
-                        "OAuth cancelled with unknown reason".into(),
-                    ))),
+                    Box::new(SlackClientError::SystemError(
+                        SlackClientSystemError::new()
+                            .with_message("OAuth cancelled with unknown reason".into()),
+                    )),
                     client,
                     user_state_storage,
                 );

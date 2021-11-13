@@ -7,6 +7,7 @@ use std::fmt::Formatter;
 pub enum SlackClientError {
     ApiError(SlackClientApiError),
     HttpError(SlackClientHttpError),
+    HttpProtocolError(SlackClientHttpProtocolError),
     EndOfStream(SlackClientEndOfStreamError),
     SystemError(SlackClientSystemError),
     ProtocolError(SlackClientProtocolError),
@@ -26,6 +27,7 @@ impl Display for SlackClientError {
         match *self {
             SlackClientError::ApiError(ref err) => err.fmt(f),
             SlackClientError::HttpError(ref err) => err.fmt(f),
+            SlackClientError::HttpProtocolError(ref err) => err.fmt(f),
             SlackClientError::EndOfStream(ref err) => err.fmt(f),
             SlackClientError::ProtocolError(ref err) => err.fmt(f),
             SlackClientError::SocketModeProtocolError(ref err) => err.fmt(f),
@@ -39,6 +41,7 @@ impl Error for SlackClientError {
         match *self {
             SlackClientError::ApiError(ref err) => Some(err),
             SlackClientError::HttpError(ref err) => Some(err),
+            SlackClientError::HttpProtocolError(ref err) => Some(err),
             SlackClientError::EndOfStream(ref err) => Some(err),
             SlackClientError::ProtocolError(ref err) => Some(err),
             SlackClientError::SocketModeProtocolError(ref err) => Some(err),
@@ -81,6 +84,19 @@ impl Display for SlackClientHttpError {
 
 impl std::error::Error for SlackClientHttpError {}
 
+#[derive(Debug, Builder)]
+pub struct SlackClientHttpProtocolError {
+    pub cause: Option<Box<dyn std::error::Error + Sync + Send>>,
+}
+
+impl Display for SlackClientHttpProtocolError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "Slack http protocol error: {:?}", self.cause)
+    }
+}
+
+impl std::error::Error for SlackClientHttpProtocolError {}
+
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackClientEndOfStreamError {}
 
@@ -92,10 +108,10 @@ impl Display for SlackClientEndOfStreamError {
 
 impl std::error::Error for SlackClientEndOfStreamError {}
 
-#[derive(Debug)]
+#[derive(Debug, Builder)]
 pub struct SlackClientProtocolError {
     pub json_error: serde_json::Error,
-    pub http_response_body: String,
+    pub json_body: Option<String>,
 }
 
 impl Display for SlackClientProtocolError {
@@ -119,17 +135,19 @@ impl Display for SlackClientSocketModeProtocolError {
 
 impl std::error::Error for SlackClientSocketModeProtocolError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, Builder)]
 pub struct SlackClientSystemError {
-    message: String,
+    pub message: Option<String>,
+    pub cause: Option<Box<dyn std::error::Error + Sync + Send>>,
 }
 
 impl Display for SlackClientSystemError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Slack system/unexpected protocol error: {}",
-            self.message
+            "Slack system protocol error. {}{:?}",
+            self.message.as_ref().unwrap_or(&"".to_string()),
+            self.cause
         )
     }
 }
