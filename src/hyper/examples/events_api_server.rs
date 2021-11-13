@@ -5,12 +5,12 @@ use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response};
 use log::*;
 
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 async fn test_oauth_install_function(
     resp: SlackOAuthV2AccessTokenResponse,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    _states: Arc<SlackClientEventsUserState>,
 ) {
     println!("{:#?}", resp);
 }
@@ -18,7 +18,7 @@ async fn test_oauth_install_function(
 async fn test_push_events_function(
     event: SlackPushEvent,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    _states: Arc<SlackClientEventsUserState>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Read state
     let current_state = {
@@ -42,7 +42,7 @@ async fn test_push_events_function(
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    _states: Arc<SlackClientEventsUserState>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
     Ok(())
@@ -51,7 +51,7 @@ async fn test_interaction_events_function(
 async fn test_command_events_function(
     event: SlackCommandEvent,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    _states: Arc<SlackClientEventsUserState>,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
@@ -70,7 +70,7 @@ async fn test_command_events_function(
 fn test_error_handler(
     err: Box<dyn std::error::Error + Send + Sync>,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    _states: Arc<SlackClientEventsUserState>,
 ) -> http::StatusCode {
     println!("{:#?}", err);
 

@@ -1,4 +1,4 @@
-# User state propagation in user event listener handlers
+# User state propagation for event listeners and callback functions
 
 It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using `SlackClientEventsUserStateStorage`.
@@ -24,9 +24,12 @@ let listener_environment = Arc::new(
 async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc<SlackHyperClient>,
-    user_states_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    user_states_storage: Arc<SlackClientEventsUserState>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    // SlackClientEventsUserState is an alias for RwLock<SlackClientEventsUserStateStorage>
     let states = user_states_storage.read().unwrap();
+
     let user_state: Option<&UserStateExample> = 
         states.get_user_state::<UserStateExample>();
 
@@ -40,9 +43,12 @@ async fn test_push_events_function(
 async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc<SlackHyperClient>,
-    user_states_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    user_states_storage: Arc<SlackClientEventsUserState>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    // SlackClientEventsUserState is an alias for RwLock<SlackClientEventsUserStateStorage>
     let states = user_states_storage.write().unwrap();
+
     states.set_user_state(UserStateExample(555));
 
     Ok(())

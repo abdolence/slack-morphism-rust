@@ -140,7 +140,7 @@ impl SlackClientEventsHyperListener {
     {
         let client = self.environment.client.clone();
         let listener_error_handler = self.environment.error_handler.clone();
-        let user_state_storage = self.environment.user_state_storage.clone();
+        let user_state_storage = self.environment.user_state.clone();
 
         move |req: Request<Body>, chain: D| {
             let cfg = config.clone();

@@ -270,10 +270,7 @@ where
                             .call(
                                 event,
                                 clients_manager.listener_environment.client.clone(),
-                                clients_manager
-                                    .listener_environment
-                                    .user_state_storage
-                                    .clone(),
+                                clients_manager.listener_environment.user_state.clone(),
                             )
                             .await;
                         None
@@ -300,10 +297,7 @@ where
                             .call(
                                 event.payload.clone(),
                                 clients_manager.listener_environment.client.clone(),
-                                clients_manager
-                                    .listener_environment
-                                    .user_state_storage
-                                    .clone(),
+                                clients_manager.listener_environment.user_state.clone(),
                             )
                             .await
                         {
@@ -312,10 +306,7 @@ where
                                 if clients_manager.listener_environment.error_handler.clone()(
                                     err,
                                     clients_manager.listener_environment.client.clone(),
-                                    clients_manager
-                                        .listener_environment
-                                        .user_state_storage
-                                        .clone(),
+                                    clients_manager.listener_environment.user_state.clone(),
                                 )
                                 .is_success()
                                 {
@@ -339,10 +330,7 @@ where
                             .call(
                                 event.payload.clone(),
                                 clients_manager.listener_environment.client.clone(),
-                                clients_manager
-                                    .listener_environment
-                                    .user_state_storage
-                                    .clone(),
+                                clients_manager.listener_environment.user_state.clone(),
                             )
                             .await
                         {
@@ -351,10 +339,7 @@ where
                                 if clients_manager.listener_environment.error_handler.clone()(
                                     err,
                                     clients_manager.listener_environment.client.clone(),
-                                    clients_manager
-                                        .listener_environment
-                                        .user_state_storage
-                                        .clone(),
+                                    clients_manager.listener_environment.user_state.clone(),
                                 )
                                 .is_success()
                                 {
@@ -373,10 +358,7 @@ where
                             .call(
                                 event.payload.clone(),
                                 clients_manager.listener_environment.client.clone(),
-                                clients_manager
-                                    .listener_environment
-                                    .user_state_storage
-                                    .clone(),
+                                clients_manager.listener_environment.user_state.clone(),
                             )
                             .await
                         {
@@ -395,10 +377,7 @@ where
                                 if clients_manager.listener_environment.error_handler.clone()(
                                     err,
                                     clients_manager.listener_environment.client.clone(),
-                                    clients_manager
-                                        .listener_environment
-                                        .user_state_storage
-                                        .clone(),
+                                    clients_manager.listener_environment.user_state.clone(),
                                 )
                                 .is_success()
                                 {
@@ -423,10 +402,7 @@ where
                     clients_manager.listener_environment.error_handler.clone()(
                         err,
                         clients_manager.listener_environment.client.clone(),
-                        clients_manager
-                            .listener_environment
-                            .user_state_storage
-                            .clone(),
+                        clients_manager.listener_environment.user_state.clone(),
                     );
                     None
                 }
@@ -441,10 +417,7 @@ where
             clients_manager.listener_environment.error_handler.clone()(
                 error,
                 clients_manager.listener_environment.client.clone(),
-                clients_manager
-                    .listener_environment
-                    .user_state_storage
-                    .clone(),
+                clients_manager.listener_environment.user_state.clone(),
             );
         }
     }

@@ -72,7 +72,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     async fn slack_oauth_install_function(
         resp: SlackOAuthV2AccessTokenResponse,
         _client: Arc<SlackHyperClient>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>
+        _states: Arc<SlackClientEventsUserState>
     ) {
         println!("{:#?}", resp);
         Ok(())
@@ -81,7 +81,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     // Push events handler
     async fn slack_push_events_function(event: SlackPushEvent, 
        _client: Arc<SlackHyperClient>, 
-       _states: Arc<RwLock<SlackClientEventsUserStateStorage>>
+       _states: Arc<SlackClientEventsUserState>
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!("{:#?}", event);
 
@@ -91,7 +91,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     // Interaction events handler
     async fn slack_interaction_events_function(event: SlackInteractionEvent, 
         _client: Arc<SlackHyperClient>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>
+        _states: Arc<SlackClientEventsUserState>
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!("{:#?}", event);
 
@@ -102,7 +102,7 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     async fn slack_command_events_function(
         event: SlackCommandEvent,
         _client: Arc<SlackHyperClient>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>
+        _states: Arc<SlackClientEventsUserState>
     ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
         println!("{:#?}", event);
         Ok(SlackCommandEventResponse::new(

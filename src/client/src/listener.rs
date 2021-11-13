@@ -13,7 +13,7 @@ where
 {
     pub client: Arc<SlackClient<SCHC>>,
     pub error_handler: BoxedErrorHandler<SCHC>,
-    pub user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    pub user_state: Arc<SlackClientEventsUserState>,
 }
 
 impl<SCHC> SlackClientEventsListenerEnvironment<SCHC>
@@ -24,7 +24,7 @@ where
         Self {
             client,
             error_handler: Box::new(Self::empty_error_handler),
-            user_state_storage: Arc::new(RwLock::new(SlackClientEventsUserStateStorage::new())),
+            user_state: Arc::new(RwLock::new(SlackClientEventsUserStateStorage::new())),
         }
     }
 
@@ -44,10 +44,7 @@ where
     }
 
     pub fn with_user_state<T: Send + Sync + 'static>(self, state: T) -> Self {
-        self.user_state_storage
-            .write()
-            .unwrap()
-            .set_user_state(state);
+        self.user_state.write().unwrap().set_user_state(state);
         self
     }
 }
@@ -82,6 +79,8 @@ impl SlackClientEventsUserStateStorage {
         self.user_state_map.is_empty()
     }
 }
+
+pub type SlackClientEventsUserState = RwLock<SlackClientEventsUserStateStorage>;
 
 pub type BoxedErrorHandler<SCHC> = Box<ErrorHandler<SCHC>>;
 
