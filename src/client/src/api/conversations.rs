@@ -23,7 +23,9 @@ where
         &self,
         req: &SlackApiConversationsArchiveRequest,
     ) -> ClientResult<SlackApiConversationsArchiveResponse> {
-        self.http_api.http_post("conversations.archive", req).await
+        self.http_session_api
+            .http_post("conversations.archive", req)
+            .await
     }
 
     ///
@@ -33,7 +35,9 @@ where
         &self,
         req: &SlackApiConversationsCloseRequest,
     ) -> ClientResult<SlackApiConversationsCloseResponse> {
-        self.http_api.http_post("conversations.close", req).await
+        self.http_session_api
+            .http_post("conversations.close", req)
+            .await
     }
 
     ///
@@ -43,7 +47,9 @@ where
         &self,
         req: &SlackApiConversationsCreateRequest,
     ) -> ClientResult<SlackApiConversationsCreateResponse> {
-        self.http_api.http_post("conversations.create", req).await
+        self.http_session_api
+            .http_post("conversations.create", req)
+            .await
     }
 
     ///
@@ -53,7 +59,7 @@ where
         &self,
         req: &SlackApiConversationsHistoryRequest,
     ) -> ClientResult<SlackApiConversationsHistoryResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "conversations.history",
                 &vec![
@@ -75,7 +81,7 @@ where
         &self,
         req: &SlackApiConversationsInfoRequest,
     ) -> ClientResult<SlackApiConversationsInfoResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "conversations.info",
                 &vec![
@@ -100,7 +106,9 @@ where
         &self,
         req: &SlackApiConversationsInviteRequest,
     ) -> ClientResult<SlackApiConversationsInviteResponse> {
-        self.http_api.http_post("conversations.invite", req).await
+        self.http_session_api
+            .http_post("conversations.invite", req)
+            .await
     }
 
     ///
@@ -110,7 +118,9 @@ where
         &self,
         req: &SlackApiConversationsJoinRequest,
     ) -> ClientResult<SlackApiConversationsJoinResponse> {
-        self.http_api.http_post("conversations.join", req).await
+        self.http_session_api
+            .http_post("conversations.join", req)
+            .await
     }
 
     ///
@@ -120,7 +130,9 @@ where
         &self,
         req: &SlackApiConversationsKickRequest,
     ) -> ClientResult<SlackApiConversationsKickResponse> {
-        self.http_api.http_post("conversations.kick", req).await
+        self.http_session_api
+            .http_post("conversations.kick", req)
+            .await
     }
 
     ///
@@ -130,7 +142,9 @@ where
         &self,
         req: &SlackApiConversationsLeaveRequest,
     ) -> ClientResult<SlackApiConversationsLeaveResponse> {
-        self.http_api.http_post("conversations.leave", req).await
+        self.http_session_api
+            .http_post("conversations.leave", req)
+            .await
     }
 
     ///
@@ -140,7 +154,7 @@ where
         &self,
         req: &SlackApiConversationsListRequest,
     ) -> ClientResult<SlackApiConversationsListResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "conversations.list",
                 &vec![
@@ -174,7 +188,7 @@ where
         &self,
         req: &SlackApiConversationsMembersRequest,
     ) -> ClientResult<SlackApiConversationsMembersResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "conversations.members",
                 &vec![
@@ -194,7 +208,7 @@ where
         &self,
         req: &SlackApiConversationsOpenRequest,
     ) -> ClientResult<SlackApiConversationsOpenResponse<SlackBasicChannelInfo>> {
-        self.http_api
+        self.http_session_api
             .http_post("conversations.open", &req.clone().without_return_im())
             .await
     }
@@ -207,7 +221,7 @@ where
         &self,
         req: &SlackApiConversationsOpenRequest,
     ) -> ClientResult<SlackApiConversationsOpenResponse<SlackChannelInfo>> {
-        self.http_api
+        self.http_session_api
             .http_post("conversations.open", &req.clone().with_return_im(true))
             .await
     }
@@ -219,7 +233,9 @@ where
         &self,
         req: &SlackApiConversationsRenameRequest,
     ) -> ClientResult<SlackApiConversationsRenameResponse> {
-        self.http_api.http_post("conversations.rename", req).await
+        self.http_session_api
+            .http_post("conversations.rename", req)
+            .await
     }
 
     ///
@@ -229,7 +245,7 @@ where
         &self,
         req: &SlackApiConversationsRepliesRequest,
     ) -> ClientResult<SlackApiConversationsRepliesResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "conversations.replies",
                 &vec![
@@ -252,7 +268,7 @@ where
         &self,
         req: &SlackApiConversationsSetPurposeRequest,
     ) -> ClientResult<SlackApiConversationsSetPurposeResponse> {
-        self.http_api
+        self.http_session_api
             .http_post("conversations.setPurpose", req)
             .await
     }
@@ -264,7 +280,9 @@ where
         &self,
         req: &SlackApiConversationsSetTopicRequest,
     ) -> ClientResult<SlackApiConversationsSetTopicResponse> {
-        self.http_api.http_post("conversations.setTopic", req).await
+        self.http_session_api
+            .http_post("conversations.setTopic", req)
+            .await
     }
 
     ///
@@ -274,7 +292,9 @@ where
         &self,
         req: &SlackApiConversationsUnarchiveRequest,
     ) -> ClientResult<SlackApiConversationsUnarchiveResponse> {
-        self.http_api.http_post("conversations.setTopic", req).await
+        self.http_session_api
+            .http_post("conversations.setTopic", req)
+            .await
     }
 }
 

@@ -21,7 +21,7 @@ where
         &self,
         req: &SlackApiBotsInfoRequest,
     ) -> ClientResult<SlackApiBotsInfoResponse> {
-        self.http_api
+        self.http_session_api
             .http_get("bots.info", &vec![("bot", req.bot.as_ref())])
             .await
     }

@@ -25,7 +25,7 @@ where
         &self,
         req: &SlackApiChatDeleteRequest,
     ) -> ClientResult<SlackApiChatDeleteResponse> {
-        self.http_api.http_post("chat.delete", req).await
+        self.http_session_api.http_post("chat.delete", req).await
     }
 
     ///
@@ -35,7 +35,7 @@ where
         &self,
         req: &SlackApiChatDeleteScheduledMessageRequest,
     ) -> ClientResult<SlackApiChatDeleteScheduledMessageResponse> {
-        self.http_api
+        self.http_session_api
             .http_post("chat.deleteScheduledMessage", req)
             .await
     }
@@ -47,7 +47,7 @@ where
         &self,
         req: &SlackApiChatGetPermalinkRequest,
     ) -> ClientResult<SlackApiChatGetPermalinkResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "chat.getPermalink",
                 &vec![
@@ -65,7 +65,9 @@ where
         &self,
         req: &SlackApiChatPostEphemeralRequest,
     ) -> ClientResult<SlackApiChatPostEphemeralResponse> {
-        self.http_api.http_post("chat.postEphemeral", req).await
+        self.http_session_api
+            .http_post("chat.postEphemeral", req)
+            .await
     }
 
     ///
@@ -75,7 +77,9 @@ where
         &self,
         req: &SlackApiChatPostMessageRequest,
     ) -> ClientResult<SlackApiChatPostMessageResponse> {
-        self.http_api.http_post("chat.postMessage", req).await
+        self.http_session_api
+            .http_post("chat.postMessage", req)
+            .await
     }
 
     ///
@@ -85,7 +89,9 @@ where
         &self,
         req: &SlackApiChatScheduleMessageRequest,
     ) -> ClientResult<SlackApiChatScheduleMessageResponse> {
-        self.http_api.http_post("chat.scheduleMessage", req).await
+        self.http_session_api
+            .http_post("chat.scheduleMessage", req)
+            .await
     }
 
     ///
@@ -95,7 +101,7 @@ where
         &self,
         req: &SlackApiChatUnfurlRequest,
     ) -> ClientResult<SlackApiChatUnfurlResponse> {
-        self.http_api.http_post("chat.unfurl", req).await
+        self.http_session_api.http_post("chat.unfurl", req).await
     }
 
     ///
@@ -105,7 +111,7 @@ where
         &self,
         req: &SlackApiChatUpdateRequest,
     ) -> ClientResult<SlackApiChatUpdateResponse> {
-        self.http_api.http_post("chat.update", req).await
+        self.http_session_api.http_post("chat.update", req).await
     }
 
     ///
@@ -115,7 +121,7 @@ where
         &self,
         req: &SlackApiChatScheduledMessagesListRequest,
     ) -> ClientResult<SlackApiChatScheduledMessagesListResponse> {
-        self.http_api
+        self.http_session_api
             .http_post("chat.scheduledMessages.list", req)
             .await
     }

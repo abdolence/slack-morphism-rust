@@ -22,7 +22,7 @@ where
         &self,
         req: &SlackApiViewsOpenRequest,
     ) -> ClientResult<SlackApiViewsOpenResponse> {
-        self.http_api.http_post("views.open", req).await
+        self.http_session_api.http_post("views.open", req).await
     }
 
     ///
@@ -32,7 +32,7 @@ where
         &self,
         req: &SlackApiViewsPublishRequest,
     ) -> ClientResult<SlackApiViewsPublishResponse> {
-        self.http_api.http_post("views.publish", req).await
+        self.http_session_api.http_post("views.publish", req).await
     }
 
     ///
@@ -42,7 +42,7 @@ where
         &self,
         req: &SlackApiViewsPushRequest,
     ) -> ClientResult<SlackApiViewsPushResponse> {
-        self.http_api.http_post("views.push", req).await
+        self.http_session_api.http_post("views.push", req).await
     }
 
     ///
@@ -52,7 +52,7 @@ where
         &self,
         req: &SlackApiViewsUpdateRequest,
     ) -> ClientResult<SlackApiViewsUpdateResponse> {
-        self.http_api.http_post("views.update", req).await
+        self.http_session_api.http_post("views.update", req).await
     }
 }
 

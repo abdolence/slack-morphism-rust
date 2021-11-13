@@ -21,7 +21,7 @@ where
         &self,
         req: &SlackApiTeamInfoRequest,
     ) -> ClientResult<SlackApiTeamInfoResponse> {
-        self.http_api
+        self.http_session_api
             .http_get("team.info", &vec![("team", req.team.as_ref())])
             .await
     }
@@ -33,7 +33,7 @@ where
         &self,
         req: &SlackApiTeamProfileGetRequest,
     ) -> ClientResult<SlackApiTeamProfileGetResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "team.profile.get",
                 &vec![("visibility", req.visibility.as_ref())],

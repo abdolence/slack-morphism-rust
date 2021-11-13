@@ -21,7 +21,7 @@ where
             &SlackClientHttpApiUri::create_method_uri_path("api.test"),
             &vec![("foo", req.foo.as_ref()), ("error", req.error.as_ref())],
         );
-        self.http_api.http_post_uri(full_uri, &req).await
+        self.http_session_api.http_post_uri(full_uri, &req).await
     }
 }
 

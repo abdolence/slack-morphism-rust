@@ -24,7 +24,7 @@ where
         &self,
         req: &SlackApiUsersConversationsRequest,
     ) -> ClientResult<SlackApiUsersConversationsResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "users.conversations",
                 &vec![
@@ -59,7 +59,7 @@ where
         &self,
         req: &SlackApiUsersGetPresenceRequest,
     ) -> ClientResult<SlackApiUsersGetPresenceResponse> {
-        self.http_api
+        self.http_session_api
             .http_get("users.getPresence", &vec![("user", Some(req.user.value()))])
             .await
     }
@@ -68,7 +68,7 @@ where
     /// https://api.slack.com/methods/users.identity
     ///
     pub async fn users_identity(&self) -> ClientResult<SlackApiUsersGetPresenceResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "users.identity",
                 &crate::client::SLACK_HTTP_EMPTY_GET_PARAMS.clone(),
@@ -83,7 +83,7 @@ where
         &self,
         req: &SlackApiUsersInfoRequest,
     ) -> ClientResult<SlackApiUsersInfoResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "users.info",
                 &vec![
@@ -104,7 +104,7 @@ where
         &self,
         req: &SlackApiUsersListRequest,
     ) -> ClientResult<SlackApiUsersListResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "users.list",
                 &vec![
@@ -126,7 +126,7 @@ where
         &self,
         req: &SlackApiUsersLookupByEmailRequest,
     ) -> ClientResult<SlackApiUsersLookupByEmailResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "users.lookupByEmail",
                 &vec![("email", Some(req.email.value()))],
@@ -141,7 +141,9 @@ where
         &self,
         req: &SlackApiUsersSetPresenceRequest,
     ) -> ClientResult<SlackApiUsersSetPresenceResponse> {
-        self.http_api.http_post("users.setPresence", req).await
+        self.http_session_api
+            .http_post("users.setPresence", req)
+            .await
     }
 
     ///
@@ -151,7 +153,7 @@ where
         &self,
         req: &SlackApiUsersProfileGetRequest,
     ) -> ClientResult<SlackApiUsersProfileGetResponse> {
-        self.http_api
+        self.http_session_api
             .http_get(
                 "users.profile.get",
                 &vec![
@@ -172,7 +174,9 @@ where
         &self,
         req: &SlackApiUsersProfileSetRequest,
     ) -> ClientResult<SlackApiUsersProfileSetResponse> {
-        self.http_api.http_post("users.profile.set", req).await
+        self.http_session_api
+            .http_post("users.profile.set", req)
+            .await
     }
 }
 

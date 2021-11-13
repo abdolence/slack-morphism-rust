@@ -22,7 +22,9 @@ where
         &self,
         req: &SlackApiAppsConnectionOpenRequest,
     ) -> ClientResult<SlackApiAppsConnectionOpenResponse> {
-        self.http_api.http_post("apps.connections.open", req).await
+        self.http_session_api
+            .http_post("apps.connections.open", req)
+            .await
     }
 }
 

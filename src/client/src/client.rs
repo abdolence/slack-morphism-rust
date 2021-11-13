@@ -30,9 +30,7 @@ pub struct SlackClientSession<'a, SCHC>
 where
     SCHC: SlackClientHttpConnector + Send,
 {
-    pub http_api: SlackClientHttpSessionApi<'a, SCHC>,
-    client: &'a SlackClient<SCHC>,
-    token: &'a SlackApiToken,
+    pub http_session_api: SlackClientHttpSessionApi<'a, SCHC>,
 }
 
 #[derive(Debug)]
@@ -213,9 +211,7 @@ where
         };
 
         SlackClientSession {
-            client: self,
-            token,
-            http_api: http_session_api,
+            http_session_api: http_session_api,
         }
     }
 }
