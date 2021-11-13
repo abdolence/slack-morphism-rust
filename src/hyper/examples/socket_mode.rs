@@ -14,14 +14,16 @@ async fn test_interaction_events_function(
 
 async fn test_command_events_function(
     event: SlackCommandEvent,
-    _client: Arc<SlackHyperClient>,
+    client: Arc<SlackHyperClient>,
     _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
 
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
-    let session = _client.open_session(&token);
+
+    // Sessions are lightweight and basically just a reference to client and token
+    let session = client.open_session(&token);
 
     session
         .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))

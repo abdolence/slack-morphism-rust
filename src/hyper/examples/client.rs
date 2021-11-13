@@ -13,6 +13,8 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new(SlackClientHyperConnector::new());
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
+
+    // Sessions are lightweight and basically just a reference to client and token
     let session = client.open_session(&token);
     println!("{:#?}", session);
 
