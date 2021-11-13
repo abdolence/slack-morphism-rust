@@ -6,10 +6,10 @@
 //!
 //! ### Create a client instance:
 //! ```ignore
-//! use slack_morphism::*;
+//! use slack_morphism::prelude::*;
+//! use slack_morphism_hyper::*;
 //!
-//! let client_connector = SlackClientHyperConnector::new(); // with Tokio/Hyper support
-//! let client = SlackClient::new(client_connector);
+//! let client = SlackClient::new(SlackClientHyperConnector::new());
 //!
 //! ```
 //!
@@ -25,22 +25,22 @@
 //!
 //! ```ignore
 //!
-//! use slack_morphism::*;
-//! use slack_morphism::api::*;
+//! use slack_morphism::prelude::*;
+//! use slack_morphism_hyper::*;
 //! use slack_morphism_models::*;
 //!
-//! use slack_morphism_hyper::*;
 //!
 //!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
-//! let client_connector: SlackClientHyperConnector::new();
-//! let client = SlackClient::new(client_connector);
+//! let client = SlackClient::new(SlackClientHyperConnector::new());
 //!
 //! // Create our Slack API token
 //! let token_value: SlackApiTokenValue = "xoxb-89.....".into();
 //! let token: SlackApiToken = SlackApiToken::new(token_value);
 //!
 //! // Create a Slack session with this token
+//! // A session is just a lightweight wrapper around your token
+//! // not to specify it all the time for series of calls.
 //! let session = client.open_session(&token);
 //!
 //! // Make your first API call (which is `api.test` here)
@@ -75,11 +75,15 @@
 //! (which is already integrated in the routes implementation for you).
 //! All you need is provide your client id and secret configuration to route implementation.
 //!
-//! Look at the examples/test_server sources for the details.
+//! ## Socket Mode support
 //!
-//! # Docs
+//! The library provides Socket Mode support additionally Events API leveraging Web-sockets
+//! in cases you don't want/need to expose publicly available HTTP endpoint.
+//!
+//! # Docs and examples
 //!
 //! Please follow to the official website: https://slack-rust.abdolence.dev
+//! Examples available at: https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples
 //!
 
 #![allow(clippy::new_without_default)]
