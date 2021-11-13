@@ -145,7 +145,7 @@ impl Display for SlackClientSystemError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Slack system/unexpected protocol error. {}{:?}",
+            "Slack system protocol error. {}{:?}",
             self.message.as_ref().unwrap_or(&"".to_string()),
             self.cause
         )
