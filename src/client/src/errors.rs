@@ -37,7 +37,7 @@ impl Display for SlackClientError {
 }
 
 impl Error for SlackClientError {
-    fn cause(&self) -> Option<&dyn Error> {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
         match *self {
             SlackClientError::ApiError(ref err) => Some(err),
             SlackClientError::HttpError(ref err) => Some(err),
@@ -138,7 +138,7 @@ impl std::error::Error for SlackClientSocketModeProtocolError {}
 #[derive(Debug, Builder)]
 pub struct SlackClientSystemError {
     pub message: Option<String>,
-    pub cause: Option<Box<dyn std::error::Error + Sync + Send>>,
+    pub cause: Option<Box<dyn std::error::Error + Sync + Send + 'static>>,
 }
 
 impl Display for SlackClientSystemError {
