@@ -210,9 +210,7 @@ where
             token,
         };
 
-        SlackClientSession {
-            http_session_api: http_session_api,
-        }
+        SlackClientSession { http_session_api }
     }
 }
 
