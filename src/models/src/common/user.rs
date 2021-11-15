@@ -16,7 +16,7 @@ pub struct SlackUser {
     pub flags: SlackUserFlags,
     pub tz: Option<String>,
     pub tz_label: Option<String>,
-    pub tz_offset: Option<i16>,
+    pub tz_offset: Option<i32>,
     pub updated: Option<SlackDateTime>,
     pub deleted: Option<bool>,
     pub color: Option<SlackColor>,
