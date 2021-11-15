@@ -8,12 +8,13 @@ use slack_morphism::{SlackClient, SlackClientHttpApiUri};
 
 use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
+use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response};
 use log::*;
 use std::future::Future;
 use std::sync::{Arc, RwLock};
 
-impl SlackClientEventsHyperListener {
+impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     async fn slack_oauth_install_service(
         _: Request<Body>,
         config: &SlackOAuthListenerConfig,
@@ -27,22 +28,22 @@ impl SlackClientEventsHyperListener {
             ],
         );
         debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
-        SlackClientHyperConnector::hyper_redirect_to(&full_uri.to_string())
+        SlackClientHyperConnector::<H>::hyper_redirect_to(&full_uri.to_string())
     }
 
     async fn slack_oauth_callback_service(
         req: Request<Body>,
         config: &SlackOAuthListenerConfig,
-        client: Arc<SlackClient<SlackClientHyperConnector>>,
+        client: Arc<SlackClient<SlackClientHyperConnector<H>>>,
         user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
         install_service_fn: UserCallbackFunction<
             SlackOAuthV2AccessTokenResponse,
             impl Future<Output = ()> + 'static + Send,
-            SlackClientHyperConnector,
+            SlackClientHyperConnector<H>,
         >,
-        error_handler: BoxedErrorHandler<SlackClientHyperConnector>,
+        error_handler: BoxedErrorHandler<SlackClientHyperConnector<H>>,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
-        let params = SlackClientHyperConnector::parse_query_params(&req);
+        let params = SlackClientHyperConnector::<H>::parse_query_params(&req);
         debug!("Received Slack OAuth callback: {:?}", &params);
 
         match (params.get("code"), params.get("error")) {
@@ -72,12 +73,12 @@ impl SlackClientEventsHyperListener {
                             &oauth_resp.authed_user.id
                         );
                         install_service_fn(oauth_resp, client, user_state_storage).await;
-                        SlackClientHyperConnector::hyper_redirect_to(&config.redirect_installed_url)
+                        SlackClientHyperConnector::<H>::hyper_redirect_to(&config.redirect_installed_url)
                     }
                     Err(err) => {
                         error!("Slack OAuth error: {}", &err);
                         error_handler(Box::new(err), client, user_state_storage);
-                        SlackClientHyperConnector::hyper_redirect_to(
+                        SlackClientHyperConnector::<H>::hyper_redirect_to(
                             &config.redirect_error_redirect_url,
                         )
                     }
@@ -97,7 +98,7 @@ impl SlackClientEventsHyperListener {
                     &config.redirect_error_redirect_url,
                     req.uri().query().map_or("".into(), |q| format!("?{}", &q))
                 );
-                SlackClientHyperConnector::hyper_redirect_to(&redirect_error_url)
+                SlackClientHyperConnector::<H>::hyper_redirect_to(&redirect_error_url)
             }
             _ => {
                 error!("Slack OAuth cancelled with unknown reason");
@@ -109,7 +110,7 @@ impl SlackClientEventsHyperListener {
                     client,
                     user_state_storage,
                 );
-                SlackClientHyperConnector::hyper_redirect_to(&config.redirect_error_redirect_url)
+                SlackClientHyperConnector::<H>::hyper_redirect_to(&config.redirect_error_redirect_url)
             }
         }
     }
@@ -120,7 +121,7 @@ impl SlackClientEventsHyperListener {
         install_service_fn: UserCallbackFunction<
             SlackOAuthV2AccessTokenResponse,
             impl Future<Output = ()> + 'static + Send,
-            SlackClientHyperConnector,
+            SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
         Request<Body>,

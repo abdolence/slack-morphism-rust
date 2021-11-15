@@ -7,6 +7,7 @@ use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
+use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response};
 use log::*;
 use slack_morphism::UserCallbackResult;
@@ -14,14 +15,14 @@ pub use slack_morphism_models::events::*;
 use std::future::Future;
 use std::sync::Arc;
 
-impl SlackClientEventsHyperListener {
+impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     pub fn push_events_service_fn<'a, D, F>(
         &self,
         config: Arc<SlackPushEventsListenerConfig>,
         push_service_fn: UserCallbackFunction<
             SlackPushEvent,
             impl Future<Output = UserCallbackResult<()>> + 'static + Send,
-            SlackClientHyperConnector,
+            SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
         Request<Body>,
@@ -55,7 +56,7 @@ impl SlackClientEventsHyperListener {
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
-                        SlackClientHyperConnector::decode_signed_response(req, &sign_verifier)
+                        SlackClientHyperConnector::<H>::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 serde_json::from_str::<SlackPushEvent>(body.as_str()).map_err(|e| {
                                     SlackClientProtocolError::new(e)

@@ -10,6 +10,7 @@ use slack_morphism::clients::{
 use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;
+use hyper::client::connect::Connect;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
@@ -412,7 +413,9 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
     }
 }
 
-impl SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient> for SlackClientHyperConnector {
+impl<H: Send + Sync + Clone + Connect> SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient>
+    for SlackClientHyperConnector<H>
+{
     fn create_wss_client(
         &self,
         wss_url: &SlackWebSocketsUrl,
