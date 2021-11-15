@@ -67,13 +67,13 @@ pub struct SlackInteractionActionViewContainer {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackInteractionActionInfo {
     #[serde(rename = "type")]
-    action_type: SlackActionType,
-    action_id: SlackActionId,
-    block_id: Option<SlackBlockId>,
-    text: Option<SlackBlockText>,
-    value: Option<String>,
-    selected_option: Option<SlackBlockChoiceItem<SlackBlockText>>,
-    action_ts: Option<SlackTs>,
+    pub action_type: SlackActionType,
+    pub action_id: SlackActionId,
+    pub block_id: Option<SlackBlockId>,
+    pub text: Option<SlackBlockText>,
+    pub value: Option<String>,
+    pub selected_option: Option<SlackBlockChoiceItem<SlackBlockText>>,
+    pub action_ts: Option<SlackTs>,
 }
 
 #[skip_serializing_none]
@@ -84,8 +84,8 @@ pub struct SlackInteractionDialogueSubmissionEvent {
     pub channel: Option<SlackBasicChannelInfo>,
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub callback_id: Option<SlackCallbackId>,
-    state: Option<String>,
-    submission: HashMap<String, String>,
+    pub state: Option<String>,
+    pub submission: HashMap<String, String>,
 }
 
 #[skip_serializing_none]
