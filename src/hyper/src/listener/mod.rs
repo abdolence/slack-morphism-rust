@@ -3,8 +3,8 @@ use crate::connector::SlackClientHyperConnector;
 use std::future::Future;
 
 use futures::future::{BoxFuture, FutureExt};
-use hyper::{Body, Request, Response};
 use hyper::client::connect::Connect;
+use hyper::{Body, Request, Response};
 
 pub use command_events::*;
 pub use interaction_events::*;

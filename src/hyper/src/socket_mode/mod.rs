@@ -1,6 +1,7 @@
 use crate::SlackClientHyperConnector;
 use async_trait::async_trait;
 use futures::{SinkExt, StreamExt};
+use hyper::client::connect::Connect;
 use log::*;
 use rvstruct::*;
 use slack_morphism::clients::{
@@ -10,7 +11,6 @@ use slack_morphism::clients::{
 use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;
-use hyper::client::connect::Connect;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;

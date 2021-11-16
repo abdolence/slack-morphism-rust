@@ -73,7 +73,9 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                             &oauth_resp.authed_user.id
                         );
                         install_service_fn(oauth_resp, client, user_state_storage).await;
-                        SlackClientHyperConnector::<H>::hyper_redirect_to(&config.redirect_installed_url)
+                        SlackClientHyperConnector::<H>::hyper_redirect_to(
+                            &config.redirect_installed_url,
+                        )
                     }
                     Err(err) => {
                         error!("Slack OAuth error: {}", &err);
@@ -110,7 +112,9 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                     client,
                     user_state_storage,
                 );
-                SlackClientHyperConnector::<H>::hyper_redirect_to(&config.redirect_error_redirect_url)
+                SlackClientHyperConnector::<H>::hyper_redirect_to(
+                    &config.redirect_error_redirect_url,
+                )
             }
         }
     }

@@ -5,7 +5,6 @@ use hyper::body::HttpBody;
 use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
-use hyper_proxy::{Proxy, ProxyConnector, Intercept};
 use hyper_rustls::HttpsConnector;
 use mime::Mime;
 use rvstruct::ValueStruct;
@@ -23,10 +22,8 @@ pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> 
     hyper_connector: Client<H>,
 }
 
-pub type SlackClientHyperHttpsConnector =
-    SlackClientHyperConnector<HttpsConnector<HttpConnector>>;
-pub type SlackClientHyperProxyHttpsConnector =
-    SlackClientHyperConnector<ProxyConnector<HttpsConnector<HttpConnector>>>;
+pub type HyperHttpsConnector = HttpsConnector<HttpConnector>;
+pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HyperHttpsConnector>;
 
 impl SlackClientHyperHttpsConnector {
     pub fn new() -> Self {
@@ -38,22 +35,13 @@ impl SlackClientHyperHttpsConnector {
     }
 }
 
-impl SlackClientHyperProxyHttpsConnector {
-    pub fn with_proxy(url: &str) -> Self {
-        let https_connector = HttpsConnector::with_native_roots();
-        let proxy = {
-            let proxy_uri = url.parse().unwrap();
-            let proxy = Proxy::new(Intercept::Https, proxy_uri);
-            ProxyConnector::from_proxy(https_connector, proxy).unwrap()
-        };
-        let http_client = Client::builder().build::<_, hyper::Body>(proxy);
+impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnector<H> {
+    pub fn with_connector(connector: H) -> Self {
         Self {
-            hyper_connector: http_client,
+            hyper_connector: Client::builder().build::<_, hyper::Body>(connector),
         }
     }
-}
 
-impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnector<H> {
     pub(crate) fn parse_query_params(request: &Request<Body>) -> HashMap<String, String> {
         request
             .uri()
@@ -154,20 +142,11 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                 }) =>
             {
                 let slack_message: SlackEnvelopeMessage =
-                    serde_json::from_str(http_body_str.as_str()).map_err(|err| {
-                        Self::map_serde_error(
-                            err,
-                            Some(http_body_str.as_str()),
-                        )
-                    })?;
+                    serde_json::from_str(http_body_str.as_str())
+                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
                 if slack_message.error.is_none() {
-                    let decoded_body =
-                        serde_json::from_str(http_body_str.as_str()).map_err(|err| {
-                            Self::map_serde_error(
-                                err,
-                                Some(http_body_str.as_str()),
-                            )
-                        })?;
+                    let decoded_body = serde_json::from_str(http_body_str.as_str())
+                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
                     Ok(decoded_body)
                 } else {
                     Err(SlackClientError::ApiError(
@@ -177,8 +156,9 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     ))
                 }
             }
-            StatusCode::OK => serde_json::from_str("{}")
-                .map_err(|err| Self::map_serde_error(err, Some("{}"))),
+            StatusCode::OK => {
+                serde_json::from_str("{}").map_err(|err| Self::map_serde_error(err, Some("{}")))
+            }
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )),
@@ -241,7 +221,9 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     }
 }
 
-impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnector for SlackClientHyperConnector<H> {
+impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnector
+    for SlackClientHyperConnector<H>
+{
     fn http_get_uri<'a, RS>(
         &'a self,
         full_uri: Url,
