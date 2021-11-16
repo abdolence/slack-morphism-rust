@@ -22,10 +22,9 @@ pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> 
     hyper_connector: Client<H>,
 }
 
-pub type HyperHttpsConnector = HttpsConnector<HttpConnector>;
-pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HyperHttpsConnector>;
+pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HttpsConnector<HttpConnector>>;
 
-impl SlackClientHyperHttpsConnector {
+impl SlackClientHyperConnector<HttpsConnector<HttpConnector>> {
     pub fn new() -> Self {
         let https_connector = HttpsConnector::with_native_roots();
         let http_client = Client::builder().build::<_, hyper::Body>(https_connector);

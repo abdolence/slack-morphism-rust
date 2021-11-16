@@ -5,6 +5,7 @@
 - [Slack Web API client](./web-api.md)
   - [Pagination support](./pagination-support.md)
   - [Block Kit support](./block-kit-support.md)
+  - [Hyper connection types and proxy support](./hyper-connections-types)
 - [Events API](./events-api.md)
 - [Socket Mode](./socket-mode.md)
 - [User state](./user-state-in-event-listener.md)
