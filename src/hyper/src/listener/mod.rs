@@ -3,6 +3,7 @@ use crate::connector::SlackClientHyperConnector;
 use std::future::Future;
 
 use futures::future::{BoxFuture, FutureExt};
+use hyper::client::connect::Connect;
 use hyper::{Body, Request, Response};
 
 pub use command_events::*;
@@ -18,13 +19,13 @@ mod interaction_events;
 mod oauth;
 mod push_events;
 
-pub struct SlackClientEventsHyperListener {
-    pub environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector>>,
+pub struct SlackClientEventsHyperListener<H: 'static + Send + Sync + Connect + Clone> {
+    pub environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector<H>>>,
 }
 
-impl SlackClientEventsHyperListener {
+impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     pub fn new(
-        environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector>>,
+        environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector<H>>>,
     ) -> Self {
         Self { environment }
     }

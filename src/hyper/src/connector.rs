@@ -18,16 +18,27 @@ use std::io::Read;
 use url::Url;
 
 #[derive(Clone, Debug)]
-pub struct SlackClientHyperConnector {
-    hyper_connector: Client<HttpsConnector<HttpConnector>>,
+pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> {
+    hyper_connector: Client<H>,
 }
 
-impl SlackClientHyperConnector {
+pub type HyperHttpsConnector = HttpsConnector<HttpConnector>;
+pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HyperHttpsConnector>;
+
+impl SlackClientHyperHttpsConnector {
     pub fn new() -> Self {
         let https_connector = HttpsConnector::with_native_roots();
         let http_client = Client::builder().build::<_, hyper::Body>(https_connector);
         Self {
             hyper_connector: http_client,
+        }
+    }
+}
+
+impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnector<H> {
+    pub fn with_connector(connector: H) -> Self {
+        Self {
+            hyper_connector: Client::builder().build::<_, hyper::Body>(connector),
         }
     }
 
@@ -116,11 +127,11 @@ impl SlackClientHyperConnector {
             .hyper_connector
             .request(request)
             .await
-            .map_err(SlackClientHyperConnector::map_http_error)?;
+            .map_err(Self::map_http_error)?;
         let http_status = http_res.status();
         let http_content_type = Self::http_response_content_type(&http_res);
         let http_body_str = Self::http_body_to_string(http_res)
-            .map_err(SlackClientHyperConnector::map_system_error)
+            .map_err(Self::map_system_error)
             .await?;
 
         match http_status {
@@ -131,20 +142,11 @@ impl SlackClientHyperConnector {
                 }) =>
             {
                 let slack_message: SlackEnvelopeMessage =
-                    serde_json::from_str(http_body_str.as_str()).map_err(|err| {
-                        SlackClientHyperConnector::map_serde_error(
-                            err,
-                            Some(http_body_str.as_str()),
-                        )
-                    })?;
+                    serde_json::from_str(http_body_str.as_str())
+                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
                 if slack_message.error.is_none() {
-                    let decoded_body =
-                        serde_json::from_str(http_body_str.as_str()).map_err(|err| {
-                            SlackClientHyperConnector::map_serde_error(
-                                err,
-                                Some(http_body_str.as_str()),
-                            )
-                        })?;
+                    let decoded_body = serde_json::from_str(http_body_str.as_str())
+                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
                     Ok(decoded_body)
                 } else {
                     Err(SlackClientError::ApiError(
@@ -154,8 +156,9 @@ impl SlackClientHyperConnector {
                     ))
                 }
             }
-            StatusCode::OK => serde_json::from_str("{}")
-                .map_err(|err| SlackClientHyperConnector::map_serde_error(err, Some("{}"))),
+            StatusCode::OK => {
+                serde_json::from_str("{}").map_err(|err| Self::map_serde_error(err, Some("{}")))
+            }
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )),
@@ -218,7 +221,9 @@ impl SlackClientHyperConnector {
     }
 }
 
-impl SlackClientHttpConnector for SlackClientHyperConnector {
+impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnector
+    for SlackClientHyperConnector<H>
+{
     fn http_get_uri<'a, RS>(
         &'a self,
         full_uri: Url,
@@ -236,7 +241,7 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
                 .send_webapi_request(
                     http_request
                         .body(Body::empty())
-                        .map_err(SlackClientHyperConnector::map_hyper_http_error)?,
+                        .map_err(Self::map_hyper_http_error)?,
                 )
                 .await?;
 
@@ -261,7 +266,7 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
                 client_secret.value(),
             )
             .body(Body::empty())
-            .map_err(SlackClientHyperConnector::map_hyper_http_error)?;
+            .map_err(Self::map_hyper_http_error)?;
 
             self.send_webapi_request(http_request).await
         }
@@ -280,7 +285,7 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
     {
         async move {
             let post_json = serde_json::to_string(&request_body)
-                .map_err(|err| SlackClientHyperConnector::map_serde_error(err, None))?;
+                .map_err(|err| Self::map_serde_error(err, None))?;
 
             let base_http_request = Self::create_http_request(full_uri, hyper::http::Method::POST)
                 .header("content-type", "application/json; charset=utf-8");
@@ -291,7 +296,7 @@ impl SlackClientHttpConnector for SlackClientHyperConnector {
                 .send_webapi_request(
                     http_request
                         .body(post_json.into())
-                        .map_err(SlackClientHyperConnector::map_hyper_http_error)?,
+                        .map_err(Self::map_hyper_http_error)?,
                 )
                 .await?;
 

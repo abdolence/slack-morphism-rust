@@ -1,6 +1,7 @@
 use crate::SlackClientHyperConnector;
 use async_trait::async_trait;
 use futures::{SinkExt, StreamExt};
+use hyper::client::connect::Connect;
 use log::*;
 use rvstruct::*;
 use slack_morphism::clients::{
@@ -412,7 +413,9 @@ impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
     }
 }
 
-impl SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient> for SlackClientHyperConnector {
+impl<H: Send + Sync + Clone + Connect> SlackSocketModeWssClientsFactory<SlackTungsteniteWssClient>
+    for SlackClientHyperConnector<H>
+{
     fn create_wss_client(
         &self,
         wss_url: &SlackWebSocketsUrl,

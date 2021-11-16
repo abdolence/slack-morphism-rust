@@ -7,6 +7,7 @@ use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
+use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response, StatusCode};
 use slack_morphism::UserCallbackResult;
 pub use slack_morphism_models::events::*;
@@ -15,14 +16,14 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
 
-impl SlackClientEventsHyperListener {
+impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     pub fn command_events_service_fn<'a, D, F>(
         &self,
         config: Arc<SlackCommandEventsListenerConfig>,
         command_service_fn: UserCallbackFunction<
             SlackCommandEvent,
             impl Future<Output = UserCallbackResult<SlackCommandEventResponse>> + 'static + Send,
-            SlackClientHyperConnector,
+            SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
         Request<Body>,
@@ -57,7 +58,7 @@ impl SlackClientEventsHyperListener {
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
-                        SlackClientHyperConnector::decode_signed_response(req, &sign_verifier)
+                        SlackClientHyperConnector::<H>::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 let body_params: HashMap<String, String> =
                                     url::form_urlencoded::parse(body.as_bytes())
