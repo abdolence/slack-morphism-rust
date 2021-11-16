@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Block Kit support - Slack Morphism for Rust</title>
+        <title>Hyper connection types and proxy support - Slack Morphism for Rust</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Slack Morphism is a type-safe and modern client for Rust">
@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html" class="active"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.3.</strong> Hyper connection types and proxy support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html" class="active"><strong aria-hidden="true">3.3.</strong> Hyper connection types and proxy support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -137,110 +137,39 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="block-kit-support"><a class="header" href="#block-kit-support">Block Kit support</a></h1>
-<p>To support Slack Block Kit rich messages and views, the library provides:</p>
+                        <h1 id="different-hyper-connection-types-and-proxy-support"><a class="header" href="#different-hyper-connection-types-and-proxy-support">Different hyper connection types and proxy support</a></h1>
+<p>In some cases you may need to configure hyper connection types. </p>
+<p>Common examples:</p>
 <ul>
-<li>Well-typed models</li>
-<li>Macros to help build blocks, block elements</li>
+<li>Need to use a proxy server</li>
+<li>Have different initialisation for certs/TLS</li>
 </ul>
-<p>Let’s take some very simple block example:</p>
-<pre><code class="language-json">{
-  &quot;blocks&quot;: [
-      {
-        &quot;type&quot;: &quot;section&quot;,
-        &quot;text&quot;: {
-            &quot;type&quot;: &quot;mrkdwn&quot;,
-            &quot;text&quot;: &quot;A message *with some bold text* and _some italicized text_.&quot;
-        }
-      }
-  ]
-}
-</code></pre>
-<p>Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:</p>
-<pre><code class="language-rust noplaypen">use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
-
-let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
- some_into(
-    SlackSectionBlock::new()
-        .with_text(md!(&quot;A message *with some bold text* and _some italicized text_.&quot;))
- )
-];
-</code></pre>
-<p>Let’s look at another more complex example for welcoming message:</p>
+<p>To do that there is additional initialisation method in <code>SlackClientHyperConnector</code>.</p>
+<p>For example for proxy server config it might be used as:</p>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
+    let proxy = {
+        let https_connector = HttpsConnector::with_native_roots();
+        let proxy_uri = &quot;http://proxy.unfortunate.world.example.net:3128&quot;
+            .parse()
+            .unwrap();
+        let proxy = Proxy::new(Intercept::Https, proxy_uri);
+        ProxyConnector::from_proxy(https_connector, proxy).unwrap()
+    };
 
-use slack_morphism_hyper::*;
-
-async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-
-    use std::time::Duration;
-    use rsb_derive::Builder;
-
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client = SlackClient::new(hyper_connector);
-
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-    let session = client.open_session(&amp;token);
-
-    // Our welcome message params as a struct
-    #[derive(Debug, Clone, Builder)]
-    pub struct WelcomeMessageTemplateParams {
-        pub user_id: SlackUserId,
-    }
-
-    // Define our welcome message template using block macros, a trait and models from the library
-    impl SlackMessageTemplate for WelcomeMessageTemplateParams {
-        fn render_template(&amp;self) -&gt; SlackMessageContent {
-            SlackMessageContent::new()
-                .with_text(format!(&quot;Hey {}&quot;, self.user_id.to_slack_format()))
-                .with_blocks(slack_blocks![
-                    some_into(
-                        SlackSectionBlock::new()
-                            .with_text(md!(&quot;Hey {}&quot;, self.user_id.to_slack_format()))
-                    ),
-                    some_into(SlackDividerBlock::new()),
-                    some_into(SlackImageBlock::new(
-                        &quot;https://www.gstatic.com/webp/gallery3/2_webp_ll.png&quot;.into(),
-                        &quot;Test Image&quot;.into()
-                    )),
-                    some_into(SlackHeaderBlock::new(
-                        pt!(&quot;Simple header&quot;)
-                    )),
-                    some_into(SlackActionsBlock::new(slack_blocks![some_into(
-                        SlackBlockButtonElement::new(
-                            &quot;simple-message-button&quot;.into(),
-                            pt!(&quot;Simple button text&quot;)
-                        )
-                    )]))
-                ])
-        }
-    }
-
-    // Use it
-    let message = WelcomeMessageTemplateParams::new(&quot;some-slack-uid&quot;.into());
-
-    let post_chat_req =
-        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(), message.render_template());
-
-    Ok(())
-}
+    let _client = SlackClient::new(
+        SlackClientHyperConnector::with_connector(proxy)
+    );
+    
 </code></pre>
-<p>Look other examples in examples/templates.rs.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="pagination-support.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="block-kit-support.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="hyper-connections-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="events-api.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -249,10 +178,10 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="pagination-support.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="block-kit-support.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="hyper-connections-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="events-api.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
