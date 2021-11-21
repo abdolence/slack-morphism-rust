@@ -13,7 +13,12 @@ For example for proxy server config it might be used as:
 ```rust,noplaypen
 
     let proxy = {
-        let https_connector = HttpsConnector::with_native_roots();
+        let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
+            .with_native_roots()
+            .https_only()
+            .enable_http1()
+            .build();
+
         let proxy_uri = "http://proxy.unfortunate.world.example.net:3128"
             .parse()
             .unwrap();
