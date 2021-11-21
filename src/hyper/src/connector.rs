@@ -26,11 +26,12 @@ pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HttpsConnect
 
 impl SlackClientHyperConnector<HttpsConnector<HttpConnector>> {
     pub fn new() -> Self {
-        let https_connector = HttpsConnector::with_native_roots();
-        let http_client = Client::builder().build::<_, hyper::Body>(https_connector);
-        Self {
-            hyper_connector: http_client,
-        }
+        let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
+            .with_native_roots()
+            .https_only()
+            .enable_http2()
+            .build();
+        Self::with_connector(https_connector)
     }
 }
 

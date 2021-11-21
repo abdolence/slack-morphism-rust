@@ -2,11 +2,15 @@ use slack_morphism::prelude::*;
 use slack_morphism_hyper::*;
 
 use hyper_proxy::{Intercept, Proxy, ProxyConnector};
-use hyper_rustls::HttpsConnector;
 
 async fn test_proxy_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let proxy = {
-        let https_connector = HttpsConnector::with_native_roots();
+        let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
+            .with_native_roots()
+            .https_only()
+            .enable_http1()
+            .build();
+
         let proxy_uri = "http://proxy.domain.unfortunate.world.example.net:3128"
             .parse()
             .unwrap();
