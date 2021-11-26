@@ -35,6 +35,14 @@ impl SlackClientHyperConnector<HttpsConnector<HttpConnector>> {
     }
 }
 
+impl From<HttpsConnector<HttpConnector>>
+    for SlackClientHyperConnector<HttpsConnector<HttpConnector>>
+{
+    fn from(https_connector: hyper_rustls::HttpsConnector<HttpConnector>) -> Self {
+        Self::with_connector(https_connector)
+    }
+}
+
 impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnector<H> {
     pub fn with_connector(connector: H) -> Self {
         Self {
