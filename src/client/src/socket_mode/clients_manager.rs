@@ -145,7 +145,6 @@ where
             .create_wss_client(
                 &open_connection_res_url,
                 client_id.clone(),
-                token.clone(),
                 client_listener.clone(),
             )?;
 

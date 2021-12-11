@@ -1,3 +1,5 @@
+#![allow(clippy::large_enum_variant)]
+
 mod common;
 
 pub mod blocks;

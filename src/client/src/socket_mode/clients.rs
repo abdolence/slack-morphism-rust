@@ -43,7 +43,6 @@ where
         &'a self,
         wss_url: &'a SlackWebSocketsUrl,
         client_id: SlackSocketModeWssClientId,
-        token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
     ) -> ClientResult<SCWSS>;
 }

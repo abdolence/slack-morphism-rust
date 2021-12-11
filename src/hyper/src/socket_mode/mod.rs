@@ -22,7 +22,6 @@ use url::Url;
 #[derive(Clone)]
 pub struct SlackTungsteniteWssClient {
     id: SlackSocketModeWssClientId,
-    token: SlackApiToken,
     client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     url: Url,
     command_writer: Arc<RwLock<Option<UnboundedSender<SlackTungsteniteWssClientCommand>>>>,
@@ -41,14 +40,12 @@ impl SlackTungsteniteWssClient {
     pub fn new(
         wss_url: &SlackWebSocketsUrl,
         id: SlackSocketModeWssClientId,
-        token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     ) -> Self {
         let url_to_connect = Url::parse(wss_url.value()).unwrap();
 
         SlackTungsteniteWssClient {
             id,
-            token,
             client_listener,
             url: url_to_connect,
             command_writer: Arc::new(RwLock::new(None)),
@@ -420,13 +417,11 @@ impl<H: Send + Sync + Clone + Connect> SlackSocketModeWssClientsFactory<SlackTun
         &self,
         wss_url: &SlackWebSocketsUrl,
         client_id: SlackSocketModeWssClientId,
-        token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
     ) -> ClientResult<SlackTungsteniteWssClient> {
         Ok(SlackTungsteniteWssClient::new(
             wss_url,
             client_id,
-            token,
             client_listener,
         ))
     }
