@@ -78,7 +78,12 @@ pub struct SlackClientHttpError {
 
 impl Display for SlackClientHttpError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "Slack HTTP error: {}", self)
+        write!(
+            f,
+            "Slack HTTP error: {}\nBody: '{}'",
+            self.status_code,
+            SlackClientError::option_to_string(&self.http_response_body)
+        )
     }
 }
 
