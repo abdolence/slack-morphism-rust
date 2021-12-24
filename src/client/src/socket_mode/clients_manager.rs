@@ -5,7 +5,8 @@ use crate::*;
 use async_trait::async_trait;
 use slack_morphism_models::socket_mode::*;
 use std::ops::Range;
-use std::sync::{Arc, RwLock, Weak};
+use std::sync::{Arc, Weak};
+use tokio::sync::RwLock;
 
 use crate::errors::*;
 use log::*;
@@ -53,7 +54,7 @@ where
 
     pub async fn shutdown(&self) {
         let mut drained_clients: Vec<SlackSocketModeClient<SCWSS>> = {
-            let mut clients_write = self.active_clients.write().unwrap();
+            let mut clients_write = self.active_clients.write().await;
             let existing_vec = clients_write.drain(..).collect();
             existing_vec
         };
@@ -63,8 +64,11 @@ where
         }
     }
 
-    fn get_next_clients_range_indices(&self, config: &SlackClientSocketModeConfig) -> Range<u32> {
-        let clients_read = self.active_clients.read().unwrap();
+    async fn get_next_clients_range_indices(
+        &self,
+        config: &SlackClientSocketModeConfig,
+    ) -> Range<u32> {
+        let clients_read = self.active_clients.read().await;
         let last_client_id_value = clients_read.len();
         last_client_id_value as u32
             ..(last_client_id_value as u32 + config.max_connections_count) as u32
@@ -76,9 +80,9 @@ where
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     ) -> ClientResult<()> {
-        let new_clients_range = self.get_next_clients_range_indices(&config);
+        let new_clients_range = self.get_next_clients_range_indices(&config).await;
         {
-            let mut clients_write = self.active_clients.write().unwrap();
+            let mut clients_write = self.active_clients.write().await;
 
             for client_id_value in new_clients_range {
                 let wss_client_result = self
@@ -98,7 +102,7 @@ where
     }
 
     pub async fn start_clients(&self, config: &SlackClientSocketModeConfig) {
-        let clients_read = self.active_clients.read().unwrap();
+        let clients_read = self.active_clients.read().await;
         for client_id_value in 0..clients_read.len() {
             clients_read[client_id_value]
                 .wss_client
@@ -161,7 +165,7 @@ where
         debug!("[{}] Removing client", client_id.to_string());
 
         let mut removed_clients = {
-            let mut clients_write = self.active_clients.write().unwrap();
+            let mut clients_write = self.active_clients.write().await;
 
             match clients_write
                 .iter()
@@ -200,7 +204,7 @@ where
                             removed_client.config.ping_failure_threshold_times,
                         )
                         .await;
-                    let mut clients_write = self.active_clients.write().unwrap();
+                    let mut clients_write = self.active_clients.write().await;
                     clients_write.push(client);
                 }
                 Err(err) => {
