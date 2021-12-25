@@ -98,6 +98,18 @@ where
     }
 
     ///
+    /// https://api.slack.com/methods/auth.test
+    ///
+    pub async fn auth_test(&self) -> ClientResult<SlackApiAuthTestResponse> {
+        self.http_session_api
+            .http_get(
+                "auth.test",
+                &crate::client::SLACK_HTTP_EMPTY_GET_PARAMS.clone(),
+            )
+            .await
+    }
+
+    ///
     /// https://api.slack.com/methods/users.list
     ///
     pub async fn users_list(
@@ -319,6 +331,16 @@ pub struct SlackApiUsersInfoRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUsersInfoResponse {
     pub user: SlackUser,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAuthTestResponse {
+    pub user_id: String,
+    pub team_id: String,
+    pub user: String,
+    pub team: String,
+    pub url: String,
 }
 
 #[skip_serializing_none]
