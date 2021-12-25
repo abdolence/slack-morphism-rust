@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 
 pub trait SlackSocketModeListenerCallback<SCHC, RQ, RS>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync,
     RQ: Send + Sync + 'static,
     RS: Send + Sync + 'static,
 {
@@ -29,7 +29,7 @@ where
         + Sync
         + Fn(RQ, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> F,
     F: Future<Output = RS> + Send + 'static,
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync,
     RQ: Send + Sync + 'static,
     RS: Send + Sync + 'static,
 {
