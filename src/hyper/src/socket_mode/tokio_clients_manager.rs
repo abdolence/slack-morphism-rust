@@ -18,7 +18,7 @@ use tokio::sync::RwLock;
 
 pub struct SlackSocketModeTokioClientsManager<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync,
 {
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     active_clients: Arc<RwLock<Vec<SlackTungsteniteWssClient>>>,
@@ -26,7 +26,7 @@ where
 
 impl<SCHC> SlackSocketModeTokioClientsManager<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync,
 {
     pub fn new(listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>) -> Self {
         Self {

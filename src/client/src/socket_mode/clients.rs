@@ -7,7 +7,7 @@ use crate::*;
 
 pub trait SlackSocketModeClientsManagerFactory<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync,
 {
     fn new_clients_manager(
         &self,
