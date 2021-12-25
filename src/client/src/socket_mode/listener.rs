@@ -1,10 +1,12 @@
+use futures::channel::mpsc::channel;
+use futures::StreamExt;
+
 use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::clients::*;
 use crate::socket_mode::clients_manager::{
     SlackSocketModeClientsManager, SlackSocketModeClientsManagerListener,
 };
 use crate::*;
-use std::sync::mpsc::channel;
 use std::sync::Arc;
 
 pub struct SlackClientSocketModeListener<SCHC, SCWSS>
@@ -63,13 +65,18 @@ where
     }
 
     pub async fn serve(&self) -> i32 {
-        let (p, c) = channel();
+        let (mut p, mut c) = channel(1);
 
         self.start().await;
 
-        ctrlc::set_handler(move || p.send(1).unwrap()).expect("Error setting Ctrl-C handler");
+        ctrlc::set_handler(move || p.try_send(1).unwrap()).expect("Error setting Ctrl-C handler");
 
-        let result = async move { c.recv().expect("Could not receive exit from channel.") }.await;
+        let result = async move {
+            c.next()
+                .await
+                .expect("Could not receive exit from channel.")
+        }
+        .await;
         self.shutdown().await;
 
         result
