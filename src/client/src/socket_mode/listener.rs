@@ -1,40 +1,48 @@
 use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::clients::*;
-use crate::socket_mode::clients_manager::SlackSocketModeClientsManager;
 use crate::socket_mode::clients_manager_listener::SlackSocketModeClientsManagerListener;
 use crate::*;
 use futures::channel::mpsc::channel;
 use futures::StreamExt;
 use std::sync::Arc;
 
-pub struct SlackClientSocketModeListener<SCHC, SCWSS>
+pub struct SlackClientSocketModeListener<SCHC>
 where
-    SCHC:
-        SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
-    SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector
+        + SlackSocketModeClientsManagerFactory<SCHC>
+        + Send
+        + Sync
+        + 'static,
 {
     config: SlackClientSocketModeConfig,
-    clients_manager: Arc<SlackSocketModeClientsManager<SCHC, SCWSS>>,
-    clients_manager_listener: Arc<SlackSocketModeClientsManagerListener<SCHC, SCWSS>>,
+    clients_manager: Arc<dyn SlackSocketModeClientsManagerT + Send + Sync>,
+    clients_manager_listener: Arc<SlackSocketModeClientsManagerListener<SCHC>>,
 }
 
-impl<SCHC, SCWSS> SlackClientSocketModeListener<SCHC, SCWSS>
+impl<SCHC> SlackClientSocketModeListener<SCHC>
 where
-    SCHC:
-        SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
-    SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector
+        + SlackSocketModeClientsManagerFactory<SCHC>
+        + Send
+        + Sync
+        + 'static,
 {
     pub fn new(
         config: &SlackClientSocketModeConfig,
         listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
         callbacks: SlackSocketModeListenerCallbacks<SCHC>,
     ) -> Self {
-        let clients_manager = Arc::new(SlackSocketModeClientsManager::new(
-            listener_environment,
-            callbacks,
-        ));
+        let clients_manager: Arc<dyn SlackSocketModeClientsManagerT + Send + Sync> =
+            listener_environment
+                .client
+                .http_api
+                .connector
+                .new_clients_manager(listener_environment.clone());
+
         let clients_manager_listener = Arc::new(SlackSocketModeClientsManagerListener::new(
             Arc::downgrade(&clients_manager),
+            listener_environment.clone(),
+            callbacks,
         ));
 
         SlackClientSocketModeListener {
@@ -47,7 +55,7 @@ where
     pub async fn listen_for(&self, token: &SlackApiToken) -> ClientResult<()> {
         self.clients_manager
             .create_all_clients(
-                self.config.clone(),
+                &self.config,
                 token.clone(),
                 self.clients_manager_listener.clone(),
             )

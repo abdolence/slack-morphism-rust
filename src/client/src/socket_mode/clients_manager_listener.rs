@@ -2,43 +2,56 @@ use crate::socket_mode::clients::*;
 use crate::*;
 use async_trait::async_trait;
 use slack_morphism_models::socket_mode::*;
-use std::sync::Weak;
+use std::sync::{Arc, Weak};
 
 use crate::errors::*;
-use crate::socket_mode::clients_manager::SlackSocketModeClientsManager;
+use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use log::*;
 use slack_morphism_models::socket_mode::SlackSocketModeEvent;
 
-pub(crate) struct SlackSocketModeClientsManagerListener<SCHC, SCWSS>
+pub(crate) struct SlackSocketModeClientsManagerListener<SCHC>
 where
-    SCHC:
-        SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
-    SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector
+        + SlackSocketModeClientsManagerFactory<SCHC>
+        + Send
+        + Sync
+        + 'static,
 {
-    clients_manager: Weak<SlackSocketModeClientsManager<SCHC, SCWSS>>,
+    clients_manager: Weak<dyn SlackSocketModeClientsManagerT + Send + Sync>,
+    listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
+    callbacks: Arc<SlackSocketModeListenerCallbacks<SCHC>>,
 }
 
-impl<SCHC, SCWSS> SlackSocketModeClientsManagerListener<SCHC, SCWSS>
+impl<SCHC> SlackSocketModeClientsManagerListener<SCHC>
 where
-    SCHC:
-        SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
-    SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector
+        + SlackSocketModeClientsManagerFactory<SCHC>
+        + Send
+        + Sync
+        + 'static,
 {
-    pub(crate) fn new(manager: Weak<SlackSocketModeClientsManager<SCHC, SCWSS>>) -> Self {
+    pub(crate) fn new(
+        manager: Weak<dyn SlackSocketModeClientsManagerT + Send + Sync>,
+        listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
+        callbacks: SlackSocketModeListenerCallbacks<SCHC>,
+    ) -> Self {
         Self {
             clients_manager: manager,
+            listener_environment: listener_environment.clone(),
+            callbacks: Arc::new(callbacks),
         }
     }
 }
 
 #[async_trait]
-impl<SCHC, SCWSS> SlackSocketModeWssClientListener
-    for SlackSocketModeClientsManagerListener<SCHC, SCWSS>
+impl<SCHC> SlackSocketModeWssClientListener for SlackSocketModeClientsManagerListener<SCHC>
 where
-    SCHC:
-        SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
-    SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector
+        + SlackSocketModeClientsManagerFactory<SCHC>
+        + Send
+        + Sync
+        + 'static,
 {
     async fn on_message(
         &self,
@@ -53,13 +66,12 @@ where
             }) {
                 Ok(sm_event) => match sm_event {
                     SlackSocketModeEvent::Hello(event) => {
-                        clients_manager
-                            .callbacks
+                        self.callbacks
                             .hello_callback
                             .call(
                                 event,
-                                clients_manager.listener_environment.client.clone(),
-                                clients_manager.listener_environment.user_state.clone(),
+                                self.listener_environment.client.clone(),
+                                self.listener_environment.user_state.clone(),
                             )
                             .await;
                         None
@@ -70,7 +82,7 @@ where
                             client_id.to_string(),
                             event
                         );
-                        clients_manager.remove_client(client_id).await;
+                        clients_manager.restart_client(client_id).await;
                         None
                     }
                     SlackSocketModeEvent::Interactive(event) => {
@@ -80,22 +92,22 @@ where
                             ))
                             .unwrap();
 
-                        match clients_manager
+                        match self
                             .callbacks
                             .interaction_callback
                             .call(
                                 event.payload.clone(),
-                                clients_manager.listener_environment.client.clone(),
-                                clients_manager.listener_environment.user_state.clone(),
+                                self.listener_environment.client.clone(),
+                                self.listener_environment.user_state.clone(),
                             )
                             .await
                         {
                             Ok(_) => Some(reply),
                             Err(err) => {
-                                if clients_manager.listener_environment.error_handler.clone()(
+                                if self.listener_environment.error_handler.clone()(
                                     err,
-                                    clients_manager.listener_environment.client.clone(),
-                                    clients_manager.listener_environment.user_state.clone(),
+                                    self.listener_environment.client.clone(),
+                                    self.listener_environment.user_state.clone(),
                                 )
                                 .is_success()
                                 {
@@ -113,22 +125,22 @@ where
                             ))
                             .unwrap();
 
-                        match clients_manager
+                        match self
                             .callbacks
                             .push_events_callback
                             .call(
                                 event.payload.clone(),
-                                clients_manager.listener_environment.client.clone(),
-                                clients_manager.listener_environment.user_state.clone(),
+                                self.listener_environment.client.clone(),
+                                self.listener_environment.user_state.clone(),
                             )
                             .await
                         {
                             Ok(_) => Some(reply),
                             Err(err) => {
-                                if clients_manager.listener_environment.error_handler.clone()(
+                                if self.listener_environment.error_handler.clone()(
                                     err,
-                                    clients_manager.listener_environment.client.clone(),
-                                    clients_manager.listener_environment.user_state.clone(),
+                                    self.listener_environment.client.clone(),
+                                    self.listener_environment.user_state.clone(),
                                 )
                                 .is_success()
                                 {
@@ -141,13 +153,13 @@ where
                     }
 
                     SlackSocketModeEvent::SlashCommands(event) => {
-                        match clients_manager
+                        match self
                             .callbacks
                             .command_callback
                             .call(
                                 event.payload.clone(),
-                                clients_manager.listener_environment.client.clone(),
-                                clients_manager.listener_environment.user_state.clone(),
+                                self.listener_environment.client.clone(),
+                                self.listener_environment.user_state.clone(),
                             )
                             .await
                         {
@@ -163,10 +175,10 @@ where
                                 .unwrap(),
                             ),
                             Err(err) => {
-                                if clients_manager.listener_environment.error_handler.clone()(
+                                if self.listener_environment.error_handler.clone()(
                                     err,
-                                    clients_manager.listener_environment.client.clone(),
-                                    clients_manager.listener_environment.user_state.clone(),
+                                    self.listener_environment.client.clone(),
+                                    self.listener_environment.user_state.clone(),
                                 )
                                 .is_success()
                                 {
@@ -188,10 +200,10 @@ where
                     }
                 },
                 Err(err) => {
-                    clients_manager.listener_environment.error_handler.clone()(
+                    self.listener_environment.error_handler.clone()(
                         err,
-                        clients_manager.listener_environment.client.clone(),
-                        clients_manager.listener_environment.user_state.clone(),
+                        self.listener_environment.client.clone(),
+                        self.listener_environment.user_state.clone(),
                     );
                     None
                 }
@@ -202,18 +214,16 @@ where
     }
 
     async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>) {
-        if let Some(clients_manager) = self.clients_manager.upgrade() {
-            clients_manager.listener_environment.error_handler.clone()(
-                error,
-                clients_manager.listener_environment.client.clone(),
-                clients_manager.listener_environment.user_state.clone(),
-            );
-        }
+        self.listener_environment.error_handler.clone()(
+            error,
+            self.listener_environment.client.clone(),
+            self.listener_environment.user_state.clone(),
+        );
     }
 
     async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId) {
         if let Some(clients_manager) = self.clients_manager.upgrade() {
-            clients_manager.remove_client(client_id).await
+            clients_manager.restart_client(client_id).await
         }
     }
 }

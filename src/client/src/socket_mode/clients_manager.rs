@@ -16,7 +16,6 @@ where
     SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
 {
     pub listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
-    pub callbacks: Arc<SlackSocketModeListenerCallbacks<SCHC>>,
     active_clients: Arc<RwLock<Vec<SlackSocketModeClient<SCWSS>>>>,
 }
 
@@ -37,13 +36,9 @@ where
         SlackClientHttpConnector + SlackSocketModeWssClientsFactory<SCWSS> + Send + Sync + 'static,
     SCWSS: SlackSocketModeWssClient + Send + Sync + 'static,
 {
-    pub fn new(
-        listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
-        callbacks: SlackSocketModeListenerCallbacks<SCHC>,
-    ) -> Self {
+    pub fn new(listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>) -> Self {
         Self {
             listener_environment,
-            callbacks: Arc::new(callbacks),
             active_clients: Arc::new(RwLock::new(vec![])),
         }
     }
