@@ -5,6 +5,7 @@ use crate::*;
 use std::ops::Range;
 use std::sync::{Arc, RwLock};
 
+use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use log::*;
 use rvstruct::*;
 

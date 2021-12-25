@@ -6,6 +6,7 @@ use std::sync::Weak;
 
 use crate::errors::*;
 use crate::socket_mode::clients_manager::SlackSocketModeClientsManager;
+use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use log::*;
 use slack_morphism_models::socket_mode::SlackSocketModeEvent;
 

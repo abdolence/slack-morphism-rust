@@ -7,3 +7,5 @@ mod callbacks;
 pub use callbacks::*;
 mod clients_manager;
 mod clients_manager_listener;
+mod wss_client_id;
+pub use wss_client_id::*;

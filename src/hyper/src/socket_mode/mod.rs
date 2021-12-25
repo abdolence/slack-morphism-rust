@@ -5,8 +5,7 @@ use hyper::client::connect::Connect;
 use log::*;
 use rvstruct::*;
 use slack_morphism::clients::{
-    SlackSocketModeWssClient, SlackSocketModeWssClientId, SlackSocketModeWssClientListener,
-    SlackSocketModeWssClientsFactory,
+    SlackSocketModeWssClient, SlackSocketModeWssClientListener, SlackSocketModeWssClientsFactory,
 };
 use slack_morphism::errors::*;
 use slack_morphism::*;
