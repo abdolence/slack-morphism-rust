@@ -1,4 +1,5 @@
 mod apps;
+mod auth;
 mod bots;
 mod chat;
 mod conversations;
@@ -10,6 +11,7 @@ mod views;
 mod webhook;
 
 pub use apps::*;
+pub use auth::*;
 pub use bots::*;
 pub use chat::*;
 pub use conversations::*;
