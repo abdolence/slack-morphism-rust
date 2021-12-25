@@ -12,10 +12,11 @@ use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::RwLock;
 use tokio_tungstenite::*;
 use url::Url;
 
@@ -142,7 +143,7 @@ impl SlackTungsteniteWssClient {
         ) = tokio::sync::mpsc::unbounded_channel();
 
         {
-            let mut self_command_writer = self.command_writer.write().unwrap();
+            let mut self_command_writer = self.command_writer.write().await;
             self_command_writer.replace(tx.clone());
         };
 
@@ -192,7 +193,7 @@ impl SlackTungsteniteWssClient {
                             );
 
                             let seen_pong_time_in_secs = {
-                                let last_pong = thread_last_time_pong_received.read().unwrap();
+                                let last_pong = thread_last_time_pong_received.read().await;
 
                                 SystemTime::now()
                                     .duration_since(last_pong.time)
@@ -294,7 +295,7 @@ impl SlackTungsteniteWssClient {
                                 thread_client_id.to_string(),
                                 body
                             );
-                            let mut last_pong = thread_last_time_pong_received.write().unwrap();
+                            let mut last_pong = thread_last_time_pong_received.write().await;
                             last_pong.time = SystemTime::now();
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
@@ -346,7 +347,7 @@ impl SlackTungsteniteWssClient {
 
     async fn shutdown_channel(&mut self) {
         let maybe_sender = {
-            let mut commands_writer = self.command_writer.write().unwrap().clone();
+            let mut commands_writer = self.command_writer.write().await.clone();
             commands_writer.take()
         };
 
@@ -364,7 +365,7 @@ impl SlackTungsteniteWssClient {
 impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
     async fn message(&self, message_body: String) -> ClientResult<()> {
         let maybe_sender = {
-            let commands_writer = self.command_writer.read().unwrap().clone();
+            let commands_writer = self.command_writer.read().await.clone();
             commands_writer
         };
 
