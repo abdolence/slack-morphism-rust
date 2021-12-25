@@ -16,7 +16,7 @@ use url::Url;
 pub struct SlackTungsteniteWssClient {
     pub id: SlackSocketModeWssClientId,
     pub token: SlackApiToken,
-    pub client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
+    pub client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     pub config: SlackClientSocketModeConfig,
     url: Url,
     command_writer: Arc<RwLock<Option<UnboundedSender<SlackTungsteniteWssClientCommand>>>>,
@@ -35,7 +35,7 @@ impl SlackTungsteniteWssClient {
     pub fn new(
         wss_url: &SlackWebSocketsUrl,
         id: SlackSocketModeWssClientId,
-        client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
+        client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
         token: &SlackApiToken,
         config: &SlackClientSocketModeConfig,
     ) -> Self {

@@ -13,7 +13,7 @@ use slack_morphism::clients_manager::SlackSocketModeClientsManager;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::{
     ClientResult, SlackApiToken, SlackClientHttpConnector, SlackClientSocketModeConfig,
-    SlackSocketModeWssClientListener,
+    SlackSocketModeClientListener,
 };
 use tokio::sync::RwLock;
 
@@ -50,7 +50,7 @@ where
         &self,
         client_id: SlackSocketModeWssClientId,
         token: SlackApiToken,
-        client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send + 'static>,
+        client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send + 'static>,
         config: SlackClientSocketModeConfig,
     ) -> ClientResult<SlackTungsteniteWssClient> {
         let session = self.listener_environment.client.open_session(&token);
@@ -91,7 +91,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         &self,
         config: &SlackClientSocketModeConfig,
         token: SlackApiToken,
-        client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
+        client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     ) -> ClientResult<()> {
         let new_clients_range = self.get_next_clients_range_indices(config).await;
         {

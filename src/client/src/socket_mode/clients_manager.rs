@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::listener::SlackClientEventsListenerEnvironment;
-use crate::socket_mode::clients_manager_listener::SlackSocketModeWssClientListener;
+use crate::socket_mode::clients_manager_listener::SlackSocketModeClientListener;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use crate::*;
 
@@ -22,7 +22,7 @@ pub trait SlackSocketModeClientsManager {
         &self,
         config: &SlackClientSocketModeConfig,
         token: SlackApiToken,
-        client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
+        client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     ) -> ClientResult<()>;
 
     async fn start_clients(&self, config: &SlackClientSocketModeConfig);

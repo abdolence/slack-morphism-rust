@@ -11,7 +11,7 @@ use log::*;
 use slack_morphism_models::socket_mode::SlackSocketModeEvent;
 
 #[async_trait]
-pub trait SlackSocketModeWssClientListener {
+pub trait SlackSocketModeClientListener {
     async fn on_message(
         &self,
         client_id: &SlackSocketModeWssClientId,
@@ -50,7 +50,7 @@ where
 }
 
 #[async_trait]
-impl<SCHC> SlackSocketModeWssClientListener for SlackSocketModeClientsManagerListener<SCHC>
+impl<SCHC> SlackSocketModeClientListener for SlackSocketModeClientsManagerListener<SCHC>
 where
     SCHC: SlackClientHttpConnector
         + SlackSocketModeClientsManagerFactory<SCHC>
