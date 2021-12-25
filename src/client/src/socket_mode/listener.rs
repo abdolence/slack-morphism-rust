@@ -4,7 +4,8 @@ use crate::socket_mode::clients_manager::{
     SlackSocketModeClientsManager, SlackSocketModeClientsManagerListener,
 };
 use crate::*;
-use std::sync::mpsc::channel;
+use futures::channel::mpsc::channel;
+use futures::StreamExt;
 use std::sync::Arc;
 
 pub struct SlackClientSocketModeListener<SCHC, SCWSS>
@@ -63,13 +64,18 @@ where
     }
 
     pub async fn serve(&self) -> i32 {
-        let (p, c) = channel();
+        let (mut sender, mut receiver) = channel(1);
 
         self.start().await;
 
-        ctrlc::set_handler(move || p.send(1).unwrap()).expect("Error setting Ctrl-C handler");
+        ctrlc::set_handler(move || sender.try_send(1).unwrap())
+            .expect("Error setting Ctrl-C handler");
 
-        let result = async move { c.recv().expect("Could not receive exit from channel.") }.await;
+        let result = receiver
+            .next()
+            .await
+            .expect("Could not receive exit from channel.");
+
         self.shutdown().await;
 
         result
