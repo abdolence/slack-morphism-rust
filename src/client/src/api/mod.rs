@@ -1,4 +1,5 @@
 mod apps;
+mod auth;
 mod bots;
 mod chat;
 mod conversations;
