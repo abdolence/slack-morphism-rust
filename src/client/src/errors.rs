@@ -78,7 +78,12 @@ pub struct SlackClientHttpError {
 
 impl Display for SlackClientHttpError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "Slack HTTP error: {}", self)
+        write!(
+            f,
+            "Slack HTTP error status: {}. Body: '{}'",
+            self.status_code,
+            SlackClientError::option_to_string(&self.http_response_body)
+        )
     }
 }
 
@@ -116,7 +121,12 @@ pub struct SlackClientProtocolError {
 
 impl Display for SlackClientProtocolError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "Slack protocol error: {}", self)
+        write!(
+            f,
+            "Slack JSON protocol error: {}. Body: '{}'",
+            self.json_error,
+            SlackClientError::option_to_string(&self.json_body)
+        )
     }
 }
 
@@ -129,7 +139,7 @@ pub struct SlackClientSocketModeProtocolError {
 
 impl Display for SlackClientSocketModeProtocolError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "Slack socket mode protocol error: {}", self)
+        write!(f, "Slack socket mode protocol error: {}", self.message)
     }
 }
 
