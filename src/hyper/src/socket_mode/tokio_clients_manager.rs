@@ -9,14 +9,14 @@ use crate::socket_mode::SlackSocketModeWssClientId;
 use log::*;
 use rvstruct::*;
 use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
-use slack_morphism::clients::{SlackSocketModeClientsManagerT, SlackSocketModeWssClientListener};
+use slack_morphism::clients::{SlackSocketModeClientsManager, SlackSocketModeWssClientListener};
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::{
     ClientResult, SlackApiToken, SlackClientHttpConnector, SlackClientSocketModeConfig,
 };
 use tokio::sync::RwLock;
 
-pub struct SlackSocketModeTungsteniteClientsManager<SCHC>
+pub struct SlackSocketModeTokioClientsManager<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
 {
@@ -24,7 +24,7 @@ where
     active_clients: Arc<RwLock<Vec<SlackTungsteniteWssClient>>>,
 }
 
-impl<SCHC> SlackSocketModeTungsteniteClientsManager<SCHC>
+impl<SCHC> SlackSocketModeTokioClientsManager<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
 {
@@ -83,8 +83,8 @@ where
 }
 
 #[async_trait]
-impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManagerT
-    for SlackSocketModeTungsteniteClientsManager<SlackClientHyperConnector<H>>
+impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
+    for SlackSocketModeTokioClientsManager<SlackClientHyperConnector<H>>
 {
     async fn create_all_clients(
         &self,

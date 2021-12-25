@@ -1,8 +1,7 @@
-use async_trait::async_trait;
 use futures::{SinkExt, StreamExt};
 use log::*;
 use rvstruct::*;
-use slack_morphism::clients::{SlackSocketModeWssClient, SlackSocketModeWssClientListener};
+use slack_morphism::clients::SlackSocketModeWssClientListener;
 use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;
@@ -376,54 +375,5 @@ impl SlackTungsteniteWssClient {
         )
         .await
         .unwrap_or(());
-    }
-}
-
-#[async_trait]
-impl SlackSocketModeWssClient for SlackTungsteniteWssClient {
-    async fn message(&self, message_body: String) -> ClientResult<()> {
-        let maybe_sender = {
-            let commands_writer = self.command_writer.read().unwrap().clone();
-            commands_writer
-        };
-
-        if let Some(sender) = maybe_sender {
-            if !sender.is_closed() {
-                tokio::spawn(async move {
-                    sender.send(SlackTungsteniteWssClientCommand::Message(message_body))
-                });
-
-                Ok(())
-            } else {
-                Err(SlackClientError::EndOfStream(
-                    SlackClientEndOfStreamError::new(),
-                ))
-            }
-        } else {
-            Err(SlackClientError::EndOfStream(
-                SlackClientEndOfStreamError::new(),
-            ))
-        }
-    }
-
-    async fn start(
-        &self,
-        initial_wait_timeout: u64,
-        reconnect_timeout: u64,
-        ping_interval: u64,
-        ping_failure_threshold: u64,
-    ) {
-        self.connect(
-            initial_wait_timeout,
-            reconnect_timeout,
-            ping_interval,
-            ping_failure_threshold,
-        )
-        .await
-        .unwrap_or(());
-    }
-
-    async fn destroy(&mut self) {
-        self.shutdown_channel().await;
     }
 }

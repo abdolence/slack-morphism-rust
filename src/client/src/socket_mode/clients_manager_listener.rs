@@ -18,7 +18,7 @@ where
         + Sync
         + 'static,
 {
-    clients_manager: Weak<dyn SlackSocketModeClientsManagerT + Send + Sync>,
+    clients_manager: Weak<dyn SlackSocketModeClientsManager + Send + Sync>,
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     callbacks: Arc<SlackSocketModeListenerCallbacks<SCHC>>,
 }
@@ -32,7 +32,7 @@ where
         + 'static,
 {
     pub(crate) fn new(
-        manager: Weak<dyn SlackSocketModeClientsManagerT + Send + Sync>,
+        manager: Weak<dyn SlackSocketModeClientsManager + Send + Sync>,
         listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
         callbacks: SlackSocketModeListenerCallbacks<SCHC>,
     ) -> Self {

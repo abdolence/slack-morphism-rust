@@ -15,7 +15,7 @@ where
         + 'static,
 {
     config: SlackClientSocketModeConfig,
-    clients_manager: Arc<dyn SlackSocketModeClientsManagerT + Send + Sync>,
+    clients_manager: Arc<dyn SlackSocketModeClientsManager + Send + Sync>,
     clients_manager_listener: Arc<SlackSocketModeClientsManagerListener<SCHC>>,
 }
 
@@ -32,7 +32,7 @@ where
         listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
         callbacks: SlackSocketModeListenerCallbacks<SCHC>,
     ) -> Self {
-        let clients_manager: Arc<dyn SlackSocketModeClientsManagerT + Send + Sync> =
+        let clients_manager: Arc<dyn SlackSocketModeClientsManager + Send + Sync> =
             listener_environment
                 .client
                 .http_api
