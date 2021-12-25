@@ -26,7 +26,7 @@ impl SlackClientSocketModeConfig {
 
     pub const DEFAULT_DEBUG_CONNECTIONS: bool = false;
 
-    pub const DEFAULT_INITIAL_BACKOFF_IN_SECONDS: u64 = 5;
+    pub const DEFAULT_INITIAL_BACKOFF_IN_SECONDS: u64 = 2;
 
     pub const DEFAULT_RECONNECT_TIMEOUT_IN_SECONDS: u64 = 30;
 

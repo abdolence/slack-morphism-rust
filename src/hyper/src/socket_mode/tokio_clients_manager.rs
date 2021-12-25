@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use crate::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
 use crate::socket_mode::SlackSocketModeWssClientId;
+use futures::future;
 use log::*;
 use rvstruct::*;
 use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
@@ -116,16 +117,17 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
     async fn start_clients(&self, config: &SlackClientSocketModeConfig) {
         let clients_read = self.active_clients.read().await;
+        let mut clients_to_await = vec![];
         for client_id_value in 0..clients_read.len() {
-            clients_read[client_id_value]
-                .start(
-                    client_id_value as u64 * config.initial_backoff_in_seconds,
-                    config.reconnect_timeout_in_seconds,
-                    config.ping_interval_in_seconds,
-                    config.ping_failure_threshold_times,
-                )
-                .await
+            clients_to_await.push(clients_read[client_id_value].start(
+                client_id_value as u64 * config.initial_backoff_in_seconds,
+                config.reconnect_timeout_in_seconds,
+                config.ping_interval_in_seconds,
+                config.ping_failure_threshold_times,
+            ));
         }
+
+        future::join_all(clients_to_await).await;
     }
 
     async fn shutdown(&self) {
