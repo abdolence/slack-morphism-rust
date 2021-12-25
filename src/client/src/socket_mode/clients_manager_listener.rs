@@ -25,11 +25,7 @@ pub trait SlackSocketModeWssClientListener {
 
 pub(crate) struct SlackSocketModeClientsManagerListener<SCHC>
 where
-    SCHC: SlackClientHttpConnector
-        + SlackSocketModeClientsManagerFactory<SCHC>
-        + Send
-        + Sync
-        + 'static,
+    SCHC: SlackClientHttpConnector + SlackSocketModeClientsManagerFactory<SCHC> + Send + Sync,
 {
     clients_manager: Weak<dyn SlackSocketModeClientsManager + Send + Sync>,
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
@@ -38,11 +34,7 @@ where
 
 impl<SCHC> SlackSocketModeClientsManagerListener<SCHC>
 where
-    SCHC: SlackClientHttpConnector
-        + SlackSocketModeClientsManagerFactory<SCHC>
-        + Send
-        + Sync
-        + 'static,
+    SCHC: SlackClientHttpConnector + SlackSocketModeClientsManagerFactory<SCHC> + Send + Sync,
 {
     pub(crate) fn new(
         manager: Weak<dyn SlackSocketModeClientsManager + Send + Sync>,

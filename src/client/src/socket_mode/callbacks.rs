@@ -45,7 +45,7 @@ where
 
 pub struct SlackSocketModeListenerCallbacks<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync,
 {
     pub hello_callback:
         Box<dyn SlackSocketModeListenerCallback<SCHC, SlackSocketModeHelloEvent, ()> + Send + Sync>,
