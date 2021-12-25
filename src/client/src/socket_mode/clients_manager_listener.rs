@@ -51,7 +51,7 @@ where
     ) -> Self {
         Self {
             clients_manager: manager,
-            listener_environment: listener_environment.clone(),
+            listener_environment,
             callbacks: Arc::new(callbacks),
         }
     }

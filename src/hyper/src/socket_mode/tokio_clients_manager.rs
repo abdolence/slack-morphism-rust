@@ -93,7 +93,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeWssClientListener + Sync + Send>,
     ) -> ClientResult<()> {
-        let new_clients_range = self.get_next_clients_range_indices(&config).await;
+        let new_clients_range = self.get_next_clients_range_indices(config).await;
         {
             let mut clients_write = self.active_clients.write().await;
 
