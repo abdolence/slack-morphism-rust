@@ -1,4 +1,4 @@
-pub mod clients;
+pub mod clients_manager;
 mod config;
 pub use config::*;
 mod listener;
@@ -6,5 +6,6 @@ pub use listener::*;
 mod callbacks;
 pub use callbacks::*;
 mod clients_manager_listener;
+pub use clients_manager_listener::*;
 mod wss_client_id;
 pub use wss_client_id::*;

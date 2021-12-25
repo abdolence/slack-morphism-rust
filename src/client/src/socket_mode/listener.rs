@@ -1,5 +1,5 @@
 use crate::listener::SlackClientEventsListenerEnvironment;
-use crate::socket_mode::clients::*;
+use crate::socket_mode::clients_manager::*;
 use crate::socket_mode::clients_manager_listener::SlackSocketModeClientsManagerListener;
 use crate::*;
 use futures::channel::mpsc::channel;

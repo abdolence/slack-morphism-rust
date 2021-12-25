@@ -1,4 +1,4 @@
-use crate::socket_mode::clients::*;
+use crate::socket_mode::clients_manager::*;
 use crate::*;
 use async_trait::async_trait;
 use slack_morphism_models::socket_mode::*;
@@ -9,6 +9,19 @@ use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use log::*;
 use slack_morphism_models::socket_mode::SlackSocketModeEvent;
+
+#[async_trait]
+pub trait SlackSocketModeWssClientListener {
+    async fn on_message(
+        &self,
+        client_id: &SlackSocketModeWssClientId,
+        message_body: String,
+    ) -> Option<String>;
+
+    async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>);
+
+    async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId);
+}
 
 pub(crate) struct SlackSocketModeClientsManagerListener<SCHC>
 where

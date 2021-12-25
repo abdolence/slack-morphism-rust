@@ -1,7 +1,6 @@
 use futures::{SinkExt, StreamExt};
 use log::*;
 use rvstruct::*;
-use slack_morphism::clients::SlackSocketModeWssClientListener;
 use slack_morphism::errors::*;
 use slack_morphism::*;
 use slack_morphism_models::SlackWebSocketsUrl;

@@ -9,10 +9,11 @@ use crate::socket_mode::SlackSocketModeWssClientId;
 use log::*;
 use rvstruct::*;
 use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
-use slack_morphism::clients::{SlackSocketModeClientsManager, SlackSocketModeWssClientListener};
+use slack_morphism::clients_manager::SlackSocketModeClientsManager;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::{
     ClientResult, SlackApiToken, SlackClientHttpConnector, SlackClientSocketModeConfig,
+    SlackSocketModeWssClientListener,
 };
 use tokio::sync::RwLock;
 

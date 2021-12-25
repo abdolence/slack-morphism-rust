@@ -1,7 +1,7 @@
 use crate::socket_mode::tokio_clients_manager::SlackSocketModeTokioClientsManager;
 use crate::SlackClientHyperConnector;
 use hyper::client::connect::Connect;
-use slack_morphism::clients::{
+use slack_morphism::clients_manager::{
     SlackSocketModeClientsManager, SlackSocketModeClientsManagerFactory,
 };
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;

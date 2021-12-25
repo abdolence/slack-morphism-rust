@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::listener::SlackClientEventsListenerEnvironment;
+use crate::socket_mode::clients_manager_listener::SlackSocketModeWssClientListener;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use crate::*;
 
@@ -28,17 +29,4 @@ pub trait SlackSocketModeClientsManager {
 
     async fn shutdown(&self);
     async fn restart_client(&self, client_id: &SlackSocketModeWssClientId);
-}
-
-#[async_trait]
-pub trait SlackSocketModeWssClientListener {
-    async fn on_message(
-        &self,
-        client_id: &SlackSocketModeWssClientId,
-        message_body: String,
-    ) -> Option<String>;
-
-    async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>);
-
-    async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId);
 }
