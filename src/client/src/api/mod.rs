@@ -11,6 +11,7 @@ mod views;
 mod webhook;
 
 pub use apps::*;
+pub use auth::*;
 pub use bots::*;
 pub use chat::*;
 pub use conversations::*;
