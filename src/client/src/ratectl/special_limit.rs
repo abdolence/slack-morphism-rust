@@ -1,4 +1,4 @@
-use crate::throttler::SlackApiRateControlLimit;
+use crate::ratectl::SlackApiRateControlLimit;
 use rsb_derive::Builder;
 
 /**

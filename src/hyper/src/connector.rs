@@ -1,3 +1,4 @@
+use crate::ratectl::SlackTokioRateController;
 use bytes::Buf;
 use futures::future::TryFutureExt;
 use futures::future::{BoxFuture, FutureExt};
@@ -9,17 +10,20 @@ use hyper_rustls::HttpsConnector;
 use mime::Mime;
 use rvstruct::ValueStruct;
 use slack_morphism::errors::*;
+use slack_morphism::prelude::SlackApiRateControlConfig;
 use slack_morphism::signature_verifier::SlackEventAbsentSignatureError;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 use slack_morphism::*;
 use slack_morphism_models::{SlackClientId, SlackClientSecret};
 use std::collections::HashMap;
 use std::io::Read;
+use std::sync::Arc;
 use url::Url;
 
 #[derive(Clone, Debug)]
 pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> {
     hyper_connector: Client<H>,
+    tokio_rate_controller: Option<Arc<SlackTokioRateController>>,
 }
 
 pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HttpsConnector<HttpConnector>>;
@@ -47,6 +51,16 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     pub fn with_connector(connector: H) -> Self {
         Self {
             hyper_connector: Client::builder().build::<_, hyper::Body>(connector),
+            tokio_rate_controller: None,
+        }
+    }
+
+    pub fn with_rate_control(self, rate_control_config: SlackApiRateControlConfig) -> Self {
+        Self {
+            tokio_rate_controller: Some(Arc::new(SlackTokioRateController::new(
+                rate_control_config,
+            ))),
+            ..self
         }
     }
 

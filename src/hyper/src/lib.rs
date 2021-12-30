@@ -6,6 +6,7 @@ use slack_morphism::SlackClient;
 
 pub mod connector;
 pub mod listener;
+mod ratectl;
 pub mod scroller_ext;
 mod socket_mode;
 

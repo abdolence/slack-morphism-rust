@@ -97,10 +97,10 @@ pub mod api;
 mod client;
 pub mod errors;
 pub mod listener;
+mod ratectl;
 mod scroller;
 pub mod signature_verifier;
 mod socket_mode;
-mod throttler;
 mod token;
 
 pub mod prelude;
