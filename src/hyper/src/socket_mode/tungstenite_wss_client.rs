@@ -76,7 +76,7 @@ where
                     open_connection_res.url
                 };
 
-                debug!(
+                trace!(
                     "[{}] Connecting to: {}",
                     self.id.to_string(),
                     open_connection_res_url.value()
