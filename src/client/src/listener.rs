@@ -1,4 +1,5 @@
 use crate::{SlackClient, SlackClientHttpConnector};
+use log::*;
 use rsb_derive::Builder;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
@@ -36,10 +37,11 @@ where
     }
 
     fn empty_error_handler(
-        _err: Box<dyn std::error::Error + Send + Sync>,
+        err: Box<dyn std::error::Error + Send + Sync>,
         _client: Arc<SlackClient<SCHC>>,
         _user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
     ) -> http::StatusCode {
+        error!("Slack listener error occurred: {:?}", err);
         http::StatusCode::BAD_REQUEST
     }
 
