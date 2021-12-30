@@ -75,17 +75,17 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         Ok(())
     }
 
-    async fn start_clients(&self, config: &SlackClientSocketModeConfig) {
+    async fn start_clients(&self) {
         let clients_read = self.active_clients.read().await;
         let mut clients_to_await = vec![];
         for client_id_value in 0..clients_read.len() {
             let client = &clients_read[client_id_value];
             clients_to_await.push(client.start(
-                client_id_value as u64 * config.initial_backoff_in_seconds,
-                config.reconnect_timeout_in_seconds,
-                config.ping_interval_in_seconds,
-                config.ping_failure_threshold_times,
-                config.debug_connections,
+                client_id_value as u64 * client.config.initial_backoff_in_seconds,
+                client.config.reconnect_timeout_in_seconds,
+                client.config.ping_interval_in_seconds,
+                client.config.ping_failure_threshold_times,
+                client.config.debug_connections,
             ));
         }
 

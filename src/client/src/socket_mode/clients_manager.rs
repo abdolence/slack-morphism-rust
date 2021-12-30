@@ -25,7 +25,7 @@ pub trait SlackSocketModeClientsManager {
         client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     ) -> ClientResult<()>;
 
-    async fn start_clients(&self, config: &SlackClientSocketModeConfig);
+    async fn start_clients(&self);
 
     async fn shutdown(&self);
     async fn restart_client(&self, client_id: &SlackSocketModeWssClientId);
