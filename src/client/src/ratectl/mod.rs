@@ -1,8 +1,10 @@
 mod config;
 mod limit;
 mod special_limit;
+mod throttling_counter;
 mod tier;
 pub use config::*;
 pub use limit::*;
 pub use special_limit::*;
+pub use throttling_counter::*;
 pub use tier::*;

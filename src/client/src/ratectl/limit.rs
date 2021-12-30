@@ -21,4 +21,8 @@ impl SlackApiRateControlLimit {
     pub fn to_rate_limit_in_ms(&self) -> u64 {
         self.per.as_millis() as u64 / self.value as u64
     }
+
+    pub fn to_rate_limit_capacity(&self) -> usize {
+        self.per.as_millis() as usize / self.to_rate_limit_in_ms() as usize
+    }
 }
