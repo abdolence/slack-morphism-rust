@@ -39,7 +39,7 @@ where
 impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
     for SlackSocketModeTokioClientsManager<SlackClientHyperConnector<H>>
 {
-    async fn create_all_clients(
+    async fn register_new_token(
         &self,
         config: &SlackClientSocketModeConfig,
         token: SlackApiToken,
@@ -71,7 +71,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         Ok(())
     }
 
-    async fn start_clients(&self) {
+    async fn start(&self) {
         let clients_read = self.active_clients.read().await;
         let mut clients_to_await = vec![];
         for client_id_value in 0..clients_read.len() {

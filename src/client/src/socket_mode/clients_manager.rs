@@ -18,15 +18,15 @@ where
 
 #[async_trait]
 pub trait SlackSocketModeClientsManager {
-    async fn create_all_clients(
+    async fn register_new_token(
         &self,
         config: &SlackClientSocketModeConfig,
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     ) -> ClientResult<()>;
 
-    async fn start_clients(&self);
-
-    async fn shutdown(&self);
     async fn restart_client(&self, client_id: &SlackSocketModeWssClientId);
+
+    async fn start(&self);
+    async fn shutdown(&self);
 }

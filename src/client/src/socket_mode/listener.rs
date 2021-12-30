@@ -54,7 +54,7 @@ where
 
     pub async fn listen_for(&self, token: &SlackApiToken) -> ClientResult<()> {
         self.clients_manager
-            .create_all_clients(
+            .register_new_token(
                 &self.config,
                 token.clone(),
                 self.clients_manager_listener.clone(),
@@ -63,7 +63,7 @@ where
     }
 
     pub async fn start(&self) {
-        self.clients_manager.start_clients().await;
+        self.clients_manager.start().await;
     }
 
     pub async fn shutdown(&self) {
