@@ -18,6 +18,7 @@ use slack_morphism_models::{SlackClientId, SlackClientSecret};
 use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
+use tokio_stream::StreamExt;
 use url::Url;
 
 #[derive(Clone, Debug)]
@@ -192,7 +193,18 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         match self.tokio_rate_controller {
-            Some(ref rate_controller) => self.send_http_request(request).await,
+            Some(ref rate_controller) => {
+                use futures::StreamExt;
+                Box::pin(
+                    self.send_http_request(request)
+                        .into_stream()
+                        .throttle(std::time::Duration::from_secs(1)),
+                )
+                .into_future()
+                .map(|(v, _)| v.unwrap())
+                .await
+            }
+
             None => self.send_http_request(request).await,
         }
     }

@@ -4,14 +4,14 @@
 #[derive(Debug, PartialEq, Clone)]
 pub struct SlackApiRateControlLimit {
     pub value: usize,
-    pub per: chrono::Duration,
+    pub per: std::time::Duration,
 }
 
 impl SlackApiRateControlLimit {
-    pub fn new(value: usize, per: chrono::Duration) -> Self {
+    pub fn new(value: usize, per: std::time::Duration) -> Self {
         assert!(value > 0, "Limit value should be more than zero");
         assert!(
-            per.num_milliseconds() > 0,
+            per.as_millis() > 0,
             "Limit duration should be more than zero"
         );
 
@@ -19,6 +19,6 @@ impl SlackApiRateControlLimit {
     }
 
     pub fn to_rate_limit_in_ms(&self) -> u64 {
-        self.per.num_milliseconds() as u64 / self.value as u64
+        self.per.as_millis() as u64 / self.value as u64
     }
 }

@@ -19,7 +19,7 @@ pub struct SlackApiRateControlConfig {
     #[default = "DEFAULT_TIERS_LIMIT_MAP.clone()"]
     pub slack_api_tier_limits: HashMap<SlackApiMethodRateTier, SlackApiRateControlLimit>,
 
-    pub max_delay_timeout: Option<chrono::Duration>,
+    pub max_delay_timeout: Option<std::time::Duration>,
     pub max_retries: Option<usize>,
 }
 
@@ -30,19 +30,19 @@ lazy_static! {
         vec![
             (
                 SlackApiMethodRateTier::Tier1,
-                SlackApiRateControlLimit::new(1, chrono::Duration::minutes(1))
+                SlackApiRateControlLimit::new(1, std::time::Duration::from_secs(60))
             ),
             (
                 SlackApiMethodRateTier::Tier2,
-                SlackApiRateControlLimit::new(20, chrono::Duration::minutes(1))
+                SlackApiRateControlLimit::new(20, std::time::Duration::from_secs(60))
             ),
             (
                 SlackApiMethodRateTier::Tier3,
-                SlackApiRateControlLimit::new(50, chrono::Duration::minutes(1))
+                SlackApiRateControlLimit::new(50, std::time::Duration::from_secs(60))
             ),
             (
                 SlackApiMethodRateTier::Tier4,
-                SlackApiRateControlLimit::new(100, chrono::Duration::minutes(1))
+                SlackApiRateControlLimit::new(100, std::time::Duration::from_secs(60))
             )
         ]
         .into_iter()
