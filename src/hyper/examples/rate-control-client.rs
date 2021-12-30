@@ -11,7 +11,7 @@ async fn test_rate_control_client() -> Result<(), Box<dyn std::error::Error + Se
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    test_proxy_client().await?;
+    test_rate_control_client().await?;
 
     Ok(())
 }
