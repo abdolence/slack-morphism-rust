@@ -59,10 +59,7 @@ where
         }
     }
 
-    async fn try_to_connect(
-        &self,
-        debug_connections: bool,
-    ) -> Option<WebSocketStream<MaybeTlsStream<TcpStream>>> {
+    async fn try_to_connect(&self) -> Option<WebSocketStream<MaybeTlsStream<TcpStream>>> {
         let session = self.listener_environment.client.open_session(&self.token);
 
         match session
@@ -70,7 +67,7 @@ where
             .await
         {
             Ok(open_connection_res) => {
-                let open_connection_res_url = if debug_connections {
+                let open_connection_res_url = if self.config.debug_connections {
                     format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
                 } else {
                     open_connection_res.url
@@ -128,9 +125,8 @@ where
     async fn connect_with_reconnections(
         &self,
         reconnect_timeout: u64,
-        debug_connections: bool,
     ) -> ClientResult<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let mut maybe_stream = self.try_to_connect(debug_connections).await;
+        let mut maybe_stream = self.try_to_connect().await;
         loop {
             if let Some(wss_stream) = maybe_stream {
                 return Ok(wss_stream);
@@ -146,7 +142,7 @@ where
                 interval.tick().await;
                 interval.tick().await;
 
-                maybe_stream = self.try_to_connect(debug_connections).await;
+                maybe_stream = self.try_to_connect().await;
             } else {
                 return Err(SlackClientError::EndOfStream(
                     SlackClientEndOfStreamError::new(),
@@ -161,7 +157,6 @@ where
         reconnect_timeout: u64,
         ping_interval: u64,
         ping_failure_threshold: u64,
-        debug_connections: bool,
     ) -> ClientResult<()> {
         if initial_wait_timeout > 0 {
             debug!(
@@ -176,9 +171,7 @@ where
             interval.tick().await;
         }
 
-        let wss_stream = self
-            .connect_with_reconnections(reconnect_timeout, debug_connections)
-            .await?;
+        let wss_stream = self.connect_with_reconnections(reconnect_timeout).await?;
 
         let (mut writer, mut reader) = wss_stream.split();
 
@@ -412,7 +405,6 @@ where
             self.config.reconnect_timeout_in_seconds,
             self.config.ping_interval_in_seconds,
             self.config.ping_interval_in_seconds,
-            self.config.debug_connections,
         )
         .await
         .unwrap_or(());
