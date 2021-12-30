@@ -205,9 +205,6 @@ where
             time: SystemTime::now(),
         }));
 
-        let ping_interval = self.identity.config.ping_interval_in_seconds;
-        let ping_failure_threshold = self.identity.config.ping_failure_threshold_times;
-
         {
             let thread_identity = self.identity.clone();
             let thread_last_time_pong_received = last_time_pong_received.clone();
@@ -255,7 +252,10 @@ where
                                     .as_secs()
                             };
 
-                            if seen_pong_time_in_secs > ping_interval * ping_failure_threshold {
+                            if seen_pong_time_in_secs
+                                > thread_identity.config.ping_interval_in_seconds
+                                    * thread_identity.config.ping_failure_threshold_times
+                            {
                                 warn!(
                                     "[{}] Haven't seen any pong from Slack since {} seconds ago",
                                     thread_identity.id.to_string(),
@@ -287,8 +287,9 @@ where
             let thread_identity = self.identity.clone();
             let ping_tx = tx.clone();
             tokio::spawn(async move {
-                let mut interval =
-                    tokio::time::interval(std::time::Duration::from_secs(ping_interval));
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(
+                    thread_identity.config.ping_interval_in_seconds,
+                ));
 
                 loop {
                     interval.tick().await;
