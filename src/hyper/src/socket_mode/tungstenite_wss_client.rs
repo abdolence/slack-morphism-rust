@@ -55,7 +55,7 @@ where
             destroyed: Arc::new(AtomicBool::new(false)),
             token: token.clone(),
             config: config.clone(),
-            listener_environment: listener_environment.clone(),
+            listener_environment,
         }
     }
 

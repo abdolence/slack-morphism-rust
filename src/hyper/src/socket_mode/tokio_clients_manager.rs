@@ -65,7 +65,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
                     SlackSocketModeWssClientId::new(client_id_value, 0),
                     client_listener.clone(),
                     &token,
-                    &config,
+                    config,
                     self.listener_environment.clone(),
                 );
                 clients_write.push(wss_client_result);
