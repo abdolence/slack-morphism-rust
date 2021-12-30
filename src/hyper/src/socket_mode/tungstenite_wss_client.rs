@@ -209,8 +209,8 @@ where
         let ping_failure_threshold = self.identity.config.ping_failure_threshold_times;
 
         {
+            let thread_identity = self.identity.clone();
             let thread_last_time_pong_received = last_time_pong_received.clone();
-            let thread_client_id = self.identity.id.clone();
 
             tokio::spawn(async move {
                 while let Some(message) = rx.recv().await {
@@ -227,7 +227,7 @@ where
                         SlackTungsteniteWssClientCommand::Pong(body) => {
                             trace!(
                                 "[{}] Pong to Slack: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
                             if writer
@@ -242,7 +242,7 @@ where
                             let body: [u8; 5] = rand::random();
                             trace!(
                                 "[{}] Ping to Slack: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
 
@@ -258,7 +258,7 @@ where
                             if seen_pong_time_in_secs > ping_interval * ping_failure_threshold {
                                 warn!(
                                     "[{}] Haven't seen any pong from Slack since {} seconds ago",
-                                    thread_client_id.to_string(),
+                                    thread_identity.id.to_string(),
                                     seen_pong_time_in_secs
                                 );
                                 rx.close()
@@ -268,7 +268,7 @@ where
                             {
                                 warn!(
                                     "[{}] Ping slack failed with: {:?}",
-                                    thread_client_id.to_string(),
+                                    thread_identity.id.to_string(),
                                     err
                                 );
                                 rx.close()
@@ -284,8 +284,7 @@ where
         }
 
         {
-            let thread_listener = self.identity.client_listener.clone();
-            let thread_client_id = self.identity.id.clone();
+            let thread_identity = self.identity.clone();
             let ping_tx = tx.clone();
             tokio::spawn(async move {
                 let mut interval =
@@ -301,7 +300,10 @@ where
                             break;
                         }
                     } else {
-                        thread_listener.on_disconnect(&thread_client_id).await;
+                        thread_identity
+                            .client_listener
+                            .on_disconnect(&thread_identity.id)
+                            .await;
                         break;
                     }
                 }
@@ -309,8 +311,7 @@ where
         }
 
         {
-            let thread_listener = self.identity.client_listener.clone();
-            let thread_client_id = self.identity.id.clone();
+            let thread_identity = self.identity.clone();
             let thread_last_time_pong_received = last_time_pong_received;
 
             tokio::spawn(async move {
@@ -319,15 +320,17 @@ where
                         Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
                             trace!(
                                 "[{}] Received from Slack: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
-                            if let Some(reply) =
-                                thread_listener.on_message(&thread_client_id, body).await
+                            if let Some(reply) = thread_identity
+                                .client_listener
+                                .on_message(&thread_identity.id, body)
+                                .await
                             {
                                 trace!(
                                     "[{}] Sending reply to Slack: {:?}",
-                                    thread_client_id.to_string(),
+                                    thread_identity.id.to_string(),
                                     reply
                                 );
                                 tx.send(SlackTungsteniteWssClientCommand::Message(reply))
@@ -337,7 +340,7 @@ where
                         Ok(tokio_tungstenite::tungstenite::Message::Ping(body)) => {
                             trace!(
                                 "[{}] Ping from Slack: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
                             tx.send(SlackTungsteniteWssClientCommand::Pong(body))
@@ -346,7 +349,7 @@ where
                         Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
                             trace!(
                                 "[{}] Pong from Slack: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
                             let mut last_pong = thread_last_time_pong_received.write().unwrap();
@@ -355,10 +358,11 @@ where
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
                             warn!(
                                 "[{}] Unexpected binary received from Slack: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
-                            thread_listener
+                            thread_identity
+                                .client_listener
                                 .on_error(Box::new(SlackClientError::SocketModeProtocolError(
                                     SlackClientSocketModeProtocolError::new(format!(
                                         "Unexpected binary received from Slack: {:?}",
@@ -370,18 +374,22 @@ where
                         Ok(tokio_tungstenite::tungstenite::Message::Close(body)) => {
                             debug!(
                                 "[{}] Shutting down WSS channel: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 body
                             );
-                            thread_listener.on_disconnect(&thread_client_id).await
+                            thread_identity
+                                .client_listener
+                                .on_disconnect(&thread_identity.id)
+                                .await
                         }
                         Err(err) => {
                             error!(
                                 "[{}] Slack WSS error: {:?}",
-                                thread_client_id.to_string(),
+                                thread_identity.id.to_string(),
                                 err
                             );
-                            thread_listener
+                            thread_identity
+                                .client_listener
                                 .on_error(Box::new(SlackClientError::SocketModeProtocolError(
                                     SlackClientSocketModeProtocolError::new(format!(
                                         "Unexpected binary received from Slack: {:?}",
@@ -389,7 +397,10 @@ where
                                     )),
                                 )))
                                 .await;
-                            thread_listener.on_disconnect(&thread_client_id).await
+                            thread_identity
+                                .client_listener
+                                .on_disconnect(&thread_identity.id)
+                                .await
                         }
                     }
                 }
