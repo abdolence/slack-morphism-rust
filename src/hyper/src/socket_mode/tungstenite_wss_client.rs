@@ -46,8 +46,6 @@ where
         config: &SlackClientSocketModeConfig,
         listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     ) -> Self {
-        //
-
         SlackTungsteniteWssClient {
             id,
             client_listener,
