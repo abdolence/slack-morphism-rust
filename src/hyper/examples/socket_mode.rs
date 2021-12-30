@@ -112,7 +112,9 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // - and per-module overrides
         .level_for("slack_morphism", log::LevelFilter::Debug)
         .level_for("slack_morphism_hyper", log::LevelFilter::Debug)
+        .level_for("tungstenite", log::LevelFilter::Info)
         .level_for("hyper", log::LevelFilter::Info)
+        .level_for("hyper_rustls", log::LevelFilter::Info)
         .level_for("rustls", log::LevelFilter::Info)
         // Output to stdout, files, and other Dispatch configurations
         .chain(std::io::stdout())

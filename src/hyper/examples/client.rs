@@ -171,6 +171,7 @@ fn init_log() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .level_for("slack_morphism_hyper", log::LevelFilter::Debug)
         .level_for("hyper", log::LevelFilter::Info)
         .level_for("rustls", log::LevelFilter::Info)
+        .level_for("hyper_rustls", log::LevelFilter::Info)
         // Output to stdout, files, and other Dispatch configurations
         .chain(std::io::stdout())
         // Apply globally
