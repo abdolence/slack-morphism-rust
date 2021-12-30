@@ -1,7 +1,6 @@
 use crate::*;
 use async_trait::async_trait;
 use hyper::client::connect::Connect;
-use std::ops::Range;
 use std::sync::Arc;
 
 use crate::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
@@ -34,16 +33,6 @@ where
             active_clients: Arc::new(RwLock::new(vec![])),
         }
     }
-
-    async fn get_next_clients_range_indices(
-        &self,
-        config: &SlackClientSocketModeConfig,
-    ) -> Range<u32> {
-        let clients_read = self.active_clients.read().await;
-        let last_client_id_value = clients_read.len();
-        last_client_id_value as u32
-            ..(last_client_id_value as u32 + config.max_connections_count) as u32
-    }
 }
 
 #[async_trait]
@@ -56,13 +45,20 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     ) -> ClientResult<()> {
-        let new_clients_range = self.get_next_clients_range_indices(config).await;
         {
             let mut clients_write = self.active_clients.write().await;
 
+            let last_client_id_value = clients_write.len();
+            let new_clients_range = last_client_id_value as u32
+                ..(last_client_id_value as u32 + config.max_connections_count) as u32;
+
             for client_id_value in new_clients_range {
                 let wss_client_result = SlackTungsteniteWssClient::new(
-                    SlackSocketModeWssClientId::new(client_id_value, 0),
+                    SlackSocketModeWssClientId::new(
+                        client_id_value,
+                        client_id_value - last_client_id_value as u32,
+                        0,
+                    ),
                     client_listener.clone(),
                     &token,
                     config,

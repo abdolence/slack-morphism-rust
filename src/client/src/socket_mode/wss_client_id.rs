@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackSocketModeWssClientId {
     pub initial_index: u32,
+    pub token_index: u32,
     pub reconnected: u64,
 }
 
@@ -25,6 +26,9 @@ impl SlackSocketModeWssClientId {
 
 impl ToString for SlackSocketModeWssClientId {
     fn to_string(&self) -> String {
-        format!("{}/{}", self.initial_index, self.reconnected)
+        format!(
+            "{}/{}/{}",
+            self.initial_index, self.token_index, self.reconnected
+        )
     }
 }

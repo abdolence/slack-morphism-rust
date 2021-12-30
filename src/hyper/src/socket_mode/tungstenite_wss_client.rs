@@ -189,8 +189,8 @@ where
         initial_wait_timeout: u64,
     ) -> ClientResult<()> {
         if initial_wait_timeout > 0 {
-            debug!(
-                "[{}] Delayed connection for {} seconds (backoff timeout for multiple connections)",
+            trace!(
+                "[{}] Postponed connection for {} seconds (backoff timeout for multiple connections)",
                 identity.id.to_string(),
                 initial_wait_timeout
             );
