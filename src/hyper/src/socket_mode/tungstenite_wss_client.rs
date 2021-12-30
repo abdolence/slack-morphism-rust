@@ -43,7 +43,7 @@ enum SlackTungsteniteWssClientCommand {
 
 impl<SCHC> SlackTungsteniteWssClient<SCHC>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync,
+    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
 {
     pub fn new(
         id: SlackSocketModeWssClientId,
@@ -419,27 +419,32 @@ where
     }
 
     pub async fn connect(&self, initial_wait_timeout: u64) -> ClientResult<()> {
-        let rx = {
+        let maybe_rx = {
             let mut rx_writer = self.command_reader.write().unwrap();
-            rx_writer.take().unwrap()
+            rx_writer.take()
         };
 
-        let tx = {
-            let tx_writer = self.command_writer.write().unwrap();
-            (*tx_writer).clone()
-        };
+        match maybe_rx {
+            Some(rx) => {
+                let tx = {
+                    let tx_writer = self.command_writer.write().unwrap();
+                    (*tx_writer).clone()
+                };
 
-        Self::connect_spawn(
-            rx,
-            tx,
-            self.identity.clone(),
-            self.listener_environment.clone(),
-            self.destroyed.clone(),
-            initial_wait_timeout,
-        )
-        .await?;
-
-        Ok(())
+                tokio::spawn(Self::connect_spawn(
+                    rx,
+                    tx,
+                    self.identity.clone(),
+                    self.listener_environment.clone(),
+                    self.destroyed.clone(),
+                    initial_wait_timeout,
+                ));
+                Ok(())
+            }
+            None => Err(SlackClientError::EndOfStream(
+                SlackClientEndOfStreamError::new(),
+            )),
+        }
     }
 
     pub async fn shutdown_channel(&mut self) {
