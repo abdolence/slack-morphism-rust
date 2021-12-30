@@ -285,6 +285,10 @@ where
                         SlackTungsteniteWssClientCommand::Exit => {
                             writer.close().await.unwrap_or(());
                             rx.close();
+                            trace!(
+                                "[{}] WSS client command channel has been closed",
+                                thread_identity.id.to_string()
+                            );
                         }
                     }
                 }
