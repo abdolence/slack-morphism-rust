@@ -14,14 +14,19 @@ use tokio_tungstenite::*;
 use url::Url;
 
 #[derive(Clone)]
-pub struct SlackTungsteniteWssClient<SCHC>
-where
-    SCHC: SlackClientHttpConnector + Send + Sync,
-{
+pub struct SlackTungsteniteWssClientIdentity {
     pub id: SlackSocketModeWssClientId,
     pub token: SlackApiToken,
     pub client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     pub config: SlackClientSocketModeConfig,
+}
+
+#[derive(Clone)]
+pub struct SlackTungsteniteWssClient<SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send + Sync,
+{
+    pub identity: SlackTungsteniteWssClientIdentity,
     command_writer: Arc<RwLock<Option<UnboundedSender<SlackTungsteniteWssClientCommand>>>>,
     destroyed: Arc<AtomicBool>,
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
@@ -46,23 +51,30 @@ where
         config: &SlackClientSocketModeConfig,
         listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     ) -> Self {
-        SlackTungsteniteWssClient {
+        let identity = SlackTungsteniteWssClientIdentity {
             id,
             client_listener,
-            command_writer: Arc::new(RwLock::new(None)),
-            destroyed: Arc::new(AtomicBool::new(false)),
             token: token.clone(),
             config: config.clone(),
+        };
+
+        SlackTungsteniteWssClient {
+            identity,
+            command_writer: Arc::new(RwLock::new(None)),
+            destroyed: Arc::new(AtomicBool::new(false)),
             listener_environment,
         }
     }
 
     async fn try_to_connect(&self) -> Option<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let session = self.listener_environment.client.open_session(&self.token);
+        let session = self
+            .listener_environment
+            .client
+            .open_session(&self.identity.token);
 
         trace!(
             "[{}] Receiving WSS URL to connect through Slack app.connections.open()",
-            self.id.to_string()
+            self.identity.id.to_string()
         );
 
         match session
@@ -70,7 +82,7 @@ where
             .await
         {
             Ok(open_connection_res) => {
-                let open_connection_res_url = if self.config.debug_connections {
+                let open_connection_res_url = if self.identity.config.debug_connections {
                     format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
                 } else {
                     open_connection_res.url
@@ -78,7 +90,7 @@ where
 
                 trace!(
                     "[{}] Connecting to: {}",
-                    self.id.to_string(),
+                    self.identity.id.to_string(),
                     open_connection_res_url.value()
                 );
 
@@ -91,7 +103,7 @@ where
                     {
                         error!(
                             "[{}] Unable to connect {}: {}",
-                            self.id.to_string(),
+                            self.identity.id.to_string(),
                             url_to_connect,
                             response.status()
                         );
@@ -101,7 +113,7 @@ where
                     Err(err) => {
                         error!(
                             "[{}] Unable to connect {}: {:?}",
-                            self.id.to_string(),
+                            self.identity.id.to_string(),
                             url_to_connect,
                             err
                         );
@@ -109,7 +121,11 @@ where
                         None
                     }
                     Ok((wss_stream, _)) => {
-                        debug!("[{}] Connected to {}", self.id.to_string(), url_to_connect);
+                        debug!(
+                            "[{}] Connected to {}",
+                            self.identity.id.to_string(),
+                            url_to_connect
+                        );
                         Some(wss_stream)
                     }
                 }
@@ -117,7 +133,7 @@ where
             Err(err) => {
                 error!(
                     "[{}] Unable to create WSS url: {}",
-                    self.id.to_string(),
+                    self.identity.id.to_string(),
                     err
                 );
                 None
@@ -135,11 +151,11 @@ where
             } else if !self.destroyed.load(Ordering::Relaxed) {
                 trace!(
                     "[{}] Reconnecting after {} seconds...",
-                    self.id.to_string(),
-                    self.config.reconnect_timeout_in_seconds
+                    self.identity.id.to_string(),
+                    self.identity.config.reconnect_timeout_in_seconds
                 );
                 let mut interval = tokio::time::interval(std::time::Duration::from_secs(
-                    self.config.reconnect_timeout_in_seconds,
+                    self.identity.config.reconnect_timeout_in_seconds,
                 ));
 
                 interval.tick().await;
@@ -158,7 +174,7 @@ where
         if initial_wait_timeout > 0 {
             debug!(
                 "[{}] Delayed connection for {} seconds (backoff timeout for multiple connections)",
-                self.id.to_string(),
+                self.identity.id.to_string(),
                 initial_wait_timeout
             );
             let mut interval =
@@ -189,12 +205,12 @@ where
             time: SystemTime::now(),
         }));
 
-        let ping_interval = self.config.ping_interval_in_seconds;
-        let ping_failure_threshold = self.config.ping_failure_threshold_times;
+        let ping_interval = self.identity.config.ping_interval_in_seconds;
+        let ping_failure_threshold = self.identity.config.ping_failure_threshold_times;
 
         {
             let thread_last_time_pong_received = last_time_pong_received.clone();
-            let thread_client_id = self.id.clone();
+            let thread_client_id = self.identity.id.clone();
 
             tokio::spawn(async move {
                 while let Some(message) = rx.recv().await {
@@ -268,8 +284,8 @@ where
         }
 
         {
-            let thread_listener = self.client_listener.clone();
-            let thread_client_id = self.id.clone();
+            let thread_listener = self.identity.client_listener.clone();
+            let thread_client_id = self.identity.id.clone();
             let ping_tx = tx.clone();
             tokio::spawn(async move {
                 let mut interval =
@@ -293,8 +309,8 @@ where
         }
 
         {
-            let thread_listener = self.client_listener.clone();
-            let thread_client_id = self.id.clone();
+            let thread_listener = self.identity.client_listener.clone();
+            let thread_client_id = self.identity.id.clone();
             let thread_last_time_pong_received = last_time_pong_received;
 
             tokio::spawn(async move {
@@ -384,7 +400,7 @@ where
     }
 
     pub async fn shutdown_channel(&mut self) {
-        debug!("[{}] Destroying WSS client", self.id.to_string());
+        debug!("[{}] Destroying WSS client", self.identity.id.to_string());
         let maybe_sender = {
             let mut commands_writer = self.command_writer.write().unwrap().clone();
             commands_writer.take()
