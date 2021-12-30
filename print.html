@@ -674,10 +674,10 @@ let app_token_value: SlackApiTokenValue =
 let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
 
 // Register an app token to listen for events, 
-// and calling Slack API to get WS url for the token.
 socket_mode_listener.listen_for(&amp;app_token).await?;
 
-// Start WS connections and wait for Ctrl-C to shutdown
+// Start WS connections calling Slack API to get WS url for the token, 
+// and wait for Ctrl-C to shutdown
 // There are also `.start()`/`.shutdown()` available to manage manually 
 socket_mode_listener.serve().await;
 
