@@ -81,7 +81,9 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         for client_id_value in 0..clients_read.len() {
             let client = &clients_read[client_id_value];
             clients_to_await.push(
-                client.start(client_id_value as u64 * client.config.initial_backoff_in_seconds),
+                client.start(
+                    client_id_value as u64 * client.identity.config.initial_backoff_in_seconds,
+                ),
             );
         }
 
@@ -109,7 +111,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             match clients_write
                 .iter()
                 .enumerate()
-                .find(|(_, client)| client.id == *client_id)
+                .find(|(_, client)| client.identity.id == *client_id)
             {
                 Some((index, _)) => clients_write
                     .drain(index..=index)
@@ -125,10 +127,10 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             // Reconnect
             trace!("[{}] Reconnecting...", client_id.to_string());
             let client = SlackTungsteniteWssClient::new(
-                removed_client.id.new_reconnected_id(),
-                removed_client.client_listener.clone(),
-                &removed_client.token,
-                &removed_client.config,
+                removed_client.identity.id.new_reconnected_id(),
+                removed_client.identity.client_listener.clone(),
+                &removed_client.identity.token,
+                &removed_client.identity.config,
                 self.listener_environment.clone(),
             );
 
