@@ -406,20 +406,13 @@ where
         self.destroyed.store(true, Ordering::Relaxed);
     }
 
-    pub async fn start(
-        &self,
-        initial_wait_timeout: u64,
-        reconnect_timeout: u64,
-        ping_interval: u64,
-        ping_failure_threshold: u64,
-        debug_connections: bool,
-    ) {
+    pub async fn start(&self, initial_wait_timeout: u64) {
         self.connect(
             initial_wait_timeout,
-            reconnect_timeout,
-            ping_interval,
-            ping_failure_threshold,
-            debug_connections,
+            self.config.reconnect_timeout_in_seconds,
+            self.config.ping_interval_in_seconds,
+            self.config.ping_interval_in_seconds,
+            self.config.debug_connections,
         )
         .await
         .unwrap_or(());

@@ -80,13 +80,9 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         let mut clients_to_await = vec![];
         for client_id_value in 0..clients_read.len() {
             let client = &clients_read[client_id_value];
-            clients_to_await.push(client.start(
-                client_id_value as u64 * client.config.initial_backoff_in_seconds,
-                client.config.reconnect_timeout_in_seconds,
-                client.config.ping_interval_in_seconds,
-                client.config.ping_failure_threshold_times,
-                client.config.debug_connections,
-            ));
+            clients_to_await.push(
+                client.start(client_id_value as u64 * client.config.initial_backoff_in_seconds),
+            );
         }
 
         future::join_all(clients_to_await).await;
@@ -136,15 +132,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
                 self.listener_environment.clone(),
             );
 
-            client
-                .start(
-                    0,
-                    removed_client.config.reconnect_timeout_in_seconds,
-                    removed_client.config.ping_interval_in_seconds,
-                    removed_client.config.ping_failure_threshold_times,
-                    removed_client.config.debug_connections,
-                )
-                .await;
+            client.start(0).await;
             let mut clients_write = self.active_clients.write().await;
             clients_write.push(client);
         } else {
