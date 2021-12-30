@@ -8,8 +8,6 @@ use crate::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
 use crate::socket_mode::SlackSocketModeWssClientId;
 use futures::future;
 use log::*;
-use rvstruct::*;
-use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
 use slack_morphism::clients_manager::SlackSocketModeClientsManager;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::{
@@ -23,7 +21,7 @@ where
     SCHC: SlackClientHttpConnector + Send + Sync,
 {
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
-    active_clients: Arc<RwLock<Vec<SlackTungsteniteWssClient>>>,
+    active_clients: Arc<RwLock<Vec<SlackTungsteniteWssClient<SCHC>>>>,
 }
 
 impl<SCHC> SlackSocketModeTokioClientsManager<SCHC>
@@ -53,34 +51,14 @@ where
         token: SlackApiToken,
         client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send + 'static>,
         config: SlackClientSocketModeConfig,
-    ) -> ClientResult<SlackTungsteniteWssClient> {
-        let session = self.listener_environment.client.open_session(&token);
-
-        let open_connection_res = session
-            .apps_connections_open(&SlackApiAppsConnectionOpenRequest::new())
-            .await?;
-
-        let open_connection_res_url = if config.debug_connections {
-            format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
-        } else {
-            open_connection_res.url
-        };
-
-        trace!(
-            "[{}] Creating a new WSS client. Url: {}",
-            client_id.to_string(),
-            open_connection_res_url.value()
-        );
-
-        let wss_client = SlackTungsteniteWssClient::new(
-            &open_connection_res_url,
+    ) -> ClientResult<SlackTungsteniteWssClient<SCHC>> {
+        Ok(SlackTungsteniteWssClient::new(
             client_id.clone(),
             client_listener.clone(),
             &token,
             &config,
-        );
-
-        Ok(wss_client)
+            self.listener_environment.clone(),
+        ))
     }
 }
 
@@ -124,6 +102,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
                 config.reconnect_timeout_in_seconds,
                 config.ping_interval_in_seconds,
                 config.ping_failure_threshold_times,
+                config.debug_connections,
             ));
         }
 
@@ -131,7 +110,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
     }
 
     async fn shutdown(&self) {
-        let mut drained_clients: Vec<SlackTungsteniteWssClient> = {
+        let mut drained_clients: Vec<SlackTungsteniteWssClient<SlackClientHyperConnector<H>>> = {
             let mut clients_write = self.active_clients.write().await;
             let existing_vec = clients_write.drain(..).collect();
             existing_vec
@@ -155,7 +134,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             {
                 Some((index, _)) => clients_write
                     .drain(index..=index)
-                    .collect::<Vec<SlackTungsteniteWssClient>>(),
+                    .collect::<Vec<SlackTungsteniteWssClient<SlackClientHyperConnector<H>>>>(),
                 None => vec![],
             }
         };
@@ -182,6 +161,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
                             removed_client.config.reconnect_timeout_in_seconds,
                             removed_client.config.ping_interval_in_seconds,
                             removed_client.config.ping_failure_threshold_times,
+                            removed_client.config.debug_connections,
                         )
                         .await;
                     let mut clients_write = self.active_clients.write().await;
