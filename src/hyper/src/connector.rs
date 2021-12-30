@@ -141,7 +141,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         })
     }
 
-    pub(crate) async fn send_webapi_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
+    async fn send_http_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
@@ -184,6 +184,16 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )),
+        }
+    }
+
+    async fn send_rate_controlled_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
+    where
+        RS: for<'de> serde::de::Deserialize<'de>,
+    {
+        match self.tokio_rate_controller {
+            Some(ref rate_controller) => self.send_http_request(request).await,
+            None => self.send_http_request(request).await,
         }
     }
 
@@ -260,7 +270,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             let http_request = Self::setup_token_auth_header(base_http_request, token);
 
             let body = self
-                .send_webapi_request(
+                .send_rate_controlled_request(
                     http_request
                         .body(Body::empty())
                         .map_err(Self::map_hyper_http_error)?,
@@ -290,7 +300,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             .body(Body::empty())
             .map_err(Self::map_hyper_http_error)?;
 
-            self.send_webapi_request(http_request).await
+            self.send_rate_controlled_request(http_request).await
         }
         .boxed()
     }
@@ -315,7 +325,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             let http_request = Self::setup_token_auth_header(base_http_request, token);
 
             let response_body = self
-                .send_webapi_request(
+                .send_rate_controlled_request(
                     http_request
                         .body(post_json.into())
                         .map_err(Self::map_hyper_http_error)?,
