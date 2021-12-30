@@ -100,6 +100,7 @@ pub mod listener;
 mod scroller;
 pub mod signature_verifier;
 mod socket_mode;
+mod throttler;
 mod token;
 
 pub mod prelude;
