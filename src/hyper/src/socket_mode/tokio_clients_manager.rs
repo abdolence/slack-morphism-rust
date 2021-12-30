@@ -79,7 +79,8 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         let clients_read = self.active_clients.read().await;
         let mut clients_to_await = vec![];
         for client_id_value in 0..clients_read.len() {
-            clients_to_await.push(clients_read[client_id_value].start(
+            let client = &clients_read[client_id_value];
+            clients_to_await.push(client.start(
                 client_id_value as u64 * config.initial_backoff_in_seconds,
                 config.reconnect_timeout_in_seconds,
                 config.ping_interval_in_seconds,
