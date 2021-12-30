@@ -124,7 +124,6 @@ where
 
     async fn connect_with_reconnections(
         &self,
-        reconnect_timeout: u64,
     ) -> ClientResult<WebSocketStream<MaybeTlsStream<TcpStream>>> {
         let mut maybe_stream = self.try_to_connect().await;
         loop {
@@ -134,10 +133,11 @@ where
                 trace!(
                     "[{}] Reconnecting after {} seconds...",
                     self.id.to_string(),
-                    reconnect_timeout
+                    self.config.reconnect_timeout_in_seconds
                 );
-                let mut interval =
-                    tokio::time::interval(std::time::Duration::from_secs(reconnect_timeout));
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(
+                    self.config.reconnect_timeout_in_seconds,
+                ));
 
                 interval.tick().await;
                 interval.tick().await;
@@ -151,13 +151,7 @@ where
         }
     }
 
-    pub async fn connect(
-        &self,
-        initial_wait_timeout: u64,
-        reconnect_timeout: u64,
-        ping_interval: u64,
-        ping_failure_threshold: u64,
-    ) -> ClientResult<()> {
+    pub async fn connect(&self, initial_wait_timeout: u64) -> ClientResult<()> {
         if initial_wait_timeout > 0 {
             debug!(
                 "[{}] Delayed connection for {} seconds (backoff timeout for multiple connections)",
@@ -171,7 +165,7 @@ where
             interval.tick().await;
         }
 
-        let wss_stream = self.connect_with_reconnections(reconnect_timeout).await?;
+        let wss_stream = self.connect_with_reconnections().await?;
 
         let (mut writer, mut reader) = wss_stream.split();
 
@@ -191,6 +185,9 @@ where
         let last_time_pong_received: Arc<RwLock<PongState>> = Arc::new(RwLock::new(PongState {
             time: SystemTime::now(),
         }));
+
+        let ping_interval = self.config.ping_interval_in_seconds;
+        let ping_failure_threshold = self.config.ping_failure_threshold_times;
 
         {
             let thread_last_time_pong_received = last_time_pong_received.clone();
@@ -400,13 +397,6 @@ where
     }
 
     pub async fn start(&self, initial_wait_timeout: u64) {
-        self.connect(
-            initial_wait_timeout,
-            self.config.reconnect_timeout_in_seconds,
-            self.config.ping_interval_in_seconds,
-            self.config.ping_interval_in_seconds,
-        )
-        .await
-        .unwrap_or(());
+        self.connect(initial_wait_timeout).await.unwrap_or(());
     }
 }
