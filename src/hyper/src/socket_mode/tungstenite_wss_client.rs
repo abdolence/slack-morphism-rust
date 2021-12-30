@@ -60,6 +60,11 @@ where
     async fn try_to_connect(&self) -> Option<WebSocketStream<MaybeTlsStream<TcpStream>>> {
         let session = self.listener_environment.client.open_session(&self.token);
 
+        trace!(
+            "[{}] Receiving WSS URL to connect through Slack app.connections.open()",
+            self.id.to_string()
+        );
+
         match session
             .apps_connections_open(&SlackApiAppsConnectionOpenRequest::new())
             .await
