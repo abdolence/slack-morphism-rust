@@ -63,7 +63,7 @@ where
     }
 
     pub async fn start(&self) {
-        self.clients_manager.start_clients(&self.config).await;
+        self.clients_manager.start_clients().await;
     }
 
     pub async fn shutdown(&self) {

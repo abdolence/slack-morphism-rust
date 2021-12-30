@@ -8,8 +8,6 @@ use crate::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
 use crate::socket_mode::SlackSocketModeWssClientId;
 use futures::future;
 use log::*;
-use rvstruct::*;
-use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
 use slack_morphism::clients_manager::SlackSocketModeClientsManager;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::{
@@ -23,7 +21,7 @@ where
     SCHC: SlackClientHttpConnector + Send + Sync,
 {
     listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
-    active_clients: Arc<RwLock<Vec<SlackTungsteniteWssClient>>>,
+    active_clients: Arc<RwLock<Vec<SlackTungsteniteWssClient<SCHC>>>>,
 }
 
 impl<SCHC> SlackSocketModeTokioClientsManager<SCHC>
@@ -46,42 +44,6 @@ where
         last_client_id_value as u32
             ..(last_client_id_value as u32 + config.max_connections_count) as u32
     }
-
-    async fn create_new_wss_client(
-        &self,
-        client_id: SlackSocketModeWssClientId,
-        token: SlackApiToken,
-        client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send + 'static>,
-        config: SlackClientSocketModeConfig,
-    ) -> ClientResult<SlackTungsteniteWssClient> {
-        let session = self.listener_environment.client.open_session(&token);
-
-        let open_connection_res = session
-            .apps_connections_open(&SlackApiAppsConnectionOpenRequest::new())
-            .await?;
-
-        let open_connection_res_url = if config.debug_connections {
-            format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
-        } else {
-            open_connection_res.url
-        };
-
-        trace!(
-            "[{}] Creating a new WSS client. Url: {}",
-            client_id.to_string(),
-            open_connection_res_url.value()
-        );
-
-        let wss_client = SlackTungsteniteWssClient::new(
-            &open_connection_res_url,
-            client_id.clone(),
-            client_listener.clone(),
-            &token,
-            &config,
-        );
-
-        Ok(wss_client)
-    }
 }
 
 #[async_trait]
@@ -99,15 +61,13 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             let mut clients_write = self.active_clients.write().await;
 
             for client_id_value in new_clients_range {
-                let wss_client_result = self
-                    .create_new_wss_client(
-                        SlackSocketModeWssClientId::new(client_id_value, 0),
-                        token.clone(),
-                        client_listener.clone(),
-                        config.clone(),
-                    )
-                    .await?;
-
+                let wss_client_result = SlackTungsteniteWssClient::new(
+                    SlackSocketModeWssClientId::new(client_id_value, 0),
+                    client_listener.clone(),
+                    &token,
+                    config,
+                    self.listener_environment.clone(),
+                );
                 clients_write.push(wss_client_result);
             }
         }
@@ -115,23 +75,21 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         Ok(())
     }
 
-    async fn start_clients(&self, config: &SlackClientSocketModeConfig) {
+    async fn start_clients(&self) {
         let clients_read = self.active_clients.read().await;
         let mut clients_to_await = vec![];
         for client_id_value in 0..clients_read.len() {
-            clients_to_await.push(clients_read[client_id_value].start(
-                client_id_value as u64 * config.initial_backoff_in_seconds,
-                config.reconnect_timeout_in_seconds,
-                config.ping_interval_in_seconds,
-                config.ping_failure_threshold_times,
-            ));
+            let client = &clients_read[client_id_value];
+            clients_to_await.push(
+                client.start(client_id_value as u64 * client.config.initial_backoff_in_seconds),
+            );
         }
 
         future::join_all(clients_to_await).await;
     }
 
     async fn shutdown(&self) {
-        let mut drained_clients: Vec<SlackTungsteniteWssClient> = {
+        let mut drained_clients: Vec<SlackTungsteniteWssClient<SlackClientHyperConnector<H>>> = {
             let mut clients_write = self.active_clients.write().await;
             let existing_vec = clients_write.drain(..).collect();
             existing_vec
@@ -155,7 +113,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             {
                 Some((index, _)) => clients_write
                     .drain(index..=index)
-                    .collect::<Vec<SlackTungsteniteWssClient>>(),
+                    .collect::<Vec<SlackTungsteniteWssClient<SlackClientHyperConnector<H>>>>(),
                 None => vec![],
             }
         };
@@ -166,35 +124,17 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
             // Reconnect
             trace!("[{}] Reconnecting...", client_id.to_string());
-            match self
-                .create_new_wss_client(
-                    removed_client.id.new_reconnected_id(),
-                    removed_client.token.clone(),
-                    removed_client.client_listener.clone(),
-                    removed_client.config.clone(),
-                )
-                .await
-            {
-                Ok(client) => {
-                    client
-                        .start(
-                            0,
-                            removed_client.config.reconnect_timeout_in_seconds,
-                            removed_client.config.ping_interval_in_seconds,
-                            removed_client.config.ping_failure_threshold_times,
-                        )
-                        .await;
-                    let mut clients_write = self.active_clients.write().await;
-                    clients_write.push(client);
-                }
-                Err(err) => {
-                    error!(
-                        "[{}] Unable to recreate WSS client: {}",
-                        client_id.to_string(),
-                        err
-                    );
-                }
-            }
+            let client = SlackTungsteniteWssClient::new(
+                removed_client.id.new_reconnected_id(),
+                removed_client.client_listener.clone(),
+                &removed_client.token,
+                &removed_client.config,
+                self.listener_environment.clone(),
+            );
+
+            client.start(0).await;
+            let mut clients_write = self.active_clients.write().await;
+            clients_write.push(client);
         } else {
             trace!(
                 "[{}] No need to reconnect for client",

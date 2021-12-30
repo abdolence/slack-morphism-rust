@@ -1,9 +1,10 @@
 use futures::{SinkExt, StreamExt};
 use log::*;
 use rvstruct::*;
+use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
 use slack_morphism::errors::*;
+use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::*;
-use slack_morphism_models::SlackWebSocketsUrl;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
@@ -13,14 +14,17 @@ use tokio_tungstenite::*;
 use url::Url;
 
 #[derive(Clone)]
-pub struct SlackTungsteniteWssClient {
+pub struct SlackTungsteniteWssClient<SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send + Sync,
+{
     pub id: SlackSocketModeWssClientId,
     pub token: SlackApiToken,
     pub client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
     pub config: SlackClientSocketModeConfig,
-    url: Url,
     command_writer: Arc<RwLock<Option<UnboundedSender<SlackTungsteniteWssClientCommand>>>>,
     destroyed: Arc<AtomicBool>,
+    listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
 }
 
 #[derive(Clone, Debug)]
@@ -31,58 +35,95 @@ enum SlackTungsteniteWssClientCommand {
     Exit,
 }
 
-impl SlackTungsteniteWssClient {
+impl<SCHC> SlackTungsteniteWssClient<SCHC>
+where
+    SCHC: SlackClientHttpConnector + Send + Sync,
+{
     pub fn new(
-        wss_url: &SlackWebSocketsUrl,
         id: SlackSocketModeWssClientId,
         client_listener: Arc<dyn SlackSocketModeClientListener + Sync + Send>,
         token: &SlackApiToken,
         config: &SlackClientSocketModeConfig,
+        listener_environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     ) -> Self {
-        let url_to_connect = Url::parse(wss_url.value()).unwrap();
+        //
 
         SlackTungsteniteWssClient {
             id,
             client_listener,
-            url: url_to_connect,
             command_writer: Arc::new(RwLock::new(None)),
             destroyed: Arc::new(AtomicBool::new(false)),
             token: token.clone(),
             config: config.clone(),
+            listener_environment,
         }
     }
 
     async fn try_to_connect(&self) -> Option<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        match connect_async(&self.url).await {
-            Ok((_, response))
-                if !response.status().is_success() && !response.status().is_informational() =>
-            {
-                error!(
-                    "[{}] Unable to connect {}: {}",
+        let session = self.listener_environment.client.open_session(&self.token);
+
+        match session
+            .apps_connections_open(&SlackApiAppsConnectionOpenRequest::new())
+            .await
+        {
+            Ok(open_connection_res) => {
+                let open_connection_res_url = if self.config.debug_connections {
+                    format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
+                } else {
+                    open_connection_res.url
+                };
+
+                debug!(
+                    "[{}] Connecting to: {}",
                     self.id.to_string(),
-                    self.url,
-                    response.status()
+                    open_connection_res_url.value()
                 );
 
-                None
+                let url_to_connect = Url::parse(open_connection_res_url.value()).unwrap();
+
+                match connect_async(&url_to_connect).await {
+                    Ok((_, response))
+                        if !response.status().is_success()
+                            && !response.status().is_informational() =>
+                    {
+                        error!(
+                            "[{}] Unable to connect {}: {}",
+                            self.id.to_string(),
+                            url_to_connect,
+                            response.status()
+                        );
+
+                        None
+                    }
+                    Err(err) => {
+                        error!(
+                            "[{}] Unable to connect {}: {:?}",
+                            self.id.to_string(),
+                            url_to_connect,
+                            err
+                        );
+
+                        None
+                    }
+                    Ok((wss_stream, _)) => {
+                        debug!("[{}] Connected to {}", self.id.to_string(), url_to_connect);
+                        Some(wss_stream)
+                    }
+                }
             }
             Err(err) => {
                 error!(
-                    "[{}] Unable to connect {}: {:?}",
+                    "[{}] Unable to create WSS url: {}",
                     self.id.to_string(),
-                    self.url,
                     err
                 );
-
                 None
             }
-            Ok((wss_stream, _)) => Some(wss_stream),
         }
     }
 
     async fn connect_with_reconnections(
         &self,
-        reconnect_timeout: u64,
     ) -> ClientResult<WebSocketStream<MaybeTlsStream<TcpStream>>> {
         let mut maybe_stream = self.try_to_connect().await;
         loop {
@@ -92,10 +133,11 @@ impl SlackTungsteniteWssClient {
                 trace!(
                     "[{}] Reconnecting after {} seconds...",
                     self.id.to_string(),
-                    reconnect_timeout
+                    self.config.reconnect_timeout_in_seconds
                 );
-                let mut interval =
-                    tokio::time::interval(std::time::Duration::from_secs(reconnect_timeout));
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(
+                    self.config.reconnect_timeout_in_seconds,
+                ));
 
                 interval.tick().await;
                 interval.tick().await;
@@ -109,14 +151,7 @@ impl SlackTungsteniteWssClient {
         }
     }
 
-    pub async fn connect(
-        &self,
-        initial_wait_timeout: u64,
-        reconnect_timeout: u64,
-        ping_interval: u64,
-        ping_failure_threshold: u64,
-    ) -> ClientResult<()> {
-        debug!("[{}] Connecting to {}", self.id.to_string(), self.url);
+    pub async fn connect(&self, initial_wait_timeout: u64) -> ClientResult<()> {
         if initial_wait_timeout > 0 {
             debug!(
                 "[{}] Delayed connection for {} seconds (backoff timeout for multiple connections)",
@@ -130,8 +165,7 @@ impl SlackTungsteniteWssClient {
             interval.tick().await;
         }
 
-        let wss_stream = self.connect_with_reconnections(reconnect_timeout).await?;
-        debug!("[{}] Connected to {}", self.id.to_string(), self.url);
+        let wss_stream = self.connect_with_reconnections().await?;
 
         let (mut writer, mut reader) = wss_stream.split();
 
@@ -151,6 +185,9 @@ impl SlackTungsteniteWssClient {
         let last_time_pong_received: Arc<RwLock<PongState>> = Arc::new(RwLock::new(PongState {
             time: SystemTime::now(),
         }));
+
+        let ping_interval = self.config.ping_interval_in_seconds;
+        let ping_failure_threshold = self.config.ping_failure_threshold_times;
 
         {
             let thread_last_time_pong_received = last_time_pong_received.clone();
@@ -344,7 +381,7 @@ impl SlackTungsteniteWssClient {
     }
 
     pub async fn shutdown_channel(&mut self) {
-        debug!("[{}] Destroying {}", self.id.to_string(), self.url);
+        debug!("[{}] Destroying WSS client", self.id.to_string());
         let maybe_sender = {
             let mut commands_writer = self.command_writer.write().unwrap().clone();
             commands_writer.take()
@@ -359,20 +396,7 @@ impl SlackTungsteniteWssClient {
         self.destroyed.store(true, Ordering::Relaxed);
     }
 
-    pub async fn start(
-        &self,
-        initial_wait_timeout: u64,
-        reconnect_timeout: u64,
-        ping_interval: u64,
-        ping_failure_threshold: u64,
-    ) {
-        self.connect(
-            initial_wait_timeout,
-            reconnect_timeout,
-            ping_interval,
-            ping_failure_threshold,
-        )
-        .await
-        .unwrap_or(());
+    pub async fn start(&self, initial_wait_timeout: u64) {
+        self.connect(initial_wait_timeout).await.unwrap_or(());
     }
 }
