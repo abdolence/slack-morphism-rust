@@ -6,10 +6,11 @@ use slack_morphism::errors::*;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::*;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::RwLock;
 use tokio_tungstenite::*;
 use url::Url;
 
@@ -251,7 +252,7 @@ where
                             );
 
                             let seen_pong_time_in_secs = {
-                                let last_pong = thread_last_time_pong_received.read().unwrap();
+                                let last_pong = thread_last_time_pong_received.read().await;
 
                                 SystemTime::now()
                                     .duration_since(last_pong.time)
@@ -360,7 +361,7 @@ where
                                 thread_identity.id.to_string(),
                                 body
                             );
-                            let mut last_pong = thread_last_time_pong_received.write().unwrap();
+                            let mut last_pong = thread_last_time_pong_received.write().await;
                             last_pong.time = SystemTime::now();
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
@@ -420,14 +421,14 @@ where
 
     pub async fn connect(&self, initial_wait_timeout: u64) -> ClientResult<()> {
         let maybe_rx = {
-            let mut rx_writer = self.command_reader.write().unwrap();
+            let mut rx_writer = self.command_reader.write().await;
             rx_writer.take()
         };
 
         match maybe_rx {
             Some(rx) => {
                 let tx = {
-                    let tx_writer = self.command_writer.write().unwrap();
+                    let tx_writer = self.command_writer.write().await;
                     (*tx_writer).clone()
                 };
 
@@ -450,7 +451,7 @@ where
     pub async fn shutdown_channel(&mut self) {
         debug!("[{}] Destroying WSS client", self.identity.id.to_string());
         let sender = {
-            let commands_writer = self.command_writer.write().unwrap();
+            let commands_writer = self.command_writer.write().await;
             (*commands_writer).clone()
         };
 
