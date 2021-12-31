@@ -4,7 +4,8 @@ use slack_morphism_hyper::*;
 
 async fn test_rate_control_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new(
-        SlackClientHyperConnector::new().with_rate_control(SlackApiRateControlConfig::new()),
+        SlackClientHyperConnector::new()
+            .with_rate_control(SlackApiRateControlConfig::new().with_max_retries(5)),
     );
 
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
