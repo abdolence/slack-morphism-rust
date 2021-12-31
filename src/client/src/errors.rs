@@ -2,6 +2,7 @@ use rsb_derive::Builder;
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub enum SlackClientError {
@@ -169,7 +170,7 @@ impl std::error::Error for SlackClientSystemError {}
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackRateLimitError {
-    pub retry_after: Option<u64>,
+    pub retry_after: Option<Duration>,
     pub code: Option<String>,
     pub warnings: Option<Vec<String>>,
     pub http_response_body: Option<String>,
@@ -179,10 +180,10 @@ impl Display for SlackRateLimitError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Slack API rate limit error: {}\nBody: '{}'. Retry after: `{}`",
+            "Slack API rate limit error: {}\nBody: '{}'. Retry after: `{:?}`",
             SlackClientError::option_to_string(&self.code),
             SlackClientError::option_to_string(&self.http_response_body),
-            SlackClientError::option_to_string(&self.retry_after),
+            self.retry_after,
         )
     }
 }

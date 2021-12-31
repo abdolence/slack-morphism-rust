@@ -5,16 +5,14 @@ use tokio::sync::Mutex;
 
 #[derive(Clone, Debug)]
 pub struct SlackTokioRateController {
-    has_global_limits: bool,
+    pub config: SlackApiRateControlConfig,
     throttler: Arc<Mutex<SlackRateThrottler>>,
 }
 
 impl SlackTokioRateController {
     pub fn new(rate_control_config: SlackApiRateControlConfig) -> Self {
-        let has_global_limits = rate_control_config.global_max_rate_limit.is_some();
-
         Self {
-            has_global_limits,
+            config: rate_control_config.clone(),
             throttler: Arc::new(Mutex::new(SlackRateThrottler::new(rate_control_config))),
         }
     }
@@ -23,12 +21,17 @@ impl SlackTokioRateController {
         &self,
         method_rate_ctl: &SlackApiMethodRateControlConfig,
         team_id: Option<SlackTeamId>,
+        delayed: Option<Duration>,
     ) -> Option<Duration> {
-        if self.has_global_limits || team_id.is_some() {
+        let has_global_limits = self.config.global_max_rate_limit.is_some();
+
+        let delayed_by_state = if has_global_limits || team_id.is_some() {
             let mut throttler = self.throttler.lock().await;
             throttler.calc_throttle_delay(method_rate_ctl, team_id)
         } else {
             None
-        }
+        };
+
+        delayed_by_state.max(delayed)
     }
 }
