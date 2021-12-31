@@ -1,4 +1,3 @@
-use crate::ratectl::SlackApiRateControlLimit;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
@@ -69,10 +68,15 @@ impl ThrottlingCounter {
             }
         }
     }
+
+    pub fn delay(&self) -> &Duration {
+        &self.delay
+    }
 }
 
 #[test]
 fn check_decreased() {
+    use crate::ratectl::*;
     let rate_limit = SlackApiRateControlLimit::new(15, Duration::from_secs(60));
     let rate_limit_in_ms = rate_limit.to_rate_limit_in_ms();
     let rate_limit_capacity = rate_limit.to_rate_limit_capacity();
@@ -88,6 +92,7 @@ fn check_decreased() {
 
 #[test]
 fn check_max_available() {
+    use crate::ratectl::*;
     let rate_limit = SlackApiRateControlLimit::new(15, Duration::from_secs(60));
     let rate_limit_in_ms = rate_limit.to_rate_limit_in_ms();
     let rate_limit_capacity = rate_limit.to_rate_limit_capacity();
@@ -102,6 +107,7 @@ fn check_max_available() {
 
 #[test]
 fn check_delay() {
+    use crate::ratectl::*;
     let counter =
         SlackApiRateControlLimit::new(15, Duration::from_secs(60)).to_throttling_counter();
 

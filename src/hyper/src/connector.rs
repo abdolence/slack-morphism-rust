@@ -188,24 +188,35 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         }
     }
 
-    async fn send_rate_controlled_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
+    async fn send_rate_controlled_request<RS>(
+        &self,
+        request: Request<Body>,
+        token: Option<&SlackApiToken>,
+        rate_control_params: Option<&SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
-        match self.tokio_rate_controller {
-            Some(ref rate_controller) => {
-                use futures::StreamExt;
-                Box::pin(
-                    self.send_http_request(request)
-                        .into_stream()
-                        .throttle(std::time::Duration::from_secs(1)),
-                )
-                .into_future()
-                .map(|(v, _)| v.unwrap())
-                .await
+        match (self.tokio_rate_controller.as_ref(), rate_control_params) {
+            (Some(rate_controller), Some(method_rate_params)) => {
+                let duration: std::time::Duration = rate_controller
+                    .calc_throttle_delay(method_rate_params, token.and_then(|t| t.team_id.clone()));
+                if duration.is_zero() {
+                    self.send_http_request(request).await
+                } else {
+                    use futures::StreamExt;
+                    Box::pin(
+                        self.send_http_request(request)
+                            .into_stream()
+                            .throttle(duration),
+                    )
+                    .into_future()
+                    .map(|(v, _)| v.unwrap())
+                    .await
+                }
             }
 
-            None => self.send_http_request(request).await,
+            (_, _) => self.send_http_request(request).await,
         }
     }
 
@@ -287,6 +298,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                     http_request
                         .body(Body::empty())
                         .map_err(Self::map_hyper_http_error)?,
+                    token,
+                    rate_control_params,
                 )
                 .await?;
 
@@ -313,7 +326,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             .body(Body::empty())
             .map_err(Self::map_hyper_http_error)?;
 
-            self.send_rate_controlled_request(http_request).await
+            self.send_rate_controlled_request(http_request, None, None)
+                .await
         }
         .boxed()
     }
@@ -323,6 +337,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         full_uri: Url,
         request_body: &'a RQ,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RQ: serde::ser::Serialize + Send + Sync,
@@ -342,6 +357,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                     http_request
                         .body(post_json.into())
                         .map_err(Self::map_hyper_http_error)?,
+                    token,
+                    rate_control_params,
                 )
                 .await?;
 
