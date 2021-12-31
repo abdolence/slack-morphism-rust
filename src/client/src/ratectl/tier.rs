@@ -11,7 +11,7 @@ pub enum SlackApiMethodRateTier {
 }
 
 lazy_static! {
-    pub static ref DEFAULT_TIERS_LIMIT_MAP: HashMap<SlackApiMethodRateTier, SlackApiRateControlLimit> =
+    pub static ref SLACK_TIERS_DEFAULT_LIMITS_MAP: HashMap<SlackApiMethodRateTier, SlackApiRateControlLimit> =
         vec![
             (
                 SlackApiMethodRateTier::Tier1,

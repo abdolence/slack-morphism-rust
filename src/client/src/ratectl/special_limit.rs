@@ -8,8 +8,8 @@ use rvstruct::*;
  */
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiRateControlSpecialLimit {
-    key: SlackApiRateControlSpecialLimitKey,
-    limit: SlackApiRateControlLimit,
+    pub key: SlackApiRateControlSpecialLimitKey,
+    pub limit: SlackApiRateControlLimit,
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, ValueStruct)]

@@ -208,7 +208,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                         Box::pin(
                             self.send_http_request(request)
                                 .into_stream()
-                                .throttle(duration.clone()),
+                                .throttle(duration),
                         )
                         .into_future()
                         .map(|(v, _)| v.unwrap())

@@ -13,10 +13,10 @@ pub struct SlackApiMethodRateControlConfig {
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackApiRateControlConfig {
     pub global_max_rate_limit: Option<SlackApiRateControlLimit>,
-    pub workspace_max_rate_limit: Option<SlackApiRateControlLimit>,
+    pub team_max_rate_limit: Option<SlackApiRateControlLimit>,
 
-    #[default = "DEFAULT_TIERS_LIMIT_MAP.clone()"]
-    pub slack_api_tier_limits: HashMap<SlackApiMethodRateTier, SlackApiRateControlLimit>,
+    #[default = "SLACK_TIERS_DEFAULT_LIMITS_MAP.clone()"]
+    pub tiers_limits: HashMap<SlackApiMethodRateTier, SlackApiRateControlLimit>,
 
     pub max_delay_timeout: Option<std::time::Duration>,
     pub max_retries: Option<usize>,
