@@ -1,3 +1,5 @@
+use crate::prelude::ThrottlingCounter;
+
 /**
  * A rate limit definition
 */
@@ -24,5 +26,9 @@ impl SlackApiRateControlLimit {
 
     pub fn to_rate_limit_capacity(&self) -> usize {
         self.per.as_millis() as usize / self.to_rate_limit_in_ms() as usize
+    }
+
+    pub fn to_throttling_counter(&self) -> ThrottlingCounter {
+        ThrottlingCounter::new(self.to_rate_limit_capacity(), self.to_rate_limit_in_ms())
     }
 }
