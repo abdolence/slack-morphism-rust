@@ -56,8 +56,7 @@ impl ThrottlingCounter {
 
             let updated_capacity = new_available_capacity - 1;
 
-            let delay_in_millis = (self.rate_limit_in_millis - updated_time_elapsed_in_millis)
-                * ((updated_capacity.abs() as u64 / self.max_capacity as u64) + 1);
+            let delay_in_millis = self.rate_limit_in_millis - updated_time_elapsed_in_millis;
             let delay = Duration::from_millis(delay_in_millis);
 
             Self {

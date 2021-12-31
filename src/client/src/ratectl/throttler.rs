@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 pub struct SlackRateThrottler {
     pub config: SlackApiRateControlConfig,
     global_max_rate_limit_counter: Option<ThrottlingCounter>,
+    global_all_team_special_limits: HashMap<SlackApiRateControlSpecialLimitKey, ThrottlingCounter>,
     rate_limit_per_team: HashMap<SlackTeamId, SlackTeamLimits>,
 }
 
@@ -19,6 +20,7 @@ impl SlackRateThrottler {
         Self {
             config: rate_control_config,
             global_max_rate_limit_counter,
+            global_all_team_special_limits: HashMap::new(),
             rate_limit_per_team: HashMap::new(),
         }
     }
@@ -78,11 +80,48 @@ impl SlackRateThrottler {
                     None => {} // no need for special rate limiting
                 }
 
+                match method_rate_ctl.tier {
+                    Some(ref tier) => {
+                        match self.config.tiers_limits.get(tier) {
+                            Some(tier_limit) => {
+                                let tier_team_limit = team_limits
+                                    .tier_limits
+                                    .entry(tier.clone())
+                                    .or_insert(tier_limit.to_throttling_counter());
+
+                                *tier_team_limit = tier_team_limit.update(now);
+
+                                if !tier_team_limit.delay().is_zero() {
+                                    delays_heap.push(tier_team_limit.delay().clone())
+                                }
+                            }
+                            None => {} // no config for tier is specified
+                        };
+                    }
+                    None => {} // no need for tier rate limiting
+                }
+
                 // Clean up old teams limits
                 self.rate_limit_per_team
                     .retain(|_, v| v.updated.duration_since(now).as_secs() < 3600);
             }
-            None => {} // Nothing to do if team id isn't specified
+            None => {
+                match method_rate_ctl.special_rate_limit {
+                    Some(ref special_method_limits) => {
+                        let special_team_limit = self
+                            .global_all_team_special_limits
+                            .entry(special_method_limits.key.clone())
+                            .or_insert(special_method_limits.limit.to_throttling_counter());
+
+                        *special_team_limit = special_team_limit.update(now);
+
+                        if !special_team_limit.delay().is_zero() {
+                            delays_heap.push(special_team_limit.delay().clone())
+                        }
+                    }
+                    None => {} // Nothing to do if team id isn't specified
+                }
+            }
         }
 
         delays_heap.pop()

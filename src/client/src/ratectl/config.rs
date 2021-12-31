@@ -28,9 +28,9 @@ lazy_static! {
     pub static ref SLACK_TIER1_METHOD_CONFIG: SlackApiMethodRateControlConfig =
         SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
     pub static ref SLACK_TIER2_METHOD_CONFIG: SlackApiMethodRateControlConfig =
-        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier2);
     pub static ref SLACK_TIER3_METHOD_CONFIG: SlackApiMethodRateControlConfig =
-        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier3);
     pub static ref SLACK_TIER4_METHOD_CONFIG: SlackApiMethodRateControlConfig =
-        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier4);
 }

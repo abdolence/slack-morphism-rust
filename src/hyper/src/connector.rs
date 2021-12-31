@@ -21,7 +21,6 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio_stream::StreamExt;
 use url::Url;
 
 #[derive(Clone, Debug)]
@@ -238,7 +237,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     {
         match (self.tokio_rate_controller.as_ref(), rate_control_params) {
             (Some(rate_controller), Some(method_rate_params)) => {
-                match rate_controller
+                if let Some(duration) = rate_controller
                     .calc_throttle_delay(
                         method_rate_params,
                         token.and_then(|t| t.team_id.clone()),
@@ -246,37 +245,24 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     )
                     .await
                 {
-                    Some(duration) if !duration.is_zero() => {
-                        use futures::StreamExt;
-                        self.retry_request_if_needed(
-                            rate_controller.clone(),
-                            Box::pin(
-                                self.send_http_request(request()?)
-                                    .into_stream()
-                                    .throttle(duration),
-                            )
-                            .into_future()
-                            .map(|(v, _)| v.unwrap())
-                            .await,
-                            retried,
-                            request,
-                            token,
-                            rate_control_params,
-                        )
-                        .await
-                    }
-                    _ => {
-                        self.retry_request_if_needed(
-                            rate_controller.clone(),
-                            self.send_http_request(request()?).await,
-                            retried,
-                            request,
-                            token,
-                            rate_control_params,
-                        )
-                        .await
+                    if !duration.is_zero() {
+                        debug!("Slack throttler postponed request for {:?}", duration);
+                        let mut interval = tokio::time::interval(duration);
+
+                        interval.tick().await;
+                        interval.tick().await;
                     }
                 }
+
+                self.retry_request_if_needed(
+                    rate_controller.clone(),
+                    self.send_http_request(request()?).await,
+                    retried,
+                    request,
+                    token,
+                    rate_control_params,
+                )
+                .await
             }
             (Some(rate_controller), None) => {
                 self.retry_request_if_needed(
