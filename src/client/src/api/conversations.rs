@@ -7,6 +7,7 @@ use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::*;
 use crate::*;
 use futures::future::{BoxFuture, FutureExt};
 use slack_morphism_models::*;
@@ -24,7 +25,11 @@ where
         req: &SlackApiConversationsArchiveRequest,
     ) -> ClientResult<SlackApiConversationsArchiveResponse> {
         self.http_session_api
-            .http_post("conversations.archive", req)
+            .http_post(
+                "conversations.archive",
+                req,
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -36,7 +41,7 @@ where
         req: &SlackApiConversationsCloseRequest,
     ) -> ClientResult<SlackApiConversationsCloseResponse> {
         self.http_session_api
-            .http_post("conversations.close", req)
+            .http_post("conversations.close", req, Some(&SLACK_TIER2_METHOD_CONFIG))
             .await
     }
 
@@ -48,7 +53,11 @@ where
         req: &SlackApiConversationsCreateRequest,
     ) -> ClientResult<SlackApiConversationsCreateResponse> {
         self.http_session_api
-            .http_post("conversations.create", req)
+            .http_post(
+                "conversations.create",
+                req,
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -70,6 +79,7 @@ where
                     ("latest", req.latest.as_ref().map(|x| x.value())),
                     ("oldest", req.oldest.as_ref().map(|x| x.value())),
                 ],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
             )
             .await
     }
@@ -95,6 +105,7 @@ where
                         req.include_locale.map(|v| v.to_string()).as_ref(),
                     ),
                 ],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
             )
             .await
     }
@@ -107,7 +118,11 @@ where
         req: &SlackApiConversationsInviteRequest,
     ) -> ClientResult<SlackApiConversationsInviteResponse> {
         self.http_session_api
-            .http_post("conversations.invite", req)
+            .http_post(
+                "conversations.invite",
+                req,
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -119,7 +134,7 @@ where
         req: &SlackApiConversationsJoinRequest,
     ) -> ClientResult<SlackApiConversationsJoinResponse> {
         self.http_session_api
-            .http_post("conversations.join", req)
+            .http_post("conversations.join", req, Some(&SLACK_TIER3_METHOD_CONFIG))
             .await
     }
 
@@ -131,7 +146,7 @@ where
         req: &SlackApiConversationsKickRequest,
     ) -> ClientResult<SlackApiConversationsKickResponse> {
         self.http_session_api
-            .http_post("conversations.kick", req)
+            .http_post("conversations.kick", req, Some(&SLACK_TIER3_METHOD_CONFIG))
             .await
     }
 
@@ -143,7 +158,7 @@ where
         req: &SlackApiConversationsLeaveRequest,
     ) -> ClientResult<SlackApiConversationsLeaveResponse> {
         self.http_session_api
-            .http_post("conversations.leave", req)
+            .http_post("conversations.leave", req, Some(&SLACK_TIER3_METHOD_CONFIG))
             .await
     }
 
@@ -177,6 +192,7 @@ where
                             .as_ref(),
                     ),
                 ],
+                Some(&SLACK_TIER2_METHOD_CONFIG),
             )
             .await
     }
@@ -196,6 +212,7 @@ where
                     ("cursor", req.cursor.as_ref().map(|x| x.value())),
                     ("limit", req.limit.map(|v| v.to_string()).as_ref()),
                 ],
+                Some(&SLACK_TIER4_METHOD_CONFIG),
             )
             .await
     }
@@ -209,7 +226,11 @@ where
         req: &SlackApiConversationsOpenRequest,
     ) -> ClientResult<SlackApiConversationsOpenResponse<SlackBasicChannelInfo>> {
         self.http_session_api
-            .http_post("conversations.open", &req.clone().without_return_im())
+            .http_post(
+                "conversations.open",
+                &req.clone().without_return_im(),
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -222,7 +243,11 @@ where
         req: &SlackApiConversationsOpenRequest,
     ) -> ClientResult<SlackApiConversationsOpenResponse<SlackChannelInfo>> {
         self.http_session_api
-            .http_post("conversations.open", &req.clone().with_return_im(true))
+            .http_post(
+                "conversations.open",
+                &req.clone().with_return_im(true),
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -234,7 +259,11 @@ where
         req: &SlackApiConversationsRenameRequest,
     ) -> ClientResult<SlackApiConversationsRenameResponse> {
         self.http_session_api
-            .http_post("conversations.rename", req)
+            .http_post(
+                "conversations.rename",
+                req,
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -257,6 +286,7 @@ where
                     ("latest", req.latest.as_ref().map(|x| x.value())),
                     ("oldest", req.oldest.as_ref().map(|x| x.value())),
                 ],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
             )
             .await
     }
@@ -269,7 +299,11 @@ where
         req: &SlackApiConversationsSetPurposeRequest,
     ) -> ClientResult<SlackApiConversationsSetPurposeResponse> {
         self.http_session_api
-            .http_post("conversations.setPurpose", req)
+            .http_post(
+                "conversations.setPurpose",
+                req,
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -281,7 +315,11 @@ where
         req: &SlackApiConversationsSetTopicRequest,
     ) -> ClientResult<SlackApiConversationsSetTopicResponse> {
         self.http_session_api
-            .http_post("conversations.setTopic", req)
+            .http_post(
+                "conversations.setTopic",
+                req,
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -293,7 +331,11 @@ where
         req: &SlackApiConversationsUnarchiveRequest,
     ) -> ClientResult<SlackApiConversationsUnarchiveResponse> {
         self.http_session_api
-            .http_post("conversations.setTopic", req)
+            .http_post(
+                "conversations.setTopic",
+                req,
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
             .await
     }
 }

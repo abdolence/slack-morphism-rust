@@ -1,7 +1,6 @@
-use crate::ratectl::{
-    SlackApiMethodRateTier, SlackApiRateControlLimit, SlackApiRateControlSpecialLimit,
-};
+use crate::ratectl::*;
 use lazy_static::lazy_static;
+
 use rsb_derive::Builder;
 use std::collections::HashMap;
 
@@ -26,25 +25,12 @@ pub struct SlackApiRateControlConfig {
 impl SlackApiRateControlConfig {}
 
 lazy_static! {
-    pub static ref DEFAULT_TIERS_LIMIT_MAP: HashMap<SlackApiMethodRateTier, SlackApiRateControlLimit> =
-        vec![
-            (
-                SlackApiMethodRateTier::Tier1,
-                SlackApiRateControlLimit::new(1, std::time::Duration::from_secs(60))
-            ),
-            (
-                SlackApiMethodRateTier::Tier2,
-                SlackApiRateControlLimit::new(20, std::time::Duration::from_secs(60))
-            ),
-            (
-                SlackApiMethodRateTier::Tier3,
-                SlackApiRateControlLimit::new(50, std::time::Duration::from_secs(60))
-            ),
-            (
-                SlackApiMethodRateTier::Tier4,
-                SlackApiRateControlLimit::new(100, std::time::Duration::from_secs(60))
-            )
-        ]
-        .into_iter()
-        .collect();
+    pub static ref SLACK_TIER1_METHOD_CONFIG: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
+    pub static ref SLACK_TIER2_METHOD_CONFIG: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
+    pub static ref SLACK_TIER3_METHOD_CONFIG: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
+    pub static ref SLACK_TIER4_METHOD_CONFIG: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_tier(SlackApiMethodRateTier::Tier1);
 }

@@ -6,6 +6,7 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::SLACK_TIER3_METHOD_CONFIG;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
 use slack_morphism_models::*;
@@ -22,7 +23,11 @@ where
         req: &SlackApiBotsInfoRequest,
     ) -> ClientResult<SlackApiBotsInfoResponse> {
         self.http_session_api
-            .http_get("bots.info", &vec![("bot", req.bot.as_ref())])
+            .http_get(
+                "bots.info",
+                &vec![("bot", req.bot.as_ref())],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 }

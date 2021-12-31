@@ -6,6 +6,7 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
 use slack_morphism_models::*;
@@ -22,7 +23,11 @@ where
         req: &SlackApiTeamInfoRequest,
     ) -> ClientResult<SlackApiTeamInfoResponse> {
         self.http_session_api
-            .http_get("team.info", &vec![("team", req.team.as_ref())])
+            .http_get(
+                "team.info",
+                &vec![("team", req.team.as_ref())],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -37,6 +42,7 @@ where
             .http_get(
                 "team.profile.get",
                 &vec![("visibility", req.visibility.as_ref())],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
             )
             .await
     }

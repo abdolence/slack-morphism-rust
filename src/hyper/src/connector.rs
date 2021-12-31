@@ -10,7 +10,7 @@ use hyper_rustls::HttpsConnector;
 use mime::Mime;
 use rvstruct::ValueStruct;
 use slack_morphism::errors::*;
-use slack_morphism::prelude::SlackApiRateControlConfig;
+use slack_morphism::prelude::{SlackApiMethodRateControlConfig, SlackApiRateControlConfig};
 use slack_morphism::signature_verifier::SlackEventAbsentSignatureError;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 use slack_morphism::*;
@@ -272,6 +272,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         &'a self,
         full_uri: Url,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send,

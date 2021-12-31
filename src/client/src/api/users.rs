@@ -7,6 +7,7 @@ use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::*;
 use crate::scroller::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
@@ -48,6 +49,7 @@ where
                             .as_ref(),
                     ),
                 ],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
             )
             .await
     }
@@ -60,7 +62,11 @@ where
         req: &SlackApiUsersGetPresenceRequest,
     ) -> ClientResult<SlackApiUsersGetPresenceResponse> {
         self.http_session_api
-            .http_get("users.getPresence", &vec![("user", Some(req.user.value()))])
+            .http_get(
+                "users.getPresence",
+                &vec![("user", Some(req.user.value()))],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -72,6 +78,7 @@ where
             .http_get(
                 "users.identity",
                 &crate::client::SLACK_HTTP_EMPTY_GET_PARAMS.clone(),
+                Some(&SLACK_TIER4_METHOD_CONFIG),
             )
             .await
     }
@@ -93,6 +100,7 @@ where
                         req.include_locale.map(|v| v.to_string()).as_ref(),
                     ),
                 ],
+                Some(&SLACK_TIER4_METHOD_CONFIG),
             )
             .await
     }
@@ -115,6 +123,7 @@ where
                         req.include_locale.map(|v| v.to_string()).as_ref(),
                     ),
                 ],
+                Some(&SLACK_TIER2_METHOD_CONFIG),
             )
             .await
     }
@@ -130,6 +139,7 @@ where
             .http_get(
                 "users.lookupByEmail",
                 &vec![("email", Some(req.email.value()))],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
             )
             .await
     }
@@ -142,7 +152,7 @@ where
         req: &SlackApiUsersSetPresenceRequest,
     ) -> ClientResult<SlackApiUsersSetPresenceResponse> {
         self.http_session_api
-            .http_post("users.setPresence", req)
+            .http_post("users.setPresence", req, Some(&SLACK_TIER2_METHOD_CONFIG))
             .await
     }
 
@@ -163,6 +173,7 @@ where
                         req.include_locale.map(|v| v.to_string()).as_ref(),
                     ),
                 ],
+                Some(&SLACK_TIER4_METHOD_CONFIG),
             )
             .await
     }
@@ -175,7 +186,7 @@ where
         req: &SlackApiUsersProfileSetRequest,
     ) -> ClientResult<SlackApiUsersProfileSetResponse> {
         self.http_session_api
-            .http_post("users.profile.set", req)
+            .http_post("users.profile.set", req, Some(&SLACK_TIER3_METHOD_CONFIG))
             .await
     }
 }

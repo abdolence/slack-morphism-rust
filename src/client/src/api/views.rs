@@ -6,6 +6,7 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
 use slack_morphism_models::blocks::*;
@@ -22,7 +23,9 @@ where
         &self,
         req: &SlackApiViewsOpenRequest,
     ) -> ClientResult<SlackApiViewsOpenResponse> {
-        self.http_session_api.http_post("views.open", req).await
+        self.http_session_api
+            .http_post("views.open", req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .await
     }
 
     ///
@@ -32,7 +35,9 @@ where
         &self,
         req: &SlackApiViewsPublishRequest,
     ) -> ClientResult<SlackApiViewsPublishResponse> {
-        self.http_session_api.http_post("views.publish", req).await
+        self.http_session_api
+            .http_post("views.publish", req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .await
     }
 
     ///
@@ -42,7 +47,9 @@ where
         &self,
         req: &SlackApiViewsPushRequest,
     ) -> ClientResult<SlackApiViewsPushResponse> {
-        self.http_session_api.http_post("views.push", req).await
+        self.http_session_api
+            .http_post("views.push", req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .await
     }
 
     ///
@@ -52,7 +59,9 @@ where
         &self,
         req: &SlackApiViewsUpdateRequest,
     ) -> ClientResult<SlackApiViewsUpdateResponse> {
-        self.http_session_api.http_post("views.update", req).await
+        self.http_session_api
+            .http_post("views.update", req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .await
     }
 }
 
