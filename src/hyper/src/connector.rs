@@ -199,20 +199,22 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     {
         match (self.tokio_rate_controller.as_ref(), rate_control_params) {
             (Some(rate_controller), Some(method_rate_params)) => {
-                let duration: std::time::Duration = rate_controller
-                    .calc_throttle_delay(method_rate_params, token.and_then(|t| t.team_id.clone()));
-                if duration.is_zero() {
-                    self.send_http_request(request).await
-                } else {
-                    use futures::StreamExt;
-                    Box::pin(
-                        self.send_http_request(request)
-                            .into_stream()
-                            .throttle(duration),
-                    )
-                    .into_future()
-                    .map(|(v, _)| v.unwrap())
+                match rate_controller
+                    .calc_throttle_delay(method_rate_params, token.and_then(|t| t.team_id.clone()))
                     .await
+                {
+                    Some(duration) if !duration.is_zero() => {
+                        use futures::StreamExt;
+                        Box::pin(
+                            self.send_http_request(request)
+                                .into_stream()
+                                .throttle(duration.clone()),
+                        )
+                        .into_future()
+                        .map(|(v, _)| v.unwrap())
+                        .await
+                    }
+                    _ => self.send_http_request(request).await,
                 }
             }
 

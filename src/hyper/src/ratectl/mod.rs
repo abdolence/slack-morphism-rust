@@ -1,5 +1,5 @@
 use slack_morphism::prelude::*;
-use std::collections::HashMap;
+use std::collections::{BinaryHeap, HashMap};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -38,11 +38,14 @@ impl SlackTokioRateController {
         }
     }
 
-    pub fn calc_throttle_delay(
+    pub async fn calc_throttle_delay(
         &self,
         method_rate_ctl: &SlackApiMethodRateControlConfig,
         team_id: Option<SlackTeamId>,
-    ) -> Duration {
-        todo!()
+    ) -> Option<&Duration> {
+        let mut delays_heap: BinaryHeap<Duration> = BinaryHeap::new();
+
+        todo!();
+        delays_heap.peek()
     }
 }
