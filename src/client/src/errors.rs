@@ -12,6 +12,7 @@ pub enum SlackClientError {
     SystemError(SlackClientSystemError),
     ProtocolError(SlackClientProtocolError),
     SocketModeProtocolError(SlackClientSocketModeProtocolError),
+    RateLimitError(SlackRateLimitError),
 }
 
 impl SlackClientError {
@@ -32,6 +33,7 @@ impl Display for SlackClientError {
             SlackClientError::ProtocolError(ref err) => err.fmt(f),
             SlackClientError::SocketModeProtocolError(ref err) => err.fmt(f),
             SlackClientError::SystemError(ref err) => err.fmt(f),
+            SlackClientError::RateLimitError(ref err) => err.fmt(f),
         }
     }
 }
@@ -46,6 +48,7 @@ impl Error for SlackClientError {
             SlackClientError::ProtocolError(ref err) => Some(err),
             SlackClientError::SocketModeProtocolError(ref err) => Some(err),
             SlackClientError::SystemError(ref err) => Some(err),
+            SlackClientError::RateLimitError(ref err) => Some(err),
         }
     }
 }
@@ -163,3 +166,25 @@ impl Display for SlackClientSystemError {
 }
 
 impl std::error::Error for SlackClientSystemError {}
+
+#[derive(Debug, PartialEq, Clone, Builder)]
+pub struct SlackRateLimitError {
+    pub retry_after: Option<u64>,
+    pub code: Option<String>,
+    pub warnings: Option<Vec<String>>,
+    pub http_response_body: Option<String>,
+}
+
+impl Display for SlackRateLimitError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Slack API rate limit error: {}\nBody: '{}'. Retry after: `{}`",
+            SlackClientError::option_to_string(&self.code),
+            SlackClientError::option_to_string(&self.http_response_body),
+            SlackClientError::option_to_string(&self.retry_after),
+        )
+    }
+}
+
+impl Error for SlackRateLimitError {}

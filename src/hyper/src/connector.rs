@@ -152,36 +152,66 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
             .await
             .map_err(Self::map_http_error)?;
         let http_status = http_res.status();
+        let http_headers = http_res.headers().clone();
         let http_content_type = Self::http_response_content_type(&http_res);
         let http_body_str = Self::http_body_to_string(http_res)
             .map_err(Self::map_system_error)
             .await?;
+        let http_content_is_json = http_content_type.iter().all(|response_mime| {
+            response_mime.type_() == mime::APPLICATION && response_mime.subtype() == mime::JSON
+        });
 
         match http_status {
-            StatusCode::OK
-                if http_content_type.iter().all(|response_mime| {
-                    response_mime.type_() == mime::APPLICATION
-                        && response_mime.subtype() == mime::JSON
-                }) =>
-            {
+            StatusCode::OK if http_content_is_json => {
                 let slack_message: SlackEnvelopeMessage =
                     serde_json::from_str(http_body_str.as_str())
                         .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
-                if slack_message.error.is_none() {
-                    let decoded_body = serde_json::from_str(http_body_str.as_str())
-                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
-                    Ok(decoded_body)
-                } else {
-                    Err(SlackClientError::ApiError(
-                        SlackClientApiError::new(slack_message.error.unwrap())
+                match slack_message.error {
+                    None => {
+                        let decoded_body =
+                            serde_json::from_str(http_body_str.as_str()).map_err(|err| {
+                                Self::map_serde_error(err, Some(http_body_str.as_str()))
+                            })?;
+                        Ok(decoded_body)
+                    }
+                    Some(slack_error) => Err(SlackClientError::ApiError(
+                        SlackClientApiError::new(slack_error)
                             .opt_warnings(slack_message.warnings)
                             .with_http_response_body(http_body_str),
-                    ))
+                    )),
                 }
             }
-            StatusCode::OK => {
+            StatusCode::OK | StatusCode::NO_CONTENT => {
                 serde_json::from_str("{}").map_err(|err| Self::map_serde_error(err, Some("{}")))
             }
+            StatusCode::TOO_MANY_REQUESTS if http_content_is_json => {
+                let slack_message: SlackEnvelopeMessage =
+                    serde_json::from_str(http_body_str.as_str())
+                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
+
+                Err(SlackClientError::RateLimitError(
+                    SlackRateLimitError::new()
+                        .opt_retry_after(
+                            http_headers
+                                .get(hyper::header::RETRY_AFTER)
+                                .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
+                                .clone(),
+                        )
+                        .opt_code(slack_message.error)
+                        .opt_warnings(slack_message.warnings)
+                        .with_http_response_body(http_body_str),
+                ))
+            }
+            StatusCode::TOO_MANY_REQUESTS => Err(SlackClientError::RateLimitError(
+                SlackRateLimitError::new()
+                    .opt_retry_after(
+                        http_headers
+                            .get(hyper::header::RETRY_AFTER)
+                            .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
+                            .clone(),
+                    )
+                    .with_http_response_body(http_body_str),
+            )),
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )),
@@ -195,7 +225,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         rate_control_params: Option<&SlackApiMethodRateControlConfig>,
     ) -> ClientResult<RS>
     where
-        RS: for<'de> serde::de::Deserialize<'de>,
+        RS: for<'de> serde::de::Deserialize<'de> + Send,
     {
         match (self.tokio_rate_controller.as_ref(), rate_control_params) {
             (Some(rate_controller), Some(method_rate_params)) => {
@@ -217,9 +247,21 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     _ => self.send_http_request(request).await,
                 }
             }
-
-            (_, _) => self.send_http_request(request).await,
+            (Some(_), None) => self.send_http_request(request).await,
+            (None, _) => self.send_http_request(request).await,
         }
+    }
+
+    async fn retry_request_if_needed<RS>(
+        &self,
+        request: Request<Body>,
+        token: Option<&SlackApiToken>,
+        rate_control_params: Option<&SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
+    where
+        RS: for<'de> serde::de::Deserialize<'de> + Send,
+    {
+        todo!()
     }
 
     pub(crate) async fn decode_signed_response(
