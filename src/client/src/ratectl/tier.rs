@@ -15,7 +15,7 @@ lazy_static! {
         vec![
             (
                 SlackApiMethodRateTier::Tier1,
-                SlackApiRateControlLimit::new(1, std::time::Duration::from_secs(60))
+                SlackApiRateControlLimit::new(5, std::time::Duration::from_secs(60))
             ),
             (
                 SlackApiMethodRateTier::Tier2,

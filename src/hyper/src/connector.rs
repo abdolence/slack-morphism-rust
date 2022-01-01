@@ -236,10 +236,10 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         RS: for<'de> serde::de::Deserialize<'de> + Send,
     {
         match (self.tokio_rate_controller.as_ref(), rate_control_params) {
-            (Some(rate_controller), Some(method_rate_params)) => {
+            (Some(rate_controller), maybe_method_rate_params) => {
                 if let Some(duration) = rate_controller
                     .calc_throttle_delay(
-                        method_rate_params,
+                        maybe_method_rate_params,
                         token.and_then(|t| t.team_id.clone()),
                         delayed,
                     )
@@ -254,17 +254,6 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     }
                 }
 
-                self.retry_request_if_needed(
-                    rate_controller.clone(),
-                    self.send_http_request(request()?).await,
-                    retried,
-                    request,
-                    token,
-                    rate_control_params,
-                )
-                .await
-            }
-            (Some(rate_controller), None) => {
                 self.retry_request_if_needed(
                     rate_controller.clone(),
                     self.send_http_request(request()?).await,
@@ -298,7 +287,9 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     SlackClientError::RateLimitError(ref rate_error) => {
                         debug!(
                             "Rate limit error received: {}. Retrying: {}/{}",
-                            rate_error, retried, max_retries
+                            rate_error,
+                            retried + 1,
+                            max_retries
                         );
 
                         self.send_rate_controlled_request(

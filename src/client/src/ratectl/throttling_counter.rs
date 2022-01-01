@@ -5,6 +5,7 @@ use std::time::{Duration, Instant};
 pub struct ThrottlingCounter {
     capacity: i64,
     max_capacity: usize,
+    last_arrived: Instant,
     last_updated: Instant,
     rate_limit_in_millis: u64,
     delay: Duration,
@@ -15,6 +16,7 @@ impl ThrottlingCounter {
         Self {
             capacity: max_capacity as i64,
             max_capacity,
+            last_arrived: Instant::now(),
             last_updated: Instant::now(),
             rate_limit_in_millis,
             delay: Duration::from_millis(0),
@@ -23,19 +25,19 @@ impl ThrottlingCounter {
 
     pub fn update(&self, now: Instant) -> Self {
         let time_elapsed_millis = now
-            .checked_duration_since(self.last_updated)
+            .checked_duration_since(self.last_arrived)
             .unwrap_or_else(|| Duration::from_millis(0))
             .as_millis() as u64;
 
-        let (arrived, new_last_updated) = {
+        let (arrived, new_last_arrived) = {
             if time_elapsed_millis >= self.rate_limit_in_millis {
                 let arrived_in_time = time_elapsed_millis / self.rate_limit_in_millis;
-                let new_last_updated = self.last_updated.add(Duration::from_millis(
+                let new_last_updated = self.last_arrived.add(Duration::from_millis(
                     arrived_in_time * self.rate_limit_in_millis,
                 ));
                 (arrived_in_time as usize, new_last_updated)
             } else {
-                (0usize, self.last_updated)
+                (0usize, self.last_arrived)
             }
         };
 
@@ -45,24 +47,33 @@ impl ThrottlingCounter {
         if new_available_capacity > 0 {
             Self {
                 capacity: new_available_capacity - 1,
-                last_updated: new_last_updated,
+                last_arrived: new_last_arrived,
+                last_updated: now,
                 delay: Duration::from_millis(0),
                 ..self.clone()
             }
         } else {
-            let updated_time_elapsed_in_millis = now
-                .checked_duration_since(new_last_updated)
-                .map_or(0u64, |d| d.as_millis() as u64);
-
             let updated_capacity = new_available_capacity - 1;
 
-            let delay_in_millis = self.rate_limit_in_millis - updated_time_elapsed_in_millis;
-            let delay = Duration::from_millis(delay_in_millis);
+            let base_delay_in_millis = now
+                .checked_duration_since(self.last_updated)
+                .map_or(0u64, |d| d.as_millis() as u64);
+
+            let delay_penalty = (self.rate_limit_in_millis as f64 * self.capacity.abs() as f64
+                / self.max_capacity as f64) as u64;
+
+            let delay_in_millis = if base_delay_in_millis < self.rate_limit_in_millis {
+                self.rate_limit_in_millis - base_delay_in_millis
+            } else {
+                0
+            };
+            let delay_with_penalty = Duration::from_millis(delay_in_millis + delay_penalty);
 
             Self {
                 capacity: updated_capacity,
-                last_updated: now.add(delay),
-                delay,
+                last_arrived: new_last_arrived,
+                last_updated: now,
+                delay: delay_with_penalty,
                 ..self.clone()
             }
         }
@@ -84,7 +95,7 @@ fn check_decreased() {
     let counter = ThrottlingCounter::new(rate_limit_capacity, rate_limit_in_ms);
     let updated_counter = counter.update(now.add(Duration::from_millis(rate_limit_in_ms - 1)));
 
-    assert_eq!(updated_counter.last_updated, counter.last_updated);
+    assert_eq!(updated_counter.last_arrived, counter.last_arrived);
     assert_eq!(updated_counter.delay, Duration::from_millis(0));
     assert_eq!(updated_counter.capacity, counter.capacity - 1);
 }
