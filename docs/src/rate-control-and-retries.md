@@ -32,7 +32,10 @@ let session = client.open_session(&token);
 
 ## Rate control params
 
-You can also customise rate control params using `SlackApiRateControlConfig`.
+You can also customise rate control params using `SlackApiRateControlConfig`:
+- To global rate limit all APIs and for all teams use:  `SlackApiRateControlConfig.global_max_rate_limit`. Default is not limited.
+- To rate limit all APIs and each team separately: `SlackApiRateControlConfig.team_max_rate_limit`. Default is not limited.
+- To change default tiers limits use `SlackApiRateControlConfig.tiers_limits`. Defaults are following the Slack recommendations (almost, there are slight differences to optimize bursting for Tier1).
 
 ## Enable automatic retry for rate exceeded requests
 
