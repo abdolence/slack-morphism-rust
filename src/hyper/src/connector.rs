@@ -197,8 +197,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                             http_headers
                                 .get(hyper::header::RETRY_AFTER)
                                 .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
-                                .map(|retry_after| Duration::from_secs(retry_after))
-                                .clone(),
+                                .map(Duration::from_secs),
                         )
                         .opt_code(slack_message.error)
                         .opt_warnings(slack_message.warnings)
@@ -211,8 +210,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                         http_headers
                             .get(hyper::header::RETRY_AFTER)
                             .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
-                            .map(|retry_after| Duration::from_secs(retry_after))
-                            .clone(),
+                            .map(Duration::from_secs),
                     )
                     .with_http_response_body(http_body_str),
             )),

@@ -39,7 +39,7 @@ impl SlackRateThrottler {
             .into_iter()
             .for_each(|updated_counter| {
                 if !updated_counter.delay().is_zero() {
-                    delays_heap.push(updated_counter.delay().clone())
+                    delays_heap.push(*updated_counter.delay())
                 }
                 self.global_max_rate_limit_counter = Some(updated_counter);
             });
@@ -49,7 +49,7 @@ impl SlackRateThrottler {
                 let team_limits = self
                     .rate_limit_per_team
                     .entry(team_id)
-                    .or_insert(SlackTeamLimits::new(&self.config));
+                    .or_insert_with(|| SlackTeamLimits::new(&self.config));
                 team_limits.updated = now;
 
                 team_limits
@@ -59,46 +59,37 @@ impl SlackRateThrottler {
                     .into_iter()
                     .for_each(|updated_counter| {
                         if !updated_counter.delay().is_zero() {
-                            delays_heap.push(updated_counter.delay().clone())
+                            delays_heap.push(*updated_counter.delay())
                         }
                         team_limits.team_limit_counter = Some(updated_counter);
                     });
 
-                match method_rate_ctl.special_rate_limit {
-                    Some(ref special_rate_limit) => {
-                        let special_team_limit = team_limits
-                            .special_limits
-                            .entry(special_rate_limit.key.clone())
-                            .or_insert(special_rate_limit.limit.to_throttling_counter());
+                if let Some(ref special_rate_limit) = method_rate_ctl.special_rate_limit {
+                    let special_team_limit = team_limits
+                        .special_limits
+                        .entry(special_rate_limit.key.clone())
+                        .or_insert_with(|| special_rate_limit.limit.to_throttling_counter());
 
-                        *special_team_limit = special_team_limit.update(now);
+                    *special_team_limit = special_team_limit.update(now);
 
-                        if !special_team_limit.delay().is_zero() {
-                            delays_heap.push(special_team_limit.delay().clone())
-                        }
+                    if !special_team_limit.delay().is_zero() {
+                        delays_heap.push(*special_team_limit.delay())
                     }
-                    None => {} // no need for special rate limiting
                 }
 
-                match method_rate_ctl.tier {
-                    Some(ref tier) => {
-                        match self.config.tiers_limits.get(tier) {
-                            Some(tier_limit) => {
-                                let tier_team_limit = team_limits
-                                    .tier_limits
-                                    .entry(tier.clone())
-                                    .or_insert(tier_limit.to_throttling_counter());
+                if let Some(ref tier) = method_rate_ctl.tier {
+                    if let Some(tier_limit) = self.config.tiers_limits.get(tier) {
+                        let tier_team_limit = team_limits
+                            .tier_limits
+                            .entry(tier.clone())
+                            .or_insert_with(|| tier_limit.to_throttling_counter());
 
-                                *tier_team_limit = tier_team_limit.update(now);
+                        *tier_team_limit = tier_team_limit.update(now);
 
-                                if !tier_team_limit.delay().is_zero() {
-                                    delays_heap.push(tier_team_limit.delay().clone())
-                                }
-                            }
-                            None => {} // no config for tier is specified
-                        };
+                        if !tier_team_limit.delay().is_zero() {
+                            delays_heap.push(*tier_team_limit.delay())
+                        }
                     }
-                    None => {} // no need for tier rate limiting
                 }
 
                 // Clean up old teams limits
@@ -106,20 +97,17 @@ impl SlackRateThrottler {
                     .retain(|_, v| v.updated.duration_since(now).as_secs() < 3600);
             }
             None => {
-                match method_rate_ctl.special_rate_limit {
-                    Some(ref special_method_limits) => {
-                        let special_team_limit = self
-                            .global_all_team_special_limits
-                            .entry(special_method_limits.key.clone())
-                            .or_insert(special_method_limits.limit.to_throttling_counter());
+                if let Some(ref special_method_limits) = method_rate_ctl.special_rate_limit {
+                    let special_team_limit = self
+                        .global_all_team_special_limits
+                        .entry(special_method_limits.key.clone())
+                        .or_insert_with(|| special_method_limits.limit.to_throttling_counter());
 
-                        *special_team_limit = special_team_limit.update(now);
+                    *special_team_limit = special_team_limit.update(now);
 
-                        if !special_team_limit.delay().is_zero() {
-                            delays_heap.push(special_team_limit.delay().clone())
-                        }
+                    if !special_team_limit.delay().is_zero() {
+                        delays_heap.push(*special_team_limit.delay())
                     }
-                    None => {} // Nothing to do if team id isn't specified
                 }
             }
         }
