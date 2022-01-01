@@ -2,8 +2,10 @@ use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::clients_manager::*;
 use crate::socket_mode::clients_manager_listener::SlackSocketModeClientsManagerListener;
 use crate::*;
-use futures::channel::mpsc::channel;
-use futures::StreamExt;
+use log::debug;
+use signal_hook::consts::TERM_SIGNALS;
+use signal_hook::iterator::exfiltrator::WithOrigin;
+use signal_hook::iterator::SignalsInfo;
 use std::sync::Arc;
 
 pub struct SlackClientSocketModeListener<SCHC>
@@ -63,28 +65,26 @@ where
     }
 
     pub async fn start(&self) {
+        debug!("Starting all WSS clients");
         self.clients_manager.start().await;
     }
 
     pub async fn shutdown(&self) {
+        debug!("Shutting down all WSS clients");
         self.clients_manager.shutdown().await;
     }
 
     pub async fn serve(&self) -> i32 {
-        let (mut sender, mut receiver) = channel(1);
-
         self.start().await;
 
-        ctrlc::set_handler(move || sender.try_send(1).unwrap())
-            .expect("Error setting Ctrl-C handler");
+        let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
 
-        let result = receiver
-            .next()
-            .await
-            .expect("Could not receive exit from channel.");
+        for info in &mut signals {
+            debug!("Received a signal: {:?}. Terminating...", info);
+            break;
+        }
 
         self.shutdown().await;
-
-        result
+        0
     }
 }
