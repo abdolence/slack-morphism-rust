@@ -79,9 +79,8 @@ where
 
         let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
 
-        for info in &mut signals {
+        if let Some(info) = (&mut signals).into_iter().next() {
             debug!("Received a signal: {:?}. Terminating...", info);
-            break;
         }
 
         self.shutdown().await;
