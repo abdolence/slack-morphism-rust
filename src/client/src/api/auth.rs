@@ -6,8 +6,10 @@ use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
+use lazy_static::lazy_static;
 use slack_morphism_models::*;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
@@ -22,9 +24,20 @@ where
             .http_get(
                 "auth.test",
                 &crate::client::SLACK_HTTP_EMPTY_GET_PARAMS.clone(),
+                Some(&AUTH_TEST_SPECIAL_LIMIT_RATE_CTL),
             )
             .await
     }
+}
+
+lazy_static! {
+    pub static ref AUTH_TEST_SPECIAL_LIMIT_RATE_CTL: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_special_rate_limit(
+            SlackApiRateControlSpecialLimit::new(
+                "auth.test".into(),
+                SlackApiRateControlLimit::new(100, std::time::Duration::from_secs(1))
+            )
+        );
 }
 
 #[skip_serializing_none]

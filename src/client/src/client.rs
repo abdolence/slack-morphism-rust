@@ -4,6 +4,7 @@ use std::sync::Arc;
 use crate::token::*;
 
 use crate::errors::SlackClientError;
+use crate::ratectl::SlackApiMethodRateControlConfig;
 use futures_util::future::BoxFuture;
 use lazy_static::*;
 use slack_morphism_models::{SlackClientId, SlackClientSecret};
@@ -47,6 +48,7 @@ pub trait SlackClientHttpConnector {
         &'a self,
         full_uri: Url,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + 'a + Send;
@@ -65,6 +67,7 @@ pub trait SlackClientHttpConnector {
         method_relative_uri: &str,
         params: &'p PT,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
@@ -76,7 +79,7 @@ pub trait SlackClientHttpConnector {
             params,
         );
 
-        self.http_get_uri(full_uri, token)
+        self.http_get_uri(full_uri, token, rate_control_params)
     }
 
     fn http_get<'a, 'p, RS, PT, TS>(
@@ -89,7 +92,7 @@ pub trait SlackClientHttpConnector {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p + 'a + Send,
     {
-        self.http_get_token(method_relative_uri, params, None)
+        self.http_get_token(method_relative_uri, params, None, None)
     }
 
     fn http_post_uri<'a, RQ, RS>(
@@ -97,6 +100,7 @@ pub trait SlackClientHttpConnector {
         full_uri: Url,
         request_body: &'a RQ,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RQ: serde::ser::Serialize + Send + Sync,
@@ -107,6 +111,7 @@ pub trait SlackClientHttpConnector {
         method_relative_uri: &str,
         request: &'a RQ,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RQ: serde::ser::Serialize + Send + Sync,
@@ -116,7 +121,7 @@ pub trait SlackClientHttpConnector {
             &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
         );
 
-        self.http_post_uri(full_uri, request, token)
+        self.http_post_uri(full_uri, request, token, rate_control_params)
     }
 
     fn http_post<'a, RQ, RS>(
@@ -128,7 +133,7 @@ pub trait SlackClientHttpConnector {
         RQ: serde::ser::Serialize + Send + Sync,
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
     {
-        self.http_post_token(method_relative_uri, request, None)
+        self.http_post_token(method_relative_uri, request, None, None)
     }
 }
 
@@ -218,14 +223,18 @@ impl<'a, SCHC> SlackClientHttpSessionApi<'a, SCHC>
 where
     SCHC: SlackClientHttpConnector + Send,
 {
-    pub async fn http_get_uri<RS, PT, TS>(&self, full_uri: Url) -> ClientResult<RS>
+    pub async fn http_get_uri<RS, PT, TS>(
+        &self,
+        full_uri: Url,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send,
     {
         self.client
             .http_api
             .connector
-            .http_get_uri(full_uri, Some(self.token))
+            .http_get_uri(full_uri, Some(self.token), rate_control_params)
             .await
     }
 
@@ -233,6 +242,7 @@ where
         &self,
         method_relative_uri: &str,
         params: &'p PT,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send,
@@ -242,7 +252,12 @@ where
         self.client
             .http_api
             .connector
-            .http_get_token(method_relative_uri, params, Some(self.token))
+            .http_get_token(
+                method_relative_uri,
+                params,
+                Some(self.token),
+                rate_control_params,
+            )
             .await
     }
 
@@ -250,6 +265,7 @@ where
         &self,
         method_relative_uri: &str,
         request: &RQ,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> ClientResult<RS>
     where
         RQ: serde::ser::Serialize + Send + Sync,
@@ -258,11 +274,21 @@ where
         self.client
             .http_api
             .connector
-            .http_post_token(method_relative_uri, &request, Some(self.token))
+            .http_post_token(
+                method_relative_uri,
+                &request,
+                Some(self.token),
+                rate_control_params,
+            )
             .await
     }
 
-    pub async fn http_post_uri<RQ, RS>(&self, full_uri: Url, request: &RQ) -> ClientResult<RS>
+    pub async fn http_post_uri<RQ, RS>(
+        &self,
+        full_uri: Url,
+        request: &RQ,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
     where
         RQ: serde::ser::Serialize + Send + Sync,
         RS: for<'de> serde::de::Deserialize<'de> + Send,
@@ -270,7 +296,7 @@ where
         self.client
             .http_api
             .connector
-            .http_post_uri(full_uri, &request, Some(self.token))
+            .http_post_uri(full_uri, &request, Some(self.token), rate_control_params)
             .await
     }
 }

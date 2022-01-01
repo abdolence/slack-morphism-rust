@@ -7,10 +7,12 @@ use rvstruct::*;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
+use crate::ratectl::*;
 use crate::scroller::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
 use futures::future::{BoxFuture, FutureExt};
+use lazy_static::lazy_static;
 use slack_morphism_models::*;
 use std::collections::HashMap;
 
@@ -25,7 +27,9 @@ where
         &self,
         req: &SlackApiChatDeleteRequest,
     ) -> ClientResult<SlackApiChatDeleteResponse> {
-        self.http_session_api.http_post("chat.delete", req).await
+        self.http_session_api
+            .http_post("chat.delete", req, Some(&SLACK_TIER3_METHOD_CONFIG))
+            .await
     }
 
     ///
@@ -36,7 +40,11 @@ where
         req: &SlackApiChatDeleteScheduledMessageRequest,
     ) -> ClientResult<SlackApiChatDeleteScheduledMessageResponse> {
         self.http_session_api
-            .http_post("chat.deleteScheduledMessage", req)
+            .http_post(
+                "chat.deleteScheduledMessage",
+                req,
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -54,6 +62,7 @@ where
                     ("channel", Some(&req.channel.value())),
                     ("message_ts", Some(&req.message_ts.value())),
                 ],
+                Some(&CHAT_GET_PERMLINK_SPECIAL_LIMIT_RATE_CTL),
             )
             .await
     }
@@ -66,7 +75,7 @@ where
         req: &SlackApiChatPostEphemeralRequest,
     ) -> ClientResult<SlackApiChatPostEphemeralResponse> {
         self.http_session_api
-            .http_post("chat.postEphemeral", req)
+            .http_post("chat.postEphemeral", req, Some(&SLACK_TIER4_METHOD_CONFIG))
             .await
     }
 
@@ -78,7 +87,11 @@ where
         req: &SlackApiChatPostMessageRequest,
     ) -> ClientResult<SlackApiChatPostMessageResponse> {
         self.http_session_api
-            .http_post("chat.postMessage", req)
+            .http_post(
+                "chat.postMessage",
+                req,
+                Some(&CHAT_POST_MESSAGE_SPECIAL_LIMIT_RATE_CTL),
+            )
             .await
     }
 
@@ -90,7 +103,11 @@ where
         req: &SlackApiChatScheduleMessageRequest,
     ) -> ClientResult<SlackApiChatScheduleMessageResponse> {
         self.http_session_api
-            .http_post("chat.scheduleMessage", req)
+            .http_post(
+                "chat.scheduleMessage",
+                req,
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 
@@ -101,7 +118,9 @@ where
         &self,
         req: &SlackApiChatUnfurlRequest,
     ) -> ClientResult<SlackApiChatUnfurlResponse> {
-        self.http_session_api.http_post("chat.unfurl", req).await
+        self.http_session_api
+            .http_post("chat.unfurl", req, Some(&SLACK_TIER3_METHOD_CONFIG))
+            .await
     }
 
     ///
@@ -111,7 +130,9 @@ where
         &self,
         req: &SlackApiChatUpdateRequest,
     ) -> ClientResult<SlackApiChatUpdateResponse> {
-        self.http_session_api.http_post("chat.update", req).await
+        self.http_session_api
+            .http_post("chat.update", req, Some(&SLACK_TIER3_METHOD_CONFIG))
+            .await
     }
 
     ///
@@ -122,7 +143,11 @@ where
         req: &SlackApiChatScheduledMessagesListRequest,
     ) -> ClientResult<SlackApiChatScheduledMessagesListResponse> {
         self.http_session_api
-            .http_post("chat.scheduledMessages.list", req)
+            .http_post(
+                "chat.scheduledMessages.list",
+                req,
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
             .await
     }
 }
@@ -341,4 +366,21 @@ impl SlackApiScrollableResponse for SlackApiChatScheduledMessagesListResponse {
     fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {
         Box::new(self.scheduled_messages.iter())
     }
+}
+
+lazy_static! {
+    pub static ref CHAT_GET_PERMLINK_SPECIAL_LIMIT_RATE_CTL: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_special_rate_limit(
+            SlackApiRateControlSpecialLimit::new(
+                "chat.getPermalink".into(),
+                SlackApiRateControlLimit::new(100, std::time::Duration::from_secs(1))
+            )
+        );
+    pub static ref CHAT_POST_MESSAGE_SPECIAL_LIMIT_RATE_CTL: SlackApiMethodRateControlConfig =
+        SlackApiMethodRateControlConfig::new().with_special_rate_limit(
+            SlackApiRateControlSpecialLimit::new(
+                "chat.postMessage".into(),
+                SlackApiRateControlLimit::new(1, std::time::Duration::from_secs(1))
+            )
+        );
 }

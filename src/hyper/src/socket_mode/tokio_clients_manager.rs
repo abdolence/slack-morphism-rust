@@ -71,33 +71,6 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         Ok(())
     }
 
-    async fn start(&self) {
-        let clients_read = self.active_clients.read().await;
-        let mut clients_to_await = vec![];
-        for client_id_value in 0..clients_read.len() {
-            let client = &clients_read[client_id_value];
-            clients_to_await.push(
-                client.start(
-                    client_id_value as u64 * client.identity.config.initial_backoff_in_seconds,
-                ),
-            );
-        }
-
-        future::join_all(clients_to_await).await;
-    }
-
-    async fn shutdown(&self) {
-        let mut drained_clients: Vec<SlackTungsteniteWssClient<SlackClientHyperConnector<H>>> = {
-            let mut clients_write = self.active_clients.write().await;
-            let existing_vec = clients_write.drain(..).collect();
-            existing_vec
-        };
-
-        for client in drained_clients.iter_mut() {
-            client.shutdown_channel().await;
-        }
-    }
-
     async fn restart_client(&self, client_id: &SlackSocketModeWssClientId) {
         debug!("[{}] Removing client", client_id.to_string());
 
@@ -138,6 +111,33 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
                 "[{}] No need to reconnect for client",
                 client_id.to_string()
             )
+        }
+    }
+
+    async fn start(&self) {
+        let clients_read = self.active_clients.read().await;
+        let mut clients_to_await = vec![];
+        for client_id_value in 0..clients_read.len() {
+            let client = &clients_read[client_id_value];
+            clients_to_await.push(
+                client.start(
+                    client_id_value as u64 * client.identity.config.initial_backoff_in_seconds,
+                ),
+            );
+        }
+
+        future::join_all(clients_to_await).await;
+    }
+
+    async fn shutdown(&self) {
+        let mut drained_clients: Vec<SlackTungsteniteWssClient<SlackClientHyperConnector<H>>> = {
+            let mut clients_write = self.active_clients.write().await;
+            let existing_vec = clients_write.drain(..).collect();
+            existing_vec
+        };
+
+        for client in drained_clients.iter_mut() {
+            client.shutdown_channel().await;
         }
     }
 }

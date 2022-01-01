@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::collections::HashMap;
 
+use crate::ratectl::*;
 use crate::{ClientResult, SlackClientHttpApiUri, SlackClientHttpConnector, SlackClientSession};
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
@@ -21,7 +22,9 @@ where
             &SlackClientHttpApiUri::create_method_uri_path("api.test"),
             &vec![("foo", req.foo.as_ref()), ("error", req.error.as_ref())],
         );
-        self.http_session_api.http_post_uri(full_uri, &req).await
+        self.http_session_api
+            .http_post_uri(full_uri, &req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .await
     }
 }
 

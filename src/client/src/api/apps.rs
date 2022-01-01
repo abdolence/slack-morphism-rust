@@ -8,6 +8,7 @@ use serde_with::skip_serializing_none;
 
 use slack_morphism_models::*;
 
+use crate::ratectl::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
 
@@ -23,7 +24,11 @@ where
         req: &SlackApiAppsConnectionOpenRequest,
     ) -> ClientResult<SlackApiAppsConnectionOpenResponse> {
         self.http_session_api
-            .http_post("apps.connections.open", req)
+            .http_post(
+                "apps.connections.open",
+                req,
+                Some(&SLACK_TIER1_METHOD_CONFIG),
+            )
             .await
     }
 }

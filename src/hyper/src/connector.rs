@@ -1,3 +1,5 @@
+use crate::ratectl::SlackTokioRateController;
+use async_recursion::async_recursion;
 use bytes::Buf;
 use futures::future::TryFutureExt;
 use futures::future::{BoxFuture, FutureExt};
@@ -6,20 +8,25 @@ use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
 use hyper_rustls::HttpsConnector;
+use log::*;
 use mime::Mime;
 use rvstruct::ValueStruct;
 use slack_morphism::errors::*;
+use slack_morphism::prelude::{SlackApiMethodRateControlConfig, SlackApiRateControlConfig};
 use slack_morphism::signature_verifier::SlackEventAbsentSignatureError;
 use slack_morphism::signature_verifier::SlackEventSignatureVerifier;
 use slack_morphism::*;
 use slack_morphism_models::{SlackClientId, SlackClientSecret};
 use std::collections::HashMap;
 use std::io::Read;
+use std::sync::Arc;
+use std::time::Duration;
 use url::Url;
 
 #[derive(Clone, Debug)]
 pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> {
     hyper_connector: Client<H>,
+    tokio_rate_controller: Option<Arc<SlackTokioRateController>>,
 }
 
 pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HttpsConnector<HttpConnector>>;
@@ -47,6 +54,16 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     pub fn with_connector(connector: H) -> Self {
         Self {
             hyper_connector: Client::builder().build::<_, hyper::Body>(connector),
+            tokio_rate_controller: None,
+        }
+    }
+
+    pub fn with_rate_control(self, rate_control_config: SlackApiRateControlConfig) -> Self {
+        Self {
+            tokio_rate_controller: Some(Arc::new(SlackTokioRateController::new(
+                rate_control_config,
+            ))),
+            ..self
         }
     }
 
@@ -127,7 +144,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         })
     }
 
-    pub(crate) async fn send_webapi_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
+    async fn send_http_request<RS>(&self, request: Request<Body>) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
@@ -137,39 +154,156 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
             .await
             .map_err(Self::map_http_error)?;
         let http_status = http_res.status();
+        let http_headers = http_res.headers().clone();
         let http_content_type = Self::http_response_content_type(&http_res);
         let http_body_str = Self::http_body_to_string(http_res)
             .map_err(Self::map_system_error)
             .await?;
+        let http_content_is_json = http_content_type.iter().all(|response_mime| {
+            response_mime.type_() == mime::APPLICATION && response_mime.subtype() == mime::JSON
+        });
 
         match http_status {
-            StatusCode::OK
-                if http_content_type.iter().all(|response_mime| {
-                    response_mime.type_() == mime::APPLICATION
-                        && response_mime.subtype() == mime::JSON
-                }) =>
-            {
+            StatusCode::OK if http_content_is_json => {
                 let slack_message: SlackEnvelopeMessage =
                     serde_json::from_str(http_body_str.as_str())
                         .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
-                if slack_message.error.is_none() {
-                    let decoded_body = serde_json::from_str(http_body_str.as_str())
-                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
-                    Ok(decoded_body)
-                } else {
-                    Err(SlackClientError::ApiError(
-                        SlackClientApiError::new(slack_message.error.unwrap())
+                match slack_message.error {
+                    None => {
+                        let decoded_body =
+                            serde_json::from_str(http_body_str.as_str()).map_err(|err| {
+                                Self::map_serde_error(err, Some(http_body_str.as_str()))
+                            })?;
+                        Ok(decoded_body)
+                    }
+                    Some(slack_error) => Err(SlackClientError::ApiError(
+                        SlackClientApiError::new(slack_error)
                             .opt_warnings(slack_message.warnings)
                             .with_http_response_body(http_body_str),
-                    ))
+                    )),
                 }
             }
-            StatusCode::OK => {
+            StatusCode::OK | StatusCode::NO_CONTENT => {
                 serde_json::from_str("{}").map_err(|err| Self::map_serde_error(err, Some("{}")))
             }
+            StatusCode::TOO_MANY_REQUESTS if http_content_is_json => {
+                let slack_message: SlackEnvelopeMessage =
+                    serde_json::from_str(http_body_str.as_str())
+                        .map_err(|err| Self::map_serde_error(err, Some(http_body_str.as_str())))?;
+
+                Err(SlackClientError::RateLimitError(
+                    SlackRateLimitError::new()
+                        .opt_retry_after(
+                            http_headers
+                                .get(hyper::header::RETRY_AFTER)
+                                .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
+                                .map(Duration::from_secs),
+                        )
+                        .opt_code(slack_message.error)
+                        .opt_warnings(slack_message.warnings)
+                        .with_http_response_body(http_body_str),
+                ))
+            }
+            StatusCode::TOO_MANY_REQUESTS => Err(SlackClientError::RateLimitError(
+                SlackRateLimitError::new()
+                    .opt_retry_after(
+                        http_headers
+                            .get(hyper::header::RETRY_AFTER)
+                            .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
+                            .map(Duration::from_secs),
+                    )
+                    .with_http_response_body(http_body_str),
+            )),
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )),
+        }
+    }
+
+    #[async_recursion]
+    async fn send_rate_controlled_request<'a, R, RS>(
+        &'a self,
+        request: R,
+        token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
+        delayed: Option<Duration>,
+        retried: usize,
+    ) -> ClientResult<RS>
+    where
+        R: Fn() -> ClientResult<Request<Body>> + Send + Sync,
+        RS: for<'de> serde::de::Deserialize<'de> + Send,
+    {
+        match (self.tokio_rate_controller.as_ref(), rate_control_params) {
+            (Some(rate_controller), maybe_method_rate_params) => {
+                if let Some(duration) = rate_controller
+                    .calc_throttle_delay(
+                        maybe_method_rate_params,
+                        token.and_then(|t| t.team_id.clone()),
+                        delayed,
+                    )
+                    .await
+                {
+                    if !duration.is_zero() {
+                        debug!("Slack throttler postponed request for {:?}", duration);
+                        let mut interval = tokio::time::interval(duration);
+
+                        interval.tick().await;
+                        interval.tick().await;
+                    }
+                }
+
+                self.retry_request_if_needed(
+                    rate_controller.clone(),
+                    self.send_http_request(request()?).await,
+                    retried,
+                    request,
+                    token,
+                    rate_control_params,
+                )
+                .await
+            }
+            (None, _) => self.send_http_request(request()?).await,
+        }
+    }
+
+    async fn retry_request_if_needed<R, RS>(
+        &self,
+        rate_controller: Arc<SlackTokioRateController>,
+        result: ClientResult<RS>,
+        retried: usize,
+        request: R,
+        token: Option<&SlackApiToken>,
+        rate_control_params: Option<&SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
+    where
+        R: Fn() -> ClientResult<Request<Body>> + Send + Sync,
+        RS: for<'de> serde::de::Deserialize<'de> + Send,
+    {
+        match result {
+            Err(err) => match rate_controller.config.max_retries {
+                Some(max_retries) if max_retries > retried => match err {
+                    SlackClientError::RateLimitError(ref rate_error) => {
+                        debug!(
+                            "Rate limit error received: {}. Retrying: {}/{}",
+                            rate_error,
+                            retried + 1,
+                            max_retries
+                        );
+
+                        self.send_rate_controlled_request(
+                            request,
+                            token,
+                            rate_control_params,
+                            rate_error.retry_after,
+                            retried + 1,
+                        )
+                        .await
+                    }
+                    _ => Err(err),
+                },
+                _ => Err(err),
+            },
+            Ok(result) => Ok(result),
         }
     }
 
@@ -236,20 +370,28 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         &'a self,
         full_uri: Url,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send,
     {
         async move {
-            let base_http_request = Self::create_http_request(full_uri, hyper::http::Method::GET);
-
-            let http_request = Self::setup_token_auth_header(base_http_request, token);
-
             let body = self
-                .send_webapi_request(
-                    http_request
-                        .body(Body::empty())
-                        .map_err(Self::map_hyper_http_error)?,
+                .send_rate_controlled_request(
+                    || {
+                        let base_http_request =
+                            Self::create_http_request(full_uri.clone(), hyper::http::Method::GET);
+
+                        let http_request = Self::setup_token_auth_header(base_http_request, token);
+
+                        http_request
+                            .body(Body::empty())
+                            .map_err(Self::map_hyper_http_error)
+                    },
+                    token,
+                    rate_control_params,
+                    None,
+                    0,
                 )
                 .await?;
 
@@ -268,15 +410,22 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + 'a + Send,
     {
         async move {
-            let http_request = Self::setup_basic_auth_header(
-                Self::create_http_request(full_uri, hyper::http::Method::GET),
-                client_id.value(),
-                client_secret.value(),
+            self.send_rate_controlled_request(
+                || {
+                    Self::setup_basic_auth_header(
+                        Self::create_http_request(full_uri.clone(), hyper::http::Method::GET),
+                        client_id.value(),
+                        client_secret.value(),
+                    )
+                    .body(Body::empty())
+                    .map_err(Self::map_hyper_http_error)
+                },
+                None,
+                None,
+                None,
+                0,
             )
-            .body(Body::empty())
-            .map_err(Self::map_hyper_http_error)?;
-
-            self.send_webapi_request(http_request).await
+            .await
         }
         .boxed()
     }
@@ -286,6 +435,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         full_uri: Url,
         request_body: &'a RQ,
         token: Option<&'a SlackApiToken>,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RQ: serde::ser::Serialize + Send + Sync,
@@ -295,16 +445,23 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             let post_json = serde_json::to_string(&request_body)
                 .map_err(|err| Self::map_serde_error(err, None))?;
 
-            let base_http_request = Self::create_http_request(full_uri, hyper::http::Method::POST)
-                .header("content-type", "application/json; charset=utf-8");
-
-            let http_request = Self::setup_token_auth_header(base_http_request, token);
-
             let response_body = self
-                .send_webapi_request(
-                    http_request
-                        .body(post_json.into())
-                        .map_err(Self::map_hyper_http_error)?,
+                .send_rate_controlled_request(
+                    || {
+                        let base_http_request =
+                            Self::create_http_request(full_uri.clone(), hyper::http::Method::POST)
+                                .header("content-type", "application/json; charset=utf-8");
+
+                        let http_request = Self::setup_token_auth_header(base_http_request, token);
+
+                        http_request
+                            .body(post_json.clone().into())
+                            .map_err(Self::map_hyper_http_error)
+                    },
+                    token,
+                    rate_control_params,
+                    None,
+                    0,
                 )
                 .await?;
 
