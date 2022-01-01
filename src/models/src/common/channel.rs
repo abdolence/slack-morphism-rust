@@ -40,7 +40,7 @@ pub type SlackChannelPurposeInfo = SlackChannelDetails;
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackChannelDetails {
     pub value: String,
-    pub creator: Option<String>,
+    pub creator: Option<SlackUserId>,
     pub last_set: Option<SlackDateTime>,
 }
 
