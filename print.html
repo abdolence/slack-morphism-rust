@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.3.</strong> Hyper connection types and proxy support</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.3.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.4.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -413,6 +413,48 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
         SlackClientHyperConnector::with_connector(proxy)
     );
     
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rate-control-throttling-and-retrying-slack-api-method-requests"><a class="header" href="#rate-control-throttling-and-retrying-slack-api-method-requests">Rate control, throttling and retrying Slack API method requests</a></h1>
+<h2 id="enable-rate-control"><a class="header" href="#enable-rate-control">Enable rate control</a></h2>
+<p>Slack API defines <a href="https://api.slack.com/docs/rate-limits">rate limits</a> to which all of your applications must follow.</p>
+<p>By default, throttler <em>isn't</em> enabled, so you should enable it explicitly:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+use slack_morphism_hyper::*;
+
+let client = SlackClient::new(
+    SlackClientHyperConnector::new()
+        .with_rate_control(
+            SlackApiRateControlConfig::new()
+        )
+);
+    
+</code></pre>
+<p>The example above creates a Slack API Client that follows the official rate limits from Slack.
+Because the Slack rate limits apply per workspaces (separately),
+to use throttling and limits properly you <em>have to specify</em> team id in tokens:</p>
+<pre><code>let token_value: SlackApiTokenValue = config_env_var(&quot;SLACK_TEST_TOKEN&quot;)?.into();
+let team_id: SlackTeamId = config_env_var(&quot;SLACK_TEST_TEAM_ID&quot;)?.into();
+let token: SlackApiToken = SlackApiToken::new(token_value).with_team_id(team_id);
+
+let session = client.open_session(&amp;token);
+</code></pre>
+<h2 id="rate-control-params"><a class="header" href="#rate-control-params">Rate control params</a></h2>
+<p>You can also customise rate control params using <code>SlackApiRateControlConfig</code>:</p>
+<ul>
+<li>To global rate limit all APIs and for all teams use:  <code>SlackApiRateControlConfig.global_max_rate_limit</code>. Default is not limited.</li>
+<li>To rate limit all APIs and each team separately: <code>SlackApiRateControlConfig.team_max_rate_limit</code>. Default is not limited.</li>
+<li>To change default tiers limits use <code>SlackApiRateControlConfig.tiers_limits</code>. Defaults are following the Slack recommendations (almost, there are slight differences to optimize bursting for Tier1).</li>
+</ul>
+<h2 id="enable-automatic-retry-for-rate-exceeded-requests"><a class="header" href="#enable-automatic-retry-for-rate-exceeded-requests">Enable automatic retry for rate exceeded requests</a></h2>
+<p>To enable automatic retry of Slack Web API method requests,
+you need to specify <code>max_retries</code> in rate control params (default value is <code>0</code>):</p>
+<pre><code class="language-rust noplaypen">
+    let client = SlackClient::new(
+        SlackClientHyperConnector::new()
+            .with_rate_control(
+                SlackApiRateControlConfig::new().with_max_retries(5)
+            ),
+    );       
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="events-api-and-oauth"><a class="header" href="#events-api-and-oauth">Events API and OAuth</a></h1>
 <p>The library provides route implementation in <code>SlackClientEventsListener</code> based on Hyper/Tokio for:</p>
