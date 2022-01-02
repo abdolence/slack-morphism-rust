@@ -25,17 +25,20 @@ impl SlackTokioRateController {
     ) -> Option<Duration> {
         let has_global_limits = self.config.global_max_rate_limit.is_some();
 
-        let delayed_by_state = if has_global_limits || team_id.is_some() {
+        if has_global_limits
+            || team_id.is_some()
+            || method_rate_ctl
+                .iter()
+                .any(|rc| rc.special_rate_limit.is_some())
+        {
             if let Some(exist_method_rate_ctl) = method_rate_ctl {
                 let mut throttler = self.throttler.lock().await;
-                throttler.calc_throttle_delay(exist_method_rate_ctl, team_id)
+                throttler.calc_throttle_delay(exist_method_rate_ctl, team_id, delayed)
             } else {
-                None
+                delayed
             }
         } else {
-            None
-        };
-
-        delayed_by_state.max(delayed)
+            delayed
+        }
     }
 }

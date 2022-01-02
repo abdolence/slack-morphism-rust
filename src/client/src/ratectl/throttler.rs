@@ -29,9 +29,15 @@ impl SlackRateThrottler {
         &mut self,
         method_rate_ctl: &SlackApiMethodRateControlConfig,
         team_id: Option<SlackTeamId>,
+        min_delayed: Option<Duration>,
     ) -> Option<Duration> {
         let mut delays_heap: BinaryHeap<Duration> = BinaryHeap::new();
         let now = Instant::now();
+
+        min_delayed
+            .iter()
+            .filter(|d| !d.is_zero())
+            .for_each(|d| delays_heap.push(*d));
 
         self.global_max_rate_limit_counter
             .as_ref()
