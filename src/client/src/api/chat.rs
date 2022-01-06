@@ -301,9 +301,10 @@ pub struct SlackApiChatUpdateRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatUpdateResponse {
-    pub channel: String,
+    pub channel: SlackChannelId,
     pub ts: SlackTs,
-    pub message: SlackMessage,
+    pub thread_ts: Option<SlackTs>,
+    pub message: SlackUpdatedMessage,
 }
 
 #[skip_serializing_none]
