@@ -55,6 +55,23 @@ pub struct SlackHistoryMessage {
 }
 
 #[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUpdatedMessage {
+    #[serde(flatten)]
+    pub sender: SlackMessageSender,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
+    pub edited: Option<SlackMessageEdited>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageEdited {
+    pub user: SlackUserId,
+    pub ts: SlackTs,
+}
+
+#[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum SlackMessageResponseType {
     #[serde(rename = "in_channel")]

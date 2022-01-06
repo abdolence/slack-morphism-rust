@@ -124,12 +124,7 @@ pub struct SlackAppMentionEvent {
     pub origin: SlackMessageOrigin,
 }
 
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackMessageEventEdited {
-    pub user: SlackUserId,
-    pub ts: SlackTs,
-}
+type SlackMessageEventEdited = SlackMessageEdited;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
