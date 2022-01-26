@@ -47,16 +47,13 @@ pub struct SlackPushEventCallback {
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum SlackEventCallbackBody {
-    #[serde(rename = "message")]
     Message(SlackMessageEvent),
-    #[serde(rename = "app_home_opened")]
     AppHomeOpened(SlackAppHomeOpenedEvent),
-    #[serde(rename = "app_mention")]
     AppMention(SlackAppMentionEvent),
-    #[serde(rename = "app_uninstalled")]
     AppUninstalled(SlackAppUninstalledEvent),
+    LinkShared(SlackLinkSharedEvent),
 }
 
 #[skip_serializing_none]
@@ -129,3 +126,23 @@ type SlackMessageEventEdited = SlackMessageEdited;
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackAppUninstalledEvent {}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackLinkSharedEvent {
+    channel: SlackChannelId,
+    event_ts: SlackTs,
+    is_bot_user_member: bool,
+    links: Vec<SlackLinkObject>,
+    message_ts: SlackTs,
+    source: String,
+    unfurl_id: String,
+    user: SlackUserId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackLinkObject {
+    domain: String,
+    url: String,
+}
