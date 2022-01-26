@@ -136,7 +136,7 @@ pub struct SlackLinkSharedEvent {
     pub links: Vec<SlackLinkObject>,
     pub message_ts: SlackTs,
     pub source: String,
-    pub unfurl_id: String,
+    pub unfurl_id: SlackUnfurlId,
     pub user: SlackUserId,
 }
 

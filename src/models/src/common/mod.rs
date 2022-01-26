@@ -147,3 +147,6 @@ pub struct SlackWebSocketsUrl(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTeamUrl(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackUnfurlId(pub String);

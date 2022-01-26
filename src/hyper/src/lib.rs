@@ -1,3 +1,7 @@
+//! # Slack Morphism models for Rust
+//! This library contains the client implementation for Hyper/Tokio.
+//! Please follow to the official website: https://slack-rust.abdolence.dev for details.
+
 #![allow(clippy::new_without_default)]
 
 pub use crate::connector::SlackClientHyperConnector;
