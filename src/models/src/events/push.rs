@@ -130,19 +130,19 @@ pub struct SlackAppUninstalledEvent {}
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackLinkSharedEvent {
-    channel: SlackChannelId,
-    event_ts: SlackTs,
-    is_bot_user_member: bool,
-    links: Vec<SlackLinkObject>,
-    message_ts: SlackTs,
-    source: String,
-    unfurl_id: String,
-    user: SlackUserId,
+    pub channel: SlackChannelId,
+    pub event_ts: SlackTs,
+    pub is_bot_user_member: bool,
+    pub links: Vec<SlackLinkObject>,
+    pub message_ts: SlackTs,
+    pub source: String,
+    pub unfurl_id: String,
+    pub user: SlackUserId,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackLinkObject {
-    domain: String,
-    url: String,
+    pub domain: String,
+    pub url: String,
 }
