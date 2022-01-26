@@ -85,3 +85,52 @@ socket_mode_listener.listen_for(&app_token).await?;
 socket_mode_listener.serve().await;
 
 ```
+
+## Important caveats to be aware of
+
+### The time blocking of the SM listener callbacks is important
+
+If your app blocks callbacks more than 2-3 minutes Slack server might decide to repeat requests again and also to inform users with errors and timeouts. 
+So, if you have something complicated that could take more time you should spawn your own future, e.g:
+
+```rust,noplaypen
+    async fn test_push_events_sm_function(
+        event: SlackPushEventCallback,
+        _client: Arc<SlackHyperClient>,
+        _states: Arc<SlackClientEventsUserState>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        tokio::spawn(async move { process_message(client, event).await; });
+        Ok(())
+    }
+```
+
+### Error handling function
+It is highly recommended implementing your own error handling function:
+
+```rust,noplaypen
+
+fn test_error_handler(
+    err: Box<dyn std::error::Error + Send + Sync>,
+    _client: Arc<SlackHyperClient>,
+    _states: Arc<SlackClientEventsUserState>,
+) -> http::StatusCode {
+    println!("{:#?}", err);
+
+    // This return value should be OK if we want to return successful ack
+    // to the Slack server using Web-sockets
+    // https://api.slack.com/apis/connections/socket-implement#acknowledge
+    // so that Slack knows whether to retry
+    http::StatusCode::OK
+}
+
+// Register it:
+    let listener_environment = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler),
+    );
+```
+
+The implementation allows you:
+- Return positive ack using http::StatusCode result / implement complex logic related to it.
+  https://api.slack.com/apis/connections/socket-implement#acknowledge
+- Increase visibility and observability in general when errors happen in your app and from Slack/library.
