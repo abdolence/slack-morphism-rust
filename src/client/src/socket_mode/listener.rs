@@ -2,10 +2,11 @@ use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::clients_manager::*;
 use crate::socket_mode::clients_manager_listener::SlackSocketModeClientsManagerListener;
 use crate::*;
+use futures::stream::StreamExt;
 use log::debug;
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::exfiltrator::WithOrigin;
-use signal_hook::iterator::SignalsInfo;
+use signal_hook_tokio::SignalsInfo;
 use std::sync::Arc;
 
 pub struct SlackClientSocketModeListener<SCHC>
@@ -79,7 +80,7 @@ where
 
         let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
 
-        if let Some(info) = (&mut signals).into_iter().next() {
+        if let Some(info) = signals.next().await {
             debug!("Received a signal: {:?}. Terminating...", info);
         }
 
