@@ -3,9 +3,6 @@ use crate::socket_mode::clients_manager::*;
 use crate::socket_mode::clients_manager_listener::SlackSocketModeClientsManagerListener;
 use crate::*;
 use log::debug;
-use signal_hook::consts::TERM_SIGNALS;
-use signal_hook::iterator::exfiltrator::WithOrigin;
-use signal_hook::iterator::SignalsInfo;
 use std::sync::Arc;
 
 pub struct SlackClientSocketModeListener<SCHC>
@@ -77,11 +74,7 @@ where
     pub async fn serve(&self) -> i32 {
         self.start().await;
 
-        let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
-
-        if let Some(info) = (&mut signals).into_iter().next() {
-            debug!("Received a signal: {:?}. Terminating...", info);
-        }
+        self.clients_manager.await_term_signals().await;
 
         self.shutdown().await;
         0

@@ -6,7 +6,11 @@ use std::sync::Arc;
 use crate::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
 use crate::socket_mode::SlackSocketModeWssClientId;
 use futures::future;
+use futures::stream::StreamExt;
 use log::*;
+use signal_hook::consts::TERM_SIGNALS;
+use signal_hook::iterator::exfiltrator::WithOrigin;
+use signal_hook_tokio::SignalsInfo;
 use slack_morphism::clients_manager::SlackSocketModeClientsManager;
 use slack_morphism::listener::SlackClientEventsListenerEnvironment;
 use slack_morphism::{
@@ -138,6 +142,14 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
         for client in drained_clients.iter_mut() {
             client.shutdown_channel().await;
+        }
+    }
+
+    async fn await_term_signals(&self) {
+        let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
+
+        if let Some(info) = signals.next().await {
+            debug!("Received a signal: {:?}. Terminating...", info);
         }
     }
 }

@@ -34,7 +34,7 @@ ring = "0.16"
 lazy_static = "1.4"
 http = "0.2"
 async-trait = "0.1.52"
-signal-hook = { version = "0.3.13", features = ["extended-siginfo"]}
+
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }

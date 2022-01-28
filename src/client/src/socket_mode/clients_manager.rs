@@ -29,4 +29,6 @@ pub trait SlackSocketModeClientsManager {
 
     async fn start(&self);
     async fn shutdown(&self);
+
+    async fn await_term_signals(&self);
 }
