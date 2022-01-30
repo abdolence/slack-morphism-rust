@@ -1,10 +1,10 @@
 use crate::{SlackClient, SlackClientHttpConnector};
-use log::*;
 use rsb_derive::Builder;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
+use tracing::*;
 
 type UserStatesMap = HashMap<TypeId, Box<dyn Any + Send + Sync + 'static>>;
 

@@ -1,5 +1,4 @@
 use futures::{SinkExt, StreamExt};
-use log::*;
 use rvstruct::*;
 use slack_morphism::api::SlackApiAppsConnectionOpenRequest;
 use slack_morphism::errors::*;
@@ -12,6 +11,7 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::RwLock;
 use tokio_tungstenite::*;
+use tracing::*;
 use url::Url;
 
 #[derive(Clone)]

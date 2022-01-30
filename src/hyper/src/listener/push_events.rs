@@ -9,11 +9,11 @@ use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
 use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response};
-use log::*;
 use slack_morphism::UserCallbackResult;
 pub use slack_morphism_models::events::*;
 use std::future::Future;
 use std::sync::Arc;
+use tracing::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     pub fn push_events_service_fn<'a, D, F>(

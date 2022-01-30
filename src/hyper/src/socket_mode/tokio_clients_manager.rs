@@ -7,7 +7,6 @@ use crate::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
 use crate::socket_mode::SlackSocketModeWssClientId;
 use futures::future;
 use futures::stream::StreamExt;
-use log::*;
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::exfiltrator::WithOrigin;
 use signal_hook_tokio::SignalsInfo;
@@ -18,6 +17,7 @@ use slack_morphism::{
     SlackSocketModeClientListener,
 };
 use tokio::sync::RwLock;
+use tracing::*;
 
 pub struct SlackSocketModeTokioClientsManager<SCHC>
 where

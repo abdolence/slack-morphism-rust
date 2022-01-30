@@ -10,9 +10,9 @@ use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
 use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response};
-use log::*;
 use std::future::Future;
 use std::sync::{Arc, RwLock};
+use tracing::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     async fn slack_oauth_install_service(

@@ -3,11 +3,11 @@ use crate::listener::SlackClientEventsUserStateStorage;
 use crate::prelude::{SlackInteractionEvent, SlackPushEventCallback, UserCallbackFunction};
 use crate::{SlackClient, SlackClientHttpConnector, UserCallbackResult};
 use futures::future::BoxFuture;
-use log::*;
 use slack_morphism_models::events::{SlackCommandEvent, SlackCommandEventResponse};
 use slack_morphism_models::socket_mode::SlackSocketModeHelloEvent;
 use std::future::Future;
 use std::sync::{Arc, RwLock};
+use tracing::*;
 
 pub trait SlackSocketModeListenerCallback<SCHC, RQ, RS>
 where

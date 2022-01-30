@@ -2,8 +2,8 @@ use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::clients_manager::*;
 use crate::socket_mode::clients_manager_listener::SlackSocketModeClientsManagerListener;
 use crate::*;
-use log::debug;
 use std::sync::Arc;
+use tracing::*;
 
 pub struct SlackClientSocketModeListener<SCHC>
 where

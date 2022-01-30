@@ -8,7 +8,6 @@ use hyper::client::*;
 use hyper::http::StatusCode;
 use hyper::{Body, Request, Response, Uri};
 use hyper_rustls::HttpsConnector;
-use log::*;
 use mime::Mime;
 use rvstruct::ValueStruct;
 use slack_morphism::errors::*;
@@ -21,6 +20,7 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::*;
 use url::Url;
 
 #[derive(Clone, Debug)]

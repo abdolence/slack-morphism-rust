@@ -7,8 +7,8 @@ use std::sync::{Arc, Weak};
 use crate::errors::*;
 use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
-use log::*;
 use slack_morphism_models::socket_mode::SlackSocketModeEvent;
+use tracing::*;
 
 #[async_trait]
 pub trait SlackSocketModeClientListener {
