@@ -148,6 +148,13 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
+        let uri_str = request.uri().to_string();
+        debug!(
+            slack_uri = uri_str.as_str(),
+            "Sending HTTP request to {}",
+            request.uri()
+        );
+
         let http_res = self
             .hyper_connector
             .request(request)
@@ -162,6 +169,13 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         let http_content_is_json = http_content_type.iter().all(|response_mime| {
             response_mime.type_() == mime::APPLICATION && response_mime.subtype() == mime::JSON
         });
+
+        debug!(
+            slack_uri = uri_str.as_str(),
+            slack_http_status = http_status.as_u16(),
+            "Received HTTP response {}",
+            http_status
+        );
 
         match http_status {
             StatusCode::OK if http_content_is_json => {

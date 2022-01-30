@@ -110,6 +110,7 @@ where
                             && !response.status().is_informational() =>
                     {
                         error!(
+                            slack_wss_client_id = identity.id.to_string().as_str(),
                             "[{}] Unable to connect {}: {}",
                             identity.id.to_string(),
                             url_to_connect,
@@ -120,6 +121,7 @@ where
                     }
                     Err(err) => {
                         error!(
+                            slack_wss_client_id = identity.id.to_string().as_str(),
                             "[{}] Unable to connect {}: {:?}",
                             identity.id.to_string(),
                             url_to_connect,
@@ -130,6 +132,7 @@ where
                     }
                     Ok((wss_stream, _)) => {
                         debug!(
+                            slack_wss_client_id = identity.id.to_string().as_str(),
                             "[{}] Connected to {}",
                             identity.id.to_string(),
                             url_to_connect
@@ -160,6 +163,7 @@ where
                 return Ok(wss_stream);
             } else if !destroyed.load(Ordering::Relaxed) {
                 trace!(
+                    slack_wss_client_id = identity.id.to_string().as_str(),
                     "[{}] Reconnecting after {} seconds...",
                     identity.id.to_string(),
                     identity.config.reconnect_timeout_in_seconds
@@ -190,6 +194,7 @@ where
     ) -> ClientResult<()> {
         if initial_wait_timeout > 0 {
             trace!(
+                slack_wss_client_id = identity.id.to_string().as_str(),
                 "[{}] Postponed connection for {} seconds (backoff timeout for multiple connections)",
                 identity.id.to_string(),
                 initial_wait_timeout
@@ -231,6 +236,7 @@ where
                         }
                         SlackTungsteniteWssClientCommand::Pong(body) => {
                             trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Pong to Slack: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -246,6 +252,7 @@ where
                         SlackTungsteniteWssClientCommand::Ping => {
                             let body: [u8; 5] = rand::random();
                             trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Ping to Slack: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -265,6 +272,7 @@ where
                                     * thread_identity.config.ping_failure_threshold_times
                             {
                                 warn!(
+                                    slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                     "[{}] Haven't seen any pong from Slack since {} seconds ago",
                                     thread_identity.id.to_string(),
                                     seen_pong_time_in_secs
@@ -275,6 +283,7 @@ where
                                 .await
                             {
                                 warn!(
+                                    slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                     "[{}] Ping slack failed with: {:?}",
                                     thread_identity.id.to_string(),
                                     err
@@ -286,6 +295,7 @@ where
                             writer.close().await.unwrap_or(());
                             rx.close();
                             trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] WSS client command channel has been closed",
                                 thread_identity.id.to_string()
                             );
@@ -332,6 +342,7 @@ where
                     match message {
                         Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
                             trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Received from Slack: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -342,6 +353,7 @@ where
                                 .await
                             {
                                 trace!(
+                                    slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                     "[{}] Sending reply to Slack: {:?}",
                                     thread_identity.id.to_string(),
                                     reply
@@ -352,6 +364,7 @@ where
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Ping(body)) => {
                             trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Ping from Slack: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -361,6 +374,7 @@ where
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
                             trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Pong from Slack: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -370,6 +384,7 @@ where
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
                             warn!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Unexpected binary received from Slack: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -386,6 +401,7 @@ where
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Close(body)) => {
                             debug!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Shutting down WSS channel: {:?}",
                                 thread_identity.id.to_string(),
                                 body
@@ -397,6 +413,7 @@ where
                         }
                         Err(err) => {
                             error!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Slack WSS error: {:?}",
                                 thread_identity.id.to_string(),
                                 err
@@ -453,7 +470,11 @@ where
     }
 
     pub async fn shutdown_channel(&mut self) {
-        debug!("[{}] Destroying WSS client", self.identity.id.to_string());
+        debug!(
+            slack_wss_client_id = self.identity.id.to_string().as_str(),
+            "[{}] Destroying WSS client",
+            self.identity.id.to_string()
+        );
         let sender = {
             let commands_writer = self.command_writer.write().await;
             (*commands_writer).clone()

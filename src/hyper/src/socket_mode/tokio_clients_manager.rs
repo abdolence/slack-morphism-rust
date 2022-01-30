@@ -76,7 +76,11 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
     }
 
     async fn restart_client(&self, client_id: &SlackSocketModeWssClientId) {
-        debug!("[{}] Removing client", client_id.to_string());
+        debug!(
+            slack_wss_client_id = client_id.to_string().as_str(),
+            "[{}] Removing client",
+            client_id.to_string()
+        );
 
         let mut removed_clients = {
             let mut clients_write = self.active_clients.write().await;
@@ -98,7 +102,11 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             removed_client.shutdown_channel().await;
 
             // Reconnect
-            trace!("[{}] Reconnecting...", client_id.to_string());
+            trace!(
+                slack_wss_client_id = client_id.to_string().as_str(),
+                "[{}] Reconnecting...",
+                client_id.to_string()
+            );
             let client = SlackTungsteniteWssClient::new(
                 removed_client.identity.id.new_reconnected_id(),
                 removed_client.identity.client_listener.clone(),
