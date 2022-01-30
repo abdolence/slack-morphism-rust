@@ -78,7 +78,9 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         )
                                         .await
                                         {
-                                            Ok(_) => Ok(Response::new(Body::empty())),
+                                            Ok(_) => {
+                                                Ok(Response::new(Body::from(url_ver.challenge)))
+                                            }
                                             Err(err) => {
                                                 let status_code = thread_error_handler(
                                                     err,
