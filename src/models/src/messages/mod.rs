@@ -23,6 +23,7 @@ pub struct SlackMessageOrigin {
 pub struct SlackMessageContent {
     pub text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
+    pub attachments: Option<Vec<SlackMessageAttachment>>,
 }
 
 #[skip_serializing_none]
@@ -78,4 +79,23 @@ pub enum SlackMessageResponseType {
     InChannel,
     #[serde(rename = "ephemeral")]
     Ephemeral,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageAttachment {
+    pub id: Option<i64>,
+    pub color: Option<String>,
+    pub fallback: Option<String>,
+    pub title: Option<String>,
+    pub fields: Option<Vec<SlackMessageAttachmentFieldObject>>,
+    pub mrkdwn_in: Option<Vec<String>>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageAttachmentFieldObject {
+    pub title: Option<String>,
+    pub value: Option<String>,
+    pub short: Option<bool>,
 }
