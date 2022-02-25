@@ -41,7 +41,7 @@ ring = "0.16"
 lazy_static = "1.4"
 async-trait = "0.1.52"
 http = "0.2"
-tokio-tungstenite = { version = "0.16.1", features = ["rustls-tls-native-roots"] }
+tokio-tungstenite = { version = "0.17.1", features = ["rustls-tls-native-roots"] }
 rand = "0.8.5"
 async-recursion="1.0.0"
 signal-hook = { version = "0.3.13", features = ["extended-siginfo"]}
