@@ -11,6 +11,7 @@ use url::Url;
 use crate::ratectl::*;
 use crate::SlackClient;
 use crate::{ClientResult, SlackClientHttpConnector};
+use rvstruct::ValueStruct;
 use slack_morphism_models::*;
 
 impl<SCHC> SlackClient<SCHC>
@@ -34,6 +35,17 @@ where
                 Some(&POST_WEBHOOK_SPECIAL_LIMIT_RATE_CTL),
             )
             .await
+    }
+
+    //
+    // Respond to event using a Slack ResponseURL and providing message.
+    //
+    pub async fn respond_to_event(
+        &self,
+        response_url: &SlackResponseUrl,
+        req: &SlackApiPostWebhookMessageRequest,
+    ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
+        self.post_webhook_message(response_url.value(), req).await
     }
 }
 
