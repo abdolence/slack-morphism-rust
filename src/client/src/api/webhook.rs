@@ -22,13 +22,13 @@ where
     ///
     pub async fn post_webhook_message(
         &self,
-        hook_url: &Url,
+        incoming_webhook_url: &Url,
         req: &SlackApiPostWebhookMessageRequest,
     ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
         self.http_api
             .connector
             .http_post_uri(
-                hook_url.clone(),
+                incoming_webhook_url.clone(),
                 req,
                 None,
                 Some(&POST_WEBHOOK_SPECIAL_LIMIT_RATE_CTL),
