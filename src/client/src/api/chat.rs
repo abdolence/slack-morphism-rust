@@ -15,6 +15,7 @@ use futures::future::{BoxFuture, FutureExt};
 use lazy_static::lazy_static;
 use slack_morphism_models::*;
 use std::collections::HashMap;
+use url::Url;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
 where
@@ -190,7 +191,7 @@ pub struct SlackApiChatGetPermalinkRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatGetPermalinkResponse {
     pub channel: SlackChannelId,
-    pub permalink: String,
+    pub permalink: Url,
 }
 
 #[skip_serializing_none]

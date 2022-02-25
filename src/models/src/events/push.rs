@@ -1,6 +1,7 @@
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 use crate::blocks::*;
 use crate::common::*;
@@ -146,5 +147,5 @@ pub struct SlackLinkSharedEvent {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackLinkObject {
     pub domain: String,
-    pub url: String,
+    pub url: Url,
 }

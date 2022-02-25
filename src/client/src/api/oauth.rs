@@ -73,6 +73,6 @@ pub struct SlackOAuthV2AuthedUser {
 pub struct SlackOAuthIncomingWebHook {
     pub channel: String,
     pub channel_id: SlackChannelId,
-    pub configuration_url: String,
-    pub url: String,
+    pub configuration_url: Url,
+    pub url: Url,
 }

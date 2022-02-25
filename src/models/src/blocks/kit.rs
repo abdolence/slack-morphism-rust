@@ -2,6 +2,7 @@ use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 use crate::common::*;
 
@@ -78,7 +79,7 @@ impl From<SlackDividerBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackImageBlock {
     pub block_id: Option<SlackBlockId>,
-    pub image_url: String,
+    pub image_url: Url,
     pub alt_text: String,
     pub title: Option<SlackBlockPlainTextOnly>,
 }
@@ -273,7 +274,7 @@ impl From<SlackBlockImageElement> for SlackContextBlockElement {
 pub struct SlackBlockButtonElement {
     pub action_id: SlackActionId,
     pub text: SlackBlockPlainTextOnly,
-    pub url: Option<String>,
+    pub url: Option<Url>,
     pub value: Option<String>,
     pub style: Option<String>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -306,7 +307,7 @@ pub struct SlackBlockConfirmItem {
 pub struct SlackBlockChoiceItem<T: Into<SlackBlockText>> {
     pub text: T,
     pub value: String,
-    pub url: Option<String>,
+    pub url: Option<Url>,
 }
 
 #[skip_serializing_none]
