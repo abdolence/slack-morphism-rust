@@ -81,6 +81,8 @@ pub enum SlackMessageResponseType {
     Ephemeral,
 }
 
+// This model is not well typed since Slack message attachments are deprecated
+// Please avoid using this if you can
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageAttachment {
@@ -92,6 +94,8 @@ pub struct SlackMessageAttachment {
     pub mrkdwn_in: Option<Vec<String>>,
 }
 
+// This model is not well typed since Slack message attachments are deprecated
+// Please avoid using this if you can
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageAttachmentFieldObject {
