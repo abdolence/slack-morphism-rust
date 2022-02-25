@@ -187,8 +187,7 @@ impl SlackClientHttpApiUri {
         let url_query_params: Vec<(String, String)> = params
             .clone()
             .into_iter()
-            .map(|(k, vo)| vo.map(|v| (k.to_string(), v.to_string())))
-            .flatten()
+            .filter_map(|(k, vo)| vo.map(|v| (k.to_string(), v.to_string())))
             .collect();
 
         Url::parse_with_params(url_str, url_query_params)
