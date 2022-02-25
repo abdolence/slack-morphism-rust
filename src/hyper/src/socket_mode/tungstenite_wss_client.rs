@@ -411,6 +411,14 @@ where
                                 .on_disconnect(&thread_identity.id)
                                 .await
                         }
+                        Ok(tokio_tungstenite::tungstenite::Message::Frame(frame)) => {
+                            trace!(
+                                slack_wss_client_id = thread_identity.id.to_string().as_str(),
+                                "[{}] Ignored frame/incomplete message from Slack: {:?}",
+                                thread_identity.id.to_string(),
+                                frame
+                            );
+                        }
                         Err(err) => {
                             error!(
                                 slack_wss_client_id = thread_identity.id.to_string().as_str(),
