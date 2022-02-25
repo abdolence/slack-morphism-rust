@@ -24,6 +24,7 @@ serde_with = "1.12"
 rvstruct = "0.3"
 rsb_derive = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
+url = { version = "2.2", features = ["serde"]}
 
 [package.metadata.release]
 disable-tag=true

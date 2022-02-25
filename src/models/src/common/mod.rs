@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::hash::Hash;
 use std::*;
+use url::Url;
 
 mod user;
 pub use user::*;
@@ -140,13 +141,22 @@ impl ToString for SlackConversationType {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
-pub struct SlackResponseUrl(pub String);
+pub struct SlackResponseUrl(pub Url);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
-pub struct SlackWebSocketsUrl(pub String);
+pub struct SlackWebSocketsUrl(pub Url);
+
+impl SlackWebSocketsUrl {
+    pub fn to_debug_url(&self) -> Self {
+        Self(
+            Url::parse(format!("{}&debug_reconnects=true", self.value().to_string()).as_str())
+                .unwrap(),
+        )
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
-pub struct SlackTeamUrl(pub String);
+pub struct SlackTeamUrl(pub Url);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackUnfurlId(pub String);

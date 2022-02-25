@@ -6,8 +6,8 @@ use lazy_static::lazy_static;
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
-use crate::errors::*;
 use crate::ratectl::*;
 use crate::SlackClient;
 use crate::{ClientResult, SlackClientHttpConnector};
@@ -22,17 +22,13 @@ where
     ///
     pub async fn post_webhook_message(
         &self,
-        hook_url: &str,
+        hook_url: &Url,
         req: &SlackApiPostWebhookMessageRequest,
     ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
         self.http_api
             .connector
             .http_post_uri(
-                hook_url.parse().map_err(|cause| {
-                    SlackClientError::SystemError(
-                        SlackClientSystemError::new().with_cause(Box::new(cause)),
-                    )
-                })?,
+                hook_url.clone(),
                 req,
                 None,
                 Some(&POST_WEBHOOK_SPECIAL_LIMIT_RATE_CTL),

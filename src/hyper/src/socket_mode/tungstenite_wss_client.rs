@@ -12,7 +12,6 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::RwLock;
 use tokio_tungstenite::*;
 use tracing::*;
-use url::Url;
 
 #[derive(Clone)]
 pub struct SlackTungsteniteWssClientIdentity {
@@ -91,7 +90,7 @@ where
         {
             Ok(open_connection_res) => {
                 let open_connection_res_url = if identity.config.debug_connections {
-                    format!("{}&debug_reconnects=true", open_connection_res.url.value()).into()
+                    open_connection_res.url.to_debug_url()
                 } else {
                     open_connection_res.url
                 };
@@ -102,7 +101,7 @@ where
                     open_connection_res_url.value()
                 );
 
-                let url_to_connect = Url::parse(open_connection_res_url.value()).unwrap();
+                let url_to_connect = open_connection_res_url.value().to_string();
 
                 match connect_async(&url_to_connect).await {
                     Ok((_, response))
