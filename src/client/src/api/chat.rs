@@ -190,7 +190,7 @@ pub struct SlackApiChatGetPermalinkRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatGetPermalinkResponse {
     pub channel: SlackChannelId,
-    pub message_ts: SlackTs,
+    pub permalink: String,
 }
 
 #[skip_serializing_none]
