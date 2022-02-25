@@ -148,10 +148,7 @@ pub struct SlackWebSocketsUrl(pub Url);
 
 impl SlackWebSocketsUrl {
     pub fn to_debug_url(&self) -> Self {
-        Self(
-            Url::parse(format!("{}&debug_reconnects=true", self.value().to_string()).as_str())
-                .unwrap(),
-        )
+        Self(Url::parse(format!("{}&debug_reconnects=true", self.value()).as_str()).unwrap())
     }
 }
 
