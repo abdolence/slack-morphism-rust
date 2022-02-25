@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Intro and Motivation - Slack Morphism for Rust</title>
+        <title>Send webhook messages - Slack Morphism for Rust</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Slack Morphism is a type-safe and modern client for Rust">
@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html" class="active"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -137,28 +137,38 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="intro-and-motivation"><a class="header" href="#intro-and-motivation">Intro and motivation</a></h1>
-<p>Slack Morphism is a modern client library for Slack Web/Events API/Sockets Mode and Block Kit.</p>
-<h2 id="type-safety"><a class="header" href="#type-safety">Type-safety</a></h2>
-<p>All of the models, API and Block Kit support in Slack Morphism are well-typed.</p>
-<h2 id="easy-to-use"><a class="header" href="#easy-to-use">Easy to use</a></h2>
-<p>The library depends only on familiar for Rust developers principles and libraries like Serde, futures, hyper.</p>
-<h2 id="async"><a class="header" href="#async">Async</a></h2>
-<p>Using latest Rust async/await language features and libraries, the library provides access to all of the functions 
-in asynchronous manner.</p>
-<h2 id="modular-design"><a class="header" href="#modular-design">Modular design</a></h2>
-<p>This library provided as multiple modules:</p>
-<ul>
-<li><code>slack-morphism-models</code>, gives you access to all type/models definitions that used for Slack Web/Events APIs.</li>
-<li><code>slack-morphism</code>, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.</li>
-<li><code>slack-morphism-hyper</code>, Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
-</ul>
+                        <h1 id="send-slack-webhook-messages"><a class="header" href="#send-slack-webhook-messages">Send Slack Webhook Messages</a></h1>
+<p>You can use <code>client..post_webhook_message</code> to post <a href="https://api.slack.com/messaging/webhooks">Slack Incoming Webhook</a> messages:</p>
+<pre><code class="language-rust noplaypen">
+use slack_morphism::prelude::*;
+use slack_morphism_hyper::*;
+use url::Url;
+
+let client = SlackClient::new(SlackClientHyperConnector::new());
+
+// Your incoming webhook url from config or OAuth/events (ResponseURL)
+let webhook_url: Url = Url::parse(&quot;https://hooks.slack.com/services/...&quot;)?; 
+
+client
+    .post_webhook_message(
+        &amp;webhook_url,
+        &amp;SlackApiPostWebhookMessageRequest::new(
+            SlackMessageContent::new()
+                .with_text(format!(&quot;Hey&quot;)),
+        ),
+    )
+    .await?;
+    
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="next" href="getting-started.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="prev" href="block-kit-support.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="hyper-connections-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -167,7 +177,10 @@ in asynchronous manner.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="next" href="getting-started.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="prev" href="block-kit-support.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="hyper-connections-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
