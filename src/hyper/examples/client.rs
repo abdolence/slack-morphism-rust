@@ -5,6 +5,7 @@ use slack_morphism_hyper::*;
 use rsb_derive::Builder;
 
 use std::time::Duration;
+use url::Url;
 
 use futures::stream::BoxStream;
 use futures::TryStreamExt;
@@ -95,7 +96,7 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                 some_into(SlackDividerBlock::new()),
                 some_into(
                     SlackImageBlock::new(
-                        "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
+                        Url::parse("https://www.gstatic.com/webp/gallery3/2_webp_ll.png").unwrap(),
                         "Test Image".into(),
                     )
                     .with_title("Test Image".into())
