@@ -87,7 +87,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         channel_id.into(),
                                         user_id.into(),
                                         command.into(),
-                                        response_url.into(),
+                                        url::Url::parse(response_url)?.into(),
                                         trigger_id.into(),
                                     )
                                     .opt_text(text.cloned())),

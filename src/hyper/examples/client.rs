@@ -24,6 +24,9 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("{:#?}", test);
 
+    let auth_test = session.auth_test().await?;
+    println!("{:#?}", auth_test);
+
     let message = WelcomeMessageTemplateParams::new("".into());
 
     let post_chat_req =

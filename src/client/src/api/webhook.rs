@@ -6,11 +6,12 @@ use lazy_static::lazy_static;
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
-use crate::errors::*;
 use crate::ratectl::*;
 use crate::SlackClient;
 use crate::{ClientResult, SlackClientHttpConnector};
+use rvstruct::ValueStruct;
 use slack_morphism_models::*;
 
 impl<SCHC> SlackClient<SCHC>
@@ -22,22 +23,29 @@ where
     ///
     pub async fn post_webhook_message(
         &self,
-        hook_url: &str,
+        incoming_webhook_url: &Url,
         req: &SlackApiPostWebhookMessageRequest,
     ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
         self.http_api
             .connector
             .http_post_uri(
-                hook_url.parse().map_err(|cause| {
-                    SlackClientError::SystemError(
-                        SlackClientSystemError::new().with_cause(Box::new(cause)),
-                    )
-                })?,
+                incoming_webhook_url.clone(),
                 req,
                 None,
                 Some(&POST_WEBHOOK_SPECIAL_LIMIT_RATE_CTL),
             )
             .await
+    }
+
+    //
+    // Respond to event using a Slack ResponseURL and providing message.
+    //
+    pub async fn respond_to_event(
+        &self,
+        response_url: &SlackResponseUrl,
+        req: &SlackApiPostWebhookMessageRequest,
+    ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
+        self.post_webhook_message(response_url.value(), req).await
     }
 }
 
