@@ -167,7 +167,7 @@ where
             .http_get(
                 "users.profile.get",
                 &vec![
-                    ("user", Some(req.user.value())),
+                    ("user", req.user.as_ref().map(|v| v.value())),
                     (
                         "include_locale",
                         req.include_locale.map(|v| v.to_string()).as_ref(),
@@ -355,7 +355,7 @@ pub struct SlackApiUsersSetPresenceResponse {}
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUsersProfileGetRequest {
-    pub user: SlackUserId,
+    pub user: Option<SlackUserId>,
     pub include_locale: Option<bool>,
 }
 
