@@ -90,6 +90,8 @@ pub enum SlackMessageEventType {
     ChannelPurpose,
     #[serde(rename = "channel_name")]
     ChannelName,
+    #[serde(rename = "file_share")]
+    FileShare,
     #[serde(rename = "message_changed")]
     MessageChanged,
     #[serde(rename = "message_deleted")]
