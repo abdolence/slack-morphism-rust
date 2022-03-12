@@ -11,8 +11,10 @@ mod common;
 
 pub mod blocks;
 pub mod events;
+pub mod files;
 mod messages;
 pub mod socket_mode;
 
 pub use common::*;
+pub use files::*;
 pub use messages::*;

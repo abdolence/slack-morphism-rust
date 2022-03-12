@@ -47,6 +47,9 @@ pub struct SlackAppId(pub String);
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackChannelId(pub String);
 
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackClientMessageId(pub String);
+
 impl SlackTextFormat for SlackChannelId {
     fn to_slack_format(&self) -> String {
         format!("<#{}>", self.value())
@@ -157,3 +160,6 @@ pub struct SlackTeamUrl(pub Url);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackUnfurlId(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackMimeType(pub String);

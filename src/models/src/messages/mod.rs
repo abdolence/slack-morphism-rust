@@ -7,6 +7,7 @@ use serde_with::skip_serializing_none;
 
 mod templates;
 
+use crate::SlackFile;
 pub use templates::*;
 
 #[skip_serializing_none]
@@ -16,6 +17,7 @@ pub struct SlackMessageOrigin {
     pub channel: Option<SlackChannelId>,
     pub channel_type: Option<SlackChannelType>,
     pub thread_ts: Option<SlackTs>,
+    pub client_msg_id: Option<SlackClientMessageId>,
 }
 
 #[skip_serializing_none]
@@ -24,6 +26,8 @@ pub struct SlackMessageContent {
     pub text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
     pub attachments: Option<Vec<SlackMessageAttachment>>,
+    pub upload: Option<bool>,
+    pub files: Option<Vec<SlackFile>>,
 }
 
 #[skip_serializing_none]
@@ -32,6 +36,7 @@ pub struct SlackMessageSender {
     pub user: Option<SlackUserId>,
     pub bot_id: Option<SlackBotId>,
     pub username: Option<String>,
+    pub display_as_bot: Option<bool>,
 }
 
 #[skip_serializing_none]
