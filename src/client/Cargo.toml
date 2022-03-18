@@ -13,6 +13,10 @@ categories = ["api-bindings"]
 readme = "../../README.md"
 include = ["Cargo.toml", "src/**/*.rs", "../../README.md", "../../LICENSE"]
 
+[badges]
+maintenance = { status = "actively-developed" }
+
+
 [lib]
 name = "slack_morphism"
 path = "src/lib.rs"
