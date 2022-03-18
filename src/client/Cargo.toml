@@ -42,6 +42,7 @@ async-trait = "0.1.52"
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
+cargo-audit = "0.16"
 
 [package.metadata.release]
 tag-prefix=""
