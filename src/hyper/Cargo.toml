@@ -39,7 +39,7 @@ hex = "0.4"
 tracing = "0.1"
 ring = "0.16"
 lazy_static = "1.4"
-async-trait = "0.1.52"
+async-trait = "0.1.53"
 http = "0.2"
 tokio-tungstenite = { version = "0.17.1", features = ["rustls-tls-native-roots"] }
 rand = "0.8.5"
