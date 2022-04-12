@@ -80,6 +80,8 @@ pub enum SlackMessageEventType {
     MeMessage,
     #[serde(rename = "channel_join")]
     ChannelJoin,
+    #[serde(rename = "channel_leave")]
+    ChannelLeave,
     #[serde(rename = "bot_add")]
     BotAdd,
     #[serde(rename = "bot_remove")]
