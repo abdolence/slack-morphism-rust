@@ -90,7 +90,7 @@ socket_mode_listener.serve().await;
 
 ### The time blocking of the SM listener callbacks is important
 
-If your app blocks callbacks more than 2-3 minutes Slack server might decide to repeat requests again and also to inform users with errors and timeouts. 
+If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again and also to inform users with errors and timeouts. 
 So, if you have something complicated that could take more time you should spawn your own future, e.g:
 
 ```rust,noplaypen
