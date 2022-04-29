@@ -216,7 +216,7 @@ socket_mode_listener.serve().await;
 </code></pre>
 <h2 id="important-caveats-to-be-aware-of"><a class="header" href="#important-caveats-to-be-aware-of">Important caveats to be aware of</a></h2>
 <h3 id="the-time-blocking-of-the-sm-listener-callbacks-is-important"><a class="header" href="#the-time-blocking-of-the-sm-listener-callbacks-is-important">The time blocking of the SM listener callbacks is important</a></h3>
-<p>If your app blocks callbacks more than 2-3 minutes Slack server might decide to repeat requests again and also to inform users with errors and timeouts. 
+<p>If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again and also to inform users with errors and timeouts. 
 So, if you have something complicated that could take more time you should spawn your own future, e.g:</p>
 <pre><code class="language-rust noplaypen">    async fn test_push_events_sm_function(
         event: SlackPushEventCallback,
