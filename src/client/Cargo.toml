@@ -37,7 +37,7 @@ tracing = "0.1"
 ring = "0.16"
 lazy_static = "1.4"
 http = "0.2"
-async-trait = "0.1.52"
+async-trait = "0.1.53"
 
 
 [dev-dependencies]
