@@ -26,8 +26,5 @@ rsb_derive = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 url = { version = "2.2", features = ["serde"]}
 
-[dev-dependencies]
-cargo-audit = "0.16"
-
 [package.metadata.release]
 disable-tag=true
