@@ -21,33 +21,33 @@ pub struct SlackFileExternalType(pub String);
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFile {
-    id: SlackFileId,
-    created: SlackDateTime,
-    timestamp: SlackDateTime,
-    name: String,
-    title: Option<String>,
-    mimetype: Option<SlackMimeType>,
-    filetype: Option<SlackFileType>,
-    pretty_type: Option<SlackFilePrettyType>,
-    external_type: Option<SlackFileExternalType>,
-    user: Option<SlackUserId>,
-    username: Option<String>,
-    url_private: Option<Url>,
-    url_private_download: Option<Url>,
-    permalink: Option<Url>,
-    permalink_public: Option<Url>,
+    pub id: SlackFileId,
+    pub created: SlackDateTime,
+    pub timestamp: SlackDateTime,
+    pub name: String,
+    pub title: Option<String>,
+    pub mimetype: Option<SlackMimeType>,
+    pub filetype: Option<SlackFileType>,
+    pub pretty_type: Option<SlackFilePrettyType>,
+    pub external_type: Option<SlackFileExternalType>,
+    pub user: Option<SlackUserId>,
+    pub username: Option<String>,
+    pub url_private: Option<Url>,
+    pub url_private_download: Option<Url>,
+    pub permalink: Option<Url>,
+    pub permalink_public: Option<Url>,
     #[serde(flatten)]
-    flags: SlackFileFlags,
+    pub flags: SlackFileFlags,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFileFlags {
-    editable: Option<bool>,
-    is_external: Option<bool>,
-    is_public: Option<bool>,
-    public_url_shared: Option<bool>,
-    display_as_bot: Option<bool>,
-    is_starred: Option<bool>,
-    has_rich_preview: Option<bool>,
+    pub editable: Option<bool>,
+    pub is_external: Option<bool>,
+    pub is_public: Option<bool>,
+    pub public_url_shared: Option<bool>,
+    pub display_as_bot: Option<bool>,
+    pub is_starred: Option<bool>,
+    pub has_rich_preview: Option<bool>,
 }
