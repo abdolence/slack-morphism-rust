@@ -22,7 +22,7 @@ name = "slack_morphism"
 path = "src/lib.rs"
 
 [dependencies]
-slack-morphism-models = { path = "../models", version = "^0.34.0"}
+slack-morphism-models = { path = "../models", version = "^0.35.0"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_with = "1.13"
