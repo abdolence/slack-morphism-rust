@@ -163,3 +163,12 @@ pub struct SlackUnfurlId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackMimeType(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackEmoji(pub String);
+
+impl SlackEmoji {
+    pub const SMILE: &'static str = ":smile:";
+    pub const SPEECH_BALLOON: &'static str = ":speech_balloon:";
+    pub const HEAVY_CHECK_MARK: &'static str = ":heavy_check_mark:";
+}

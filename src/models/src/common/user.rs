@@ -30,15 +30,15 @@ pub struct SlackUserProfile {
     pub display_name: Option<String>,
     pub real_name: Option<String>,
     pub real_name_normalized: Option<String>,
-    pub avatar_hash: Option<String>,
+    pub avatar_hash: Option<SlackAvatarHash>,
     pub status_text: Option<String>,
     pub status_expiration: Option<SlackDateTime>,
-    pub status_emoji: Option<String>,
+    pub status_emoji: Option<SlackEmoji>,
     pub display_name_normalized: Option<String>,
-    pub email: Option<String>,
+    pub email: Option<EmailAddress>,
     #[serde(flatten)]
     pub icon: Option<SlackIcon>,
-    pub team: Option<String>,
+    pub team: Option<SlackTeamId>,
 }
 
 #[skip_serializing_none]
@@ -53,6 +53,7 @@ pub struct SlackUserFlags {
     pub is_restricted: Option<bool>,
     pub is_stranger: Option<bool>,
     pub is_ultra_restricted: Option<bool>,
+    pub has_2fa: Option<bool>,
 }
 
 #[skip_serializing_none]
@@ -62,3 +63,6 @@ pub struct SlackBasicUserInfo {
     pub team_id: Option<SlackTeamId>,
     pub username: Option<String>,
 }
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackAvatarHash(pub String);
