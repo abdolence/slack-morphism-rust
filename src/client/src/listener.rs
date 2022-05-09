@@ -1,9 +1,11 @@
 use crate::{SlackClient, SlackClientHttpConnector};
+use futures::executor::block_on;
+use futures::FutureExt;
 use rsb_derive::Builder;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tracing::*;
 
 type UserStatesMap = HashMap<TypeId, Box<dyn Any + Send + Sync + 'static>>;
@@ -17,6 +19,8 @@ where
     pub user_state: Arc<SlackClientEventsUserState>,
 }
 
+pub type SlackClientEventsUserState = futures_locks::RwLock<SlackClientEventsUserStateStorage>;
+
 impl<SCHC> SlackClientEventsListenerEnvironment<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
@@ -25,7 +29,9 @@ where
         Self {
             client,
             error_handler: Box::new(Self::empty_error_handler),
-            user_state: Arc::new(RwLock::new(SlackClientEventsUserStateStorage::new())),
+            user_state: Arc::new(futures_locks::RwLock::new(
+                SlackClientEventsUserStateStorage::new(),
+            )),
         }
     }
 
@@ -39,14 +45,18 @@ where
     fn empty_error_handler(
         err: Box<dyn std::error::Error + Send + Sync>,
         _client: Arc<SlackClient<SCHC>>,
-        _user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        _user_state_storage: Arc<SlackClientEventsUserState>,
     ) -> http::StatusCode {
         error!("Slack listener error occurred: {:?}", err);
         http::StatusCode::BAD_REQUEST
     }
 
     pub fn with_user_state<T: Send + Sync + 'static>(self, state: T) -> Self {
-        self.user_state.write().unwrap().set_user_state(state);
+        let future_init_state = self
+            .user_state
+            .write()
+            .map(|mut guard| guard.set_user_state(state));
+        block_on(future_init_state);
         self
     }
 }
@@ -82,14 +92,12 @@ impl SlackClientEventsUserStateStorage {
     }
 }
 
-pub type SlackClientEventsUserState = RwLock<SlackClientEventsUserStateStorage>;
-
 pub type BoxedErrorHandler<SCHC> = Box<ErrorHandler<SCHC>>;
 
 pub type ErrorHandler<SCHC> = fn(
     Box<dyn std::error::Error + Send + Sync + 'static>,
     Arc<SlackClient<SCHC>>,
-    Arc<RwLock<SlackClientEventsUserStateStorage>>,
+    Arc<SlackClientEventsUserState>,
 ) -> http::StatusCode;
 
 #[derive(Debug, PartialEq, Clone, Builder)]
@@ -161,4 +169,4 @@ impl SlackOAuthListenerConfig {
 }
 
 pub type UserCallbackFunction<E, IF, SCHC> =
-    fn(E, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> IF;
+    fn(E, Arc<SlackClient<SCHC>>, Arc<SlackClientEventsUserState>) -> IF;

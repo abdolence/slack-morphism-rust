@@ -11,7 +11,7 @@ use hyper::body::*;
 use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response};
 use std::future::Future;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tracing::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
@@ -35,7 +35,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         req: Request<Body>,
         config: &SlackOAuthListenerConfig,
         client: Arc<SlackClient<SlackClientHyperConnector<H>>>,
-        user_state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        user_state_storage: Arc<SlackClientEventsUserState>,
         install_service_fn: UserCallbackFunction<
             SlackOAuthV2AccessTokenResponse,
             impl Future<Output = ()> + 'static + Send,
