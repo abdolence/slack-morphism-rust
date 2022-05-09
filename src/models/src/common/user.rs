@@ -33,6 +33,7 @@ pub struct SlackUserProfile {
     pub avatar_hash: Option<String>,
     pub status_text: Option<String>,
     pub status_expiration: Option<SlackDateTime>,
+    pub status_emoji: Option<String>,
     pub display_name_normalized: Option<String>,
     pub email: Option<String>,
     #[serde(flatten)]
