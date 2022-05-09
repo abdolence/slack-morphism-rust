@@ -3,43 +3,35 @@ use slack_morphism_hyper::*;
 
 use std::sync::Arc;
 
-async fn test_interaction_events_function(
-    event: SlackInteractionEvent,
-    _client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("{:#?}", event);
-    Ok(())
-}
-
-async fn test_command_events_function(
-    event: SlackCommandEvent,
-    client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
-) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
-    println!("{:#?}", event);
-
-    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-
-    // Sessions are lightweight and basically just a reference to client and token
-    let session = client.open_session(&token);
-
-    session
-        .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
-        .await?;
-
-    Ok(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text("Working on it".into()),
-    ))
-}
+#[derive(Debug, Clone)]
+struct UserStateExample(u64);
 
 async fn test_push_events_sm_function(
-    event: SlackPushEventCallback,
+    _event: SlackPushEventCallback,
     _client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
+    user_state: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("{:#?}", event);
+    // Read state
+    let current_state_example: UserStateExample = {
+        let storage = user_state.read().await;
+        storage
+            .get_user_state::<UserStateExample>()
+            .unwrap()
+            .clone()
+    };
+
+    // Write state
+    {
+        let mut storage = user_state.write().await;
+        let updated_state = UserStateExample(current_state_example.0 + 1);
+        storage.set_user_state::<UserStateExample>(updated_state);
+        println!(
+            "Updating user state from {:#?} to {:#?}",
+            current_state_example,
+            storage.get_user_state::<UserStateExample>()
+        );
+    }
+
     Ok(())
 }
 
@@ -59,14 +51,13 @@ fn test_error_handler(
 async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
 
-    let socket_mode_callbacks = SlackSocketModeListenerCallbacks::new()
-        .with_command_events(test_command_events_function)
-        .with_interaction_events(test_interaction_events_function)
-        .with_push_events(test_push_events_sm_function);
+    let socket_mode_callbacks =
+        SlackSocketModeListenerCallbacks::new().with_push_events(test_push_events_sm_function);
 
     let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(test_error_handler),
+            .with_error_handler(test_error_handler)
+            .with_user_state(UserStateExample(0)),
     );
 
     let socket_mode_listener = SlackClientSocketModeListener::new(
