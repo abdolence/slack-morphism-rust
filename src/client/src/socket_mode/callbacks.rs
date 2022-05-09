@@ -1,12 +1,12 @@
 use crate::errors::*;
-use crate::listener::SlackClientEventsUserStateStorage;
+use crate::listener::SlackClientEventsUserState;
 use crate::prelude::{SlackInteractionEvent, SlackPushEventCallback, UserCallbackFunction};
 use crate::{SlackClient, SlackClientHttpConnector, UserCallbackResult};
 use futures::future::BoxFuture;
 use slack_morphism_models::events::{SlackCommandEvent, SlackCommandEventResponse};
 use slack_morphism_models::socket_mode::SlackSocketModeHelloEvent;
 use std::future::Future;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tracing::*;
 
 pub trait SlackSocketModeListenerCallback<SCHC, RQ, RS>
@@ -19,15 +19,13 @@ where
         &self,
         ev: RQ,
         client: Arc<SlackClient<SCHC>>,
-        state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        state_storage: SlackClientEventsUserState,
     ) -> BoxFuture<'static, RS>;
 }
 
 impl<T, F, SCHC, RQ, RS> SlackSocketModeListenerCallback<SCHC, RQ, RS> for T
 where
-    T: Send
-        + Sync
-        + Fn(RQ, Arc<SlackClient<SCHC>>, Arc<RwLock<SlackClientEventsUserStateStorage>>) -> F,
+    T: Send + Sync + Fn(RQ, Arc<SlackClient<SCHC>>, SlackClientEventsUserState) -> F,
     F: Future<Output = RS> + Send + 'static,
     SCHC: SlackClientHttpConnector + Send + Sync,
     RQ: Send + Sync + 'static,
@@ -37,7 +35,7 @@ where
         &self,
         ev: RQ,
         client: Arc<SlackClient<SCHC>>,
-        state_storage: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        state_storage: SlackClientEventsUserState,
     ) -> BoxFuture<'static, RS> {
         Box::pin(self(ev, client, state_storage))
     }
@@ -97,7 +95,7 @@ where
     async fn empty_hello_callback(
         event: SlackSocketModeHelloEvent,
         _client: Arc<SlackClient<SCHC>>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        _states: SlackClientEventsUserState,
     ) {
         debug!("Received Slack hello for socket mode: {:?}", event);
     }
@@ -116,7 +114,7 @@ where
     async fn empty_command_events_callback(
         event: SlackCommandEvent,
         _client: Arc<SlackClient<SCHC>>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        _states: SlackClientEventsUserState,
     ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
         warn!("No callback is specified for a command event: {:?}", event);
         Err(Box::new(SlackClientError::SystemError(
@@ -139,7 +137,7 @@ where
     async fn empty_interaction_events_callback(
         event: SlackInteractionEvent,
         _client: Arc<SlackClient<SCHC>>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        _states: SlackClientEventsUserState,
     ) -> UserCallbackResult<()> {
         warn!(
             "No callback is specified for interactive events: {:?}",
@@ -165,7 +163,7 @@ where
     async fn empty_push_events_callback(
         event: SlackPushEventCallback,
         _client: Arc<SlackClient<SCHC>>,
-        _states: Arc<RwLock<SlackClientEventsUserStateStorage>>,
+        _states: SlackClientEventsUserState,
     ) -> UserCallbackResult<()> {
         warn!("No callback is specified for a push event: {:?}", event);
 
