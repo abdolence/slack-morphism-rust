@@ -24,11 +24,10 @@ let listener_environment = Arc::new(
 async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc<SlackHyperClient>,
-    user_states_storage: Arc<SlackClientEventsUserState>,
+    user_state_storage: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    // SlackClientEventsUserState is an alias for RwLock<SlackClientEventsUserStateStorage>
-    let states = user_states_storage.read().unwrap();
+    let states = user_state_storage.read().await;
 
     let user_state: Option<&UserStateExample> = 
         states.get_user_state::<UserStateExample>();
@@ -43,11 +42,10 @@ async fn test_push_events_function(
 async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc<SlackHyperClient>,
-    user_states_storage: Arc<SlackClientEventsUserState>,
+    user_state_storage: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    // SlackClientEventsUserState is an alias for RwLock<SlackClientEventsUserStateStorage>
-    let states = user_states_storage.write().unwrap();
+    let states = user_state_storage.write().await;
 
     states.set_user_state(UserStateExample(555));
 
