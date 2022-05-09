@@ -13,6 +13,7 @@ use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
 use futures::future::{BoxFuture, FutureExt};
 use lazy_static::lazy_static;
+use slack_morphism_models::blocks::{SlackBlock, SlackBlockText};
 use slack_morphism_models::*;
 use std::collections::HashMap;
 use url::Url;
@@ -113,11 +114,25 @@ where
     }
 
     ///
+    /// The old/legacy version of unfurl with channel/ts
     /// https://api.slack.com/methods/chat.unfurl
     ///
     pub async fn chat_unfurl(
         &self,
         req: &SlackApiChatUnfurlRequest,
+    ) -> ClientResult<SlackApiChatUnfurlResponse> {
+        self.http_session_api
+            .http_post("chat.unfurl", req, Some(&SLACK_TIER3_METHOD_CONFIG))
+            .await
+    }
+
+    ///
+    /// The version for unfurl with source/unfurl_id
+    /// https://api.slack.com/methods/chat.unfurl
+    ///
+    pub async fn chat_unfurl_v2(
+        &self,
+        req: &SlackApiChatUnfurlRequestV2,
     ) -> ClientResult<SlackApiChatUnfurlResponse> {
         self.http_session_api
             .http_post("chat.unfurl", req, Some(&SLACK_TIER3_METHOD_CONFIG))
@@ -274,18 +289,52 @@ pub struct SlackApiChatUnfurlRequest {
     pub unfurls: HashMap<String, SlackApiChatUnfurlMapItem>,
     pub user_auth_message: Option<String>,
     pub user_auth_required: Option<bool>,
-    pub user_auth_url: Option<String>,
+    pub user_auth_url: Option<Url>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackApiChatUnfurlResponse {}
+pub struct SlackApiChatUnfurlRequestV2 {
+    pub source: SlackApiChatUnfurlSource,
+    pub unfurl_id: SlackUnfurlId,
+    pub unfurls: HashMap<String, SlackApiChatUnfurlMapItemV2>,
+    pub user_auth_message: Option<String>,
+    pub user_auth_required: Option<bool>,
+    pub user_auth_url: Option<Url>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum SlackApiChatUnfurlSource {
+    #[serde(rename = "composer")]
+    Composer,
+    #[serde(rename = "conversations_history")]
+    ConversationsHistory,
+}
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatUnfurlMapItem {
     pub text: String,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlMapItemV2 {
+    pub blocks: Vec<SlackBlock>,
+    pub preview: Option<SlackApiChatUnfurlPreview>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlPreview {
+    pub title: SlackBlockText,
+    pub icon_url: Option<Url>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlResponse {}
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
