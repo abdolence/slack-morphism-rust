@@ -16,7 +16,7 @@ use slack_morphism_hyper::*;
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<SlackClientEventsUserState>,
+    _states: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
     Ok(())
@@ -25,7 +25,7 @@ async fn test_interaction_events_function(
 async fn test_command_events_function(
     event: SlackCommandEvent,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<SlackClientEventsUserState>,
+    _states: SlackClientEventsUserState,
 ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
     Ok(SlackCommandEventResponse::new(
@@ -36,7 +36,7 @@ async fn test_command_events_function(
 async fn test_push_events_sm_function(
     event: SlackPushEventCallback,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<SlackClientEventsUserState>,
+    _states: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
     Ok(())
@@ -86,18 +86,20 @@ socket_mode_listener.serve().await;
 
 ```
 
-## Important caveats to be aware of
+## Important caveats
 
 ### The time blocking of the SM listener callbacks is important
 
-If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again and also to inform users with errors and timeouts. 
-So, if you have something complicated that could take more time you should spawn your own future, e.g:
+If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again 
+and also to inform users with errors and timeouts. 
+So, if you have something complex and time-consuming in your callbacks 
+you should spawn your own future, e.g:
 
 ```rust,noplaypen
     async fn test_push_events_sm_function(
         event: SlackPushEventCallback,
         _client: Arc<SlackHyperClient>,
-        _states: Arc<SlackClientEventsUserState>,
+        _states: SlackClientEventsUserState,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         tokio::spawn(async move { process_message(client, event).await; });
         Ok(())
@@ -112,7 +114,7 @@ It is highly recommended implementing your own error handling function:
 fn test_error_handler(
     err: Box<dyn std::error::Error + Send + Sync>,
     _client: Arc<SlackHyperClient>,
-    _states: Arc<SlackClientEventsUserState>,
+    _states: SlackClientEventsUserState,
 ) -> http::StatusCode {
     println!("{:#?}", err);
 
