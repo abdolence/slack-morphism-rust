@@ -187,7 +187,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // Our error handler for Slack Events API
     fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, 
        _client: Arc&lt;SlackHyperClient&gt;, 
-       _states: Arc&lt;RwLock&lt;SlackClientEventsUserStateStorage&gt;&gt;) -&gt; http::StatusCode {
+       _states: SlackClientEventsUserState) -&gt; http::StatusCode {
         error!(&quot;Slack Events error: {:#?}&quot;, err);
         
         // Defines what we return Slack server
@@ -207,7 +207,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     async fn slack_oauth_install_function(
         resp: SlackOAuthV2AccessTokenResponse,
         _client: Arc&lt;SlackHyperClient&gt;,
-        _states: Arc&lt;SlackClientEventsUserState&gt;
+        _states: SlackClientEventsUserState
     ) {
         println!(&quot;{:#?}&quot;, resp);
         Ok(())
@@ -216,7 +216,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // Push events handler
     async fn slack_push_events_function(event: SlackPushEvent, 
        _client: Arc&lt;SlackHyperClient&gt;, 
-       _states: Arc&lt;SlackClientEventsUserState&gt;
+       _states: SlackClientEventsUserState
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         println!(&quot;{:#?}&quot;, event);
 
@@ -226,7 +226,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // Interaction events handler
     async fn slack_interaction_events_function(event: SlackInteractionEvent, 
         _client: Arc&lt;SlackHyperClient&gt;,
-        _states: Arc&lt;SlackClientEventsUserState&gt;
+        _states: SlackClientEventsUserState
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         println!(&quot;{:#?}&quot;, event);
 
@@ -237,7 +237,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     async fn slack_command_events_function(
         event: SlackCommandEvent,
         _client: Arc&lt;SlackHyperClient&gt;,
-        _states: Arc&lt;SlackClientEventsUserState&gt;
+        _states: SlackClientEventsUserState
     ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         println!(&quot;{:#?}&quot;, event);
         Ok(SlackCommandEventResponse::new(
