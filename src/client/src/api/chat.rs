@@ -250,6 +250,7 @@ pub struct SlackApiChatPostMessageRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatPostMessageResponse {
+    pub channel: SlackChannelId,
     pub ts: SlackTs,
     pub message: SlackMessage,
 }
