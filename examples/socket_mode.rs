@@ -28,9 +28,8 @@ async fn test_command_events_function(
         .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
         .await?;
 
-    Ok(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text("Working on it".into()),
-    ))
+    Ok(SlackCommandEventResponse::new()
+        .with_content(SlackMessageContent::new().with_text("Working on it".into())))
 }
 
 async fn test_push_events_sm_function(

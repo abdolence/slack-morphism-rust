@@ -61,9 +61,8 @@ async fn test_command_events_function(
         .await?;
 
     println!("{:#?}", event);
-    Ok(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text("Working on it".into()),
-    ))
+    Ok(SlackCommandEventResponse::new()
+        .with_content(SlackMessageContent::new().with_text("Working on it".into())))
 }
 
 fn test_error_handler(
