@@ -51,7 +51,7 @@ async fn test_command_events_function(
     event: SlackCommandEvent,
     _client: Arc<SlackHyperClient>,
     _states: SlackClientEventsUserState,
-) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<Option<SlackCommandEventResponse>, Box<dyn std::error::Error + Send + Sync>> {
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = _client.open_session(&token);
@@ -61,8 +61,9 @@ async fn test_command_events_function(
         .await?;
 
     println!("{:#?}", event);
-    Ok(SlackCommandEventResponse::new()
-        .with_content(SlackMessageContent::new().with_text("Working on it".into())))
+    Ok(Some(SlackCommandEventResponse::new().with_content(
+        SlackMessageContent::new().with_text("Working on it".into()),
+    )))
 }
 
 fn test_error_handler(

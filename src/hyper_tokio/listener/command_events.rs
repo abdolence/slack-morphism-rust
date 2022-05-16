@@ -20,7 +20,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         config: Arc<SlackCommandEventsListenerConfig>,
         command_service_fn: UserCallbackFunction<
             SlackCommandEvent,
-            impl Future<Output = UserCallbackResult<SlackCommandEventResponse>> + 'static + Send,
+            impl Future<Output = UserCallbackResult<Option<SlackCommandEventResponse>>> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
@@ -107,14 +107,23 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         )
                                         .await
                                         {
-                                            Ok(cresp) => Response::builder()
-                                                .status(StatusCode::OK)
-                                                .header(
-                                                    "content-type",
-                                                    "application/json; charset=utf-8",
-                                                )
-                                                .body(serde_json::to_string(&cresp).unwrap().into())
-                                                .map_err(|e| e.into()),
+                                            Ok(cresp) => match cresp {
+                                                Some(cresp) => Response::builder()
+                                                    .status(StatusCode::OK)
+                                                    .header(
+                                                        "content-type",
+                                                        "application/json; charset=utf-8",
+                                                    )
+                                                    .body(
+                                                        serde_json::to_string(&cresp)
+                                                            .unwrap()
+                                                            .into(),
+                                                    ),
+                                                None => Response::builder()
+                                                    .status(StatusCode::OK)
+                                                    .body(Body::empty()),
+                                            }
+                                            .map_err(|e| e.into()),
                                             Err(err) => {
                                                 let status_code = thread_error_handler(
                                                     err,
