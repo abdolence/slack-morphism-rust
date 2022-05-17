@@ -44,7 +44,7 @@ http = "0.2"
 tokio-tungstenite = { version = "0.17.1", features = ["rustls-tls-native-roots"] }
 rand = "0.8.5"
 async-recursion="1.0.0"
-signal-hook = { version = "0.3.13", features = ["extended-siginfo"]}
+signal-hook = { version = "0.3.14", features = ["extended-siginfo"]}
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
 
 [dev-dependencies]
