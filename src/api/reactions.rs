@@ -51,6 +51,6 @@ pub struct SlackApiReactionsGetRequest {
 #[serde(rename_all = "lowercase")]
 #[allow(clippy::large_enum_variant)]
 pub enum SlackApiReactionsGetResponse {
-    Message(SlackMessage),
+    Message(SlackHistoryMessage),
     File(SlackFile),
 }
