@@ -41,11 +41,22 @@ pub struct SlackMessageSender {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackParentMessageParams {
+    pub reply_count: Option<usize>,
+    pub reply_users_count: Option<usize>,
+    pub latest_reply: Option<SlackTs>,
+    pub reply_users: Option<Vec<SlackUserId>>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessage {
     #[serde(flatten)]
     pub origin: SlackMessageOrigin,
     #[serde(flatten)]
     pub content: SlackMessageContent,
+    #[serde(flatten)]
+    pub parent: SlackParentMessageParams,
 }
 
 #[skip_serializing_none]
@@ -57,6 +68,8 @@ pub struct SlackHistoryMessage {
     pub content: SlackMessageContent,
     #[serde(flatten)]
     pub sender: SlackMessageSender,
+    #[serde(flatten)]
+    pub parent: SlackParentMessageParams,
     pub subtype: Option<SlackMessageEventType>,
 }
 
