@@ -6,6 +6,7 @@ use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 use crate::ratectl::SLACK_TIER3_METHOD_CONFIG;
 use crate::SlackClientSession;
@@ -47,10 +48,17 @@ pub struct SlackApiReactionsGetRequest {
     pub timestamp: Option<SlackTs>,
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiReactionsGetMessageResponse {
+    #[serde(flatten)]
+    pub message: SlackHistoryMessage,
+    pub permalink: Url,
+}
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[allow(clippy::large_enum_variant)]
 pub enum SlackApiReactionsGetResponse {
-    Message(SlackHistoryMessage),
+    Message(SlackApiReactionsGetMessageResponse),
     File(SlackFile),
 }
