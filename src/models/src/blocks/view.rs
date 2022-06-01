@@ -62,7 +62,6 @@ pub struct SlackStatefulStateParams {
     pub team_id: SlackTeamId,
     pub state: Option<SlackViewState>,
     pub hash: String,
-    pub callback_id: Option<SlackCallbackId>,
     pub previous_view_id: Option<SlackViewId>,
     pub root_view_id: Option<SlackViewId>,
     pub app_id: Option<SlackAppId>,
