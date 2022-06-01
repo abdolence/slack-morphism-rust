@@ -117,6 +117,7 @@ pub struct SlackInteractionViewSubmissionEvent {
     pub team: SlackBasicTeamInfo,
     pub user: SlackBasicUserInfo,
     pub view: SlackStatefulView,
+    pub trigger_id: Option<SlackTriggerId>,
 }
 
 #[skip_serializing_none]
@@ -125,4 +126,5 @@ pub struct SlackInteractionViewClosedEvent {
     pub team: SlackBasicTeamInfo,
     pub user: SlackBasicUserInfo,
     pub view: SlackStatefulView,
+    pub trigger_id: Option<SlackTriggerId>,
 }
