@@ -44,6 +44,9 @@ pub struct SlackScheduledMid(pub String);
 pub struct SlackTeamId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackEnterpriseSubteamId(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackAppId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
@@ -72,6 +75,9 @@ pub struct SlackActionType(pub String);
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackUserId(pub String);
+
+#[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackUserGroupId(pub String);
 
 impl SlackTextFormat for SlackUserId {
     fn to_slack_format(&self) -> String {

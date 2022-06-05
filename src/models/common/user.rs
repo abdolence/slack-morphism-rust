@@ -66,5 +66,46 @@ pub struct SlackBasicUserInfo {
     pub username: Option<String>,
 }
 
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUserGroup {
+    pub id: SlackUserGroupId,
+    pub team_id: SlackTeamId,
+    pub enterprise_subteam_id: Option<SlackEnterpriseSubteamId>,
+    pub is_usergroup: Option<bool>,
+    pub is_subteam: Option<bool>,
+    pub name: String,
+    pub description: Option<String>,
+    pub handle: String,
+    pub is_external: bool,
+    pub auto_provision: Option<bool>,
+    pub date_create: SlackDateTime,
+    pub date_update: Option<SlackDateTime>,
+    pub date_delete: Option<SlackDateTime>,
+    pub auto_type: Option<SlackAutoType>,
+    pub created_by: SlackUserId,
+    pub updated_by: Option<SlackUserId>,
+    pub deleted_by: Option<SlackUserId>,
+    pub prefs: SlackUserGroupPrefs,
+    pub users: Option<Vec<SlackUserId>>,
+    pub user_count: String,
+    pub channel_count: Option<u64>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackAutoType {
+    Admin,
+    Owner,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUserGroupPrefs {
+    pub channels: Vec<SlackChannelId>,
+    pub groups: Vec<SlackUserGroupId>,
+}
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackAvatarHash(pub String);
