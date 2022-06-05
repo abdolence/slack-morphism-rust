@@ -50,13 +50,13 @@ where
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUserGroupsListRequest {
-    include_count: Option<bool>,
-    include_disabled: Option<bool>,
-    include_users: Option<bool>,
-    team_id: Option<SlackTeamId>,
+    pub include_count: Option<bool>,
+    pub include_disabled: Option<bool>,
+    pub include_users: Option<bool>,
+    pub team_id: Option<SlackTeamId>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUserGroupsListResponse {
-    usergroups: Vec<SlackUserGroup>,
+    pub usergroups: Vec<SlackUserGroup>,
 }
