@@ -116,7 +116,8 @@ where
             .http_get(
                 "users.list",
                 &vec![
-                    ("cursor", req.cursor.as_ref().map(|x| x.value())),
+                    ("cursor", req.cursor.as_ref().map(|v| v.value())),
+                    ("team_id", req.team_id.as_ref().map(|v| v.value())),
                     ("limit", req.limit.map(|v| v.to_string()).as_ref()),
                     (
                         "include_locale",
@@ -249,6 +250,7 @@ pub struct SlackApiUsersListRequest {
     pub cursor: Option<SlackCursorId>,
     pub include_locale: Option<bool>,
     pub limit: Option<u16>,
+    pub team_id: Option<SlackTeamId>,
 }
 
 #[skip_serializing_none]
