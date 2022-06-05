@@ -4,7 +4,7 @@ use crate::SlackUserId;
 use rsb_derive::Builder;
 use rvstruct::*;
 use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
+use serde_with::{serde_as, skip_serializing_none, DisplayFromStr};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -66,6 +66,7 @@ pub struct SlackBasicUserInfo {
     pub username: Option<String>,
 }
 
+#[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackUserGroup {
@@ -88,7 +89,8 @@ pub struct SlackUserGroup {
     pub deleted_by: Option<SlackUserId>,
     pub prefs: SlackUserGroupPrefs,
     pub users: Option<Vec<SlackUserId>>,
-    pub user_count: String,
+    #[serde_as(as = "DisplayFromStr")]
+    pub user_count: usize,
     pub channel_count: Option<u64>,
 }
 
