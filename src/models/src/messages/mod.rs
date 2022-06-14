@@ -28,6 +28,7 @@ pub struct SlackMessageContent {
     pub attachments: Option<Vec<SlackMessageAttachment>>,
     pub upload: Option<bool>,
     pub files: Option<Vec<SlackFile>>,
+    pub reactions: Option<Vec<SlackReaction>>,
 }
 
 #[skip_serializing_none]
