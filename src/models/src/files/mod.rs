@@ -36,6 +36,7 @@ pub struct SlackFile {
     pub url_private_download: Option<Url>,
     pub permalink: Option<Url>,
     pub permalink_public: Option<Url>,
+    pub reactions: Option<Vec<SlackReaction>>,
     #[serde(flatten)]
     pub flags: SlackFileFlags,
 }
