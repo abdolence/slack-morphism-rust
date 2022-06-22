@@ -102,7 +102,7 @@ pub struct SlackApiAppsManifestUpdateRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAppsManifestUpdateResponse {
     pub app_id: SlackAppId,
-    pub permission_updated: bool,
+    pub permissions_updated: bool,
 }
 
 fn as_json_string<T, S>(x: &T, s: S) -> Result<S::Ok, S::Error>
