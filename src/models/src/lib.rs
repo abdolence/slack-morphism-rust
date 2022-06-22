@@ -9,6 +9,7 @@
 
 mod common;
 
+pub mod apps;
 pub mod blocks;
 pub mod events;
 pub mod files;

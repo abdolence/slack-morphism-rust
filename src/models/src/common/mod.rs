@@ -172,3 +172,11 @@ impl SlackEmoji {
     pub const SPEECH_BALLOON: &'static str = ":speech_balloon:";
     pub const HEAVY_CHECK_MARK: &'static str = ":heavy_check_mark:";
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub enum SlackShortcutType {
+    #[serde(rename = "message")]
+    Message,
+    #[serde(rename = "global")]
+    Global,
+}
