@@ -1,6 +1,9 @@
-use crate::events::SlackMessageEventType;
-use crate::{SlackCallbackId, SlackShortcutType};
+use rsb_derive::Builder;
+use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
 use url::Url;
+
+use crate::{SlackCallbackId, SlackShortcutType};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
