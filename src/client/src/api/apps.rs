@@ -31,6 +31,22 @@ where
             )
             .await
     }
+
+    ///
+    /// https://api.slack.com/methods/apps.manifest.export
+    ///
+    pub async fn apps_manifest_export(
+        &self,
+        req: &SlackApiAppsManifestExportRequest,
+    ) -> ClientResult<SlackApiAppsManifestExportResponse> {
+        self.http_session_api
+            .http_post(
+                "apps.manifest.export",
+                req,
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -41,4 +57,16 @@ pub struct SlackApiAppsConnectionOpenRequest {}
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAppsConnectionOpenResponse {
     pub url: SlackWebSocketsUrl,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAppsManifestExportRequest {
+    pub app_id: SlackAppId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAppsManifestExportResponse {
+    pub manifest: SlackAppManifest,
 }
