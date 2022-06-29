@@ -429,7 +429,7 @@ where
                                 .client_listener
                                 .on_error(Box::new(SlackClientError::SocketModeProtocolError(
                                     SlackClientSocketModeProtocolError::new(format!(
-                                        "Unexpected binary received from Slack: {:?}",
+                                        "Slack WSS error: {:?}",
                                         err
                                     )),
                                 )))
