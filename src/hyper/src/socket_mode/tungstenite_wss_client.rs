@@ -303,6 +303,7 @@ where
                                 "[{}] WSS client command channel has been closed",
                                 thread_identity.id.to_string()
                             );
+                            break;
                         }
                     }
                 }
@@ -421,7 +422,8 @@ where
                             thread_identity
                                 .client_listener
                                 .on_disconnect(&thread_identity.id)
-                                .await
+                                .await;
+                            break;
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Frame(frame)) => {
                             trace!(
@@ -450,7 +452,8 @@ where
                             thread_identity
                                 .client_listener
                                 .on_disconnect(&thread_identity.id)
-                                .await
+                                .await;
+                            break;
                         }
                     }
                 }
