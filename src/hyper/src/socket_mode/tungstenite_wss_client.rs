@@ -206,7 +206,8 @@ where
         }
 
         let wss_stream =
-            Self::connect_with_reconnections(&identity, listener_environment, destroyed).await?;
+            Self::connect_with_reconnections(&identity, listener_environment, destroyed.clone())
+                .await?;
 
         let (mut writer, mut reader) = wss_stream.split();
 
@@ -220,9 +221,13 @@ where
         {
             let thread_identity = identity.clone();
             let thread_last_time_pong_received = last_time_pong_received.clone();
+            let thread_destroyed = destroyed.clone();
 
             tokio::spawn(async move {
                 while let Some(message) = rx.recv().await {
+                    if thread_destroyed.load(Ordering::Relaxed) {
+                        break;
+                    }
                     match message {
                         SlackTungsteniteWssClientCommand::Message(body) => {
                             if writer
@@ -307,12 +312,16 @@ where
         {
             let thread_identity = identity.clone();
             let ping_tx = tx.clone();
+            let thread_destroyed = destroyed.clone();
             tokio::spawn(async move {
                 let mut interval = tokio::time::interval(std::time::Duration::from_secs(
                     thread_identity.config.ping_interval_in_seconds,
                 ));
 
                 loop {
+                    if thread_destroyed.load(Ordering::Relaxed) {
+                        break;
+                    }
                     interval.tick().await;
                     if !ping_tx.is_closed() {
                         if ping_tx
@@ -335,9 +344,13 @@ where
         {
             let thread_identity = identity.clone();
             let thread_last_time_pong_received = last_time_pong_received;
+            let thread_destroyed = destroyed.clone();
 
             tokio::spawn(async move {
                 while let Some(message) = reader.next().await {
+                    if thread_destroyed.load(Ordering::Relaxed) {
+                        break;
+                    }
                     match message {
                         Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
                             trace!(
@@ -429,7 +442,7 @@ where
                                 .client_listener
                                 .on_error(Box::new(SlackClientError::SocketModeProtocolError(
                                     SlackClientSocketModeProtocolError::new(format!(
-                                        "Unexpected binary received from Slack: {:?}",
+                                        "Slack WSS error: {:?}",
                                         err
                                     )),
                                 )))
@@ -482,6 +495,8 @@ where
             "[{}] Destroying WSS client",
             self.identity.id.to_string()
         );
+        self.destroyed.store(true, Ordering::Relaxed);
+
         let sender = {
             let commands_writer = self.command_writer.write().await;
             (*commands_writer).clone()
@@ -491,7 +506,11 @@ where
             .send(SlackTungsteniteWssClientCommand::Exit)
             .unwrap_or(());
 
-        self.destroyed.store(true, Ordering::Relaxed);
+        debug!(
+            slack_wss_client_id = self.identity.id.to_string().as_str(),
+            "[{}] WSS client has been destroyed",
+            self.identity.id.to_string()
+        );
     }
 
     pub async fn start(&self, initial_wait_timeout: u64) {
