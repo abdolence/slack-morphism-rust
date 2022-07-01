@@ -70,7 +70,7 @@ async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error 
     );
 
     let socket_mode_listener = SlackClientSocketModeListener::new(
-        &SlackClientSocketModeConfig::new().with_debug_connections(true),
+        &SlackClientSocketModeConfig::new(),
         listener_environment.clone(),
         socket_mode_callbacks,
     );
