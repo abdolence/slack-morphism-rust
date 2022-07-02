@@ -96,6 +96,22 @@ where
             )
             .await
     }
+
+    ///
+    /// https://api.slack.com/methods/apps.manifest.validate
+    ///
+    pub async fn apps_manifest_validate(
+        &self,
+        req: &SlackApiAppsManifestValidateRequest,
+    ) -> ClientResult<()> {
+        self.http_session_api
+            .http_post(
+                "apps.manifest.validate",
+                req,
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -169,6 +185,21 @@ pub struct SlackApiAppsManifestUpdateRequest {
 pub struct SlackApiAppsManifestUpdateResponse {
     pub app_id: SlackAppId,
     pub permissions_updated: bool,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAppsManifestValidateRequest {
+    // HACK: This API requires a "json-encoded" string in a JSON object.
+    //       Using these `as_json_string` and `from_json_string` functions,
+    //       we enforce serde to encode or decode the field from/to JSON.
+    #[serde(
+        serialize_with = "as_json_string",
+        deserialize_with = "from_json_string"
+    )]
+    pub manifest: SlackAppManifest,
+
+    pub app_id: Option<SlackAppId>,
 }
 
 fn as_json_string<T, S>(x: &T, s: S) -> Result<S::Ok, S::Error>
