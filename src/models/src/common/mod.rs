@@ -111,6 +111,12 @@ pub struct SlackClientId(pub String);
 pub struct SlackClientSecret(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackVerificationToken(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackSigningSecret(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct EmailAddress(pub String);
 
 #[skip_serializing_none]

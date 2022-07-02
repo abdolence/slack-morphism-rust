@@ -5,6 +5,7 @@
 use rsb_derive::Builder;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 use slack_morphism_models::*;
 
@@ -26,6 +27,22 @@ where
         self.http_session_api
             .http_post(
                 "apps.connections.open",
+                req,
+                Some(&SLACK_TIER1_METHOD_CONFIG),
+            )
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/apps.manifest.create
+    ///
+    pub async fn apps_manifest_create(
+        &self,
+        req: &SlackApiAppsManifestCreateRequest,
+    ) -> ClientResult<SlackApiAppsManifestCreateResponse> {
+        self.http_session_api
+            .http_post(
+                "apps.manifest.create",
                 req,
                 Some(&SLACK_TIER1_METHOD_CONFIG),
             )
@@ -73,6 +90,29 @@ pub struct SlackApiAppsConnectionOpenRequest {}
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAppsConnectionOpenResponse {
     pub url: SlackWebSocketsUrl,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAppsManifestCreateRequest {
+    pub app_id: SlackAppId,
+
+    // HACK: This API requires a "json-encoded" string in a JSON object.
+    //       Using these `as_json_string` and `from_json_string` functions,
+    //       we enforce serde to encode or decode the field from/to JSON.
+    #[serde(
+        serialize_with = "as_json_string",
+        deserialize_with = "from_json_string"
+    )]
+    pub manifest: SlackAppManifest,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAppsManifestCreateResponse {
+    pub app_id: SlackAppId,
+    pub credentials: SlackAppCredentials,
+    pub oauth_authorize_url: Url,
 }
 
 #[skip_serializing_none]
