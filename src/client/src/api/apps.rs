@@ -59,7 +59,7 @@ where
             .http_post(
                 "apps.manifest.update",
                 req,
-                Some(&SLACK_TIER3_METHOD_CONFIG),
+                Some(&SLACK_TIER1_METHOD_CONFIG),
             )
             .await
     }
