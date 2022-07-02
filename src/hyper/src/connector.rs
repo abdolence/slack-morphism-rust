@@ -249,22 +249,13 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     {
         match (self.tokio_rate_controller.as_ref(), rate_control_params) {
             (Some(rate_controller), maybe_method_rate_params) => {
-                if let Some(duration) = rate_controller
-                    .calc_throttle_delay(
+                rate_controller
+                    .throttle_delay(
                         maybe_method_rate_params,
                         token.and_then(|t| t.team_id.clone()),
                         delayed,
                     )
-                    .await
-                {
-                    if !duration.is_zero() {
-                        debug!("Slack throttler postponed request for {:?}", duration);
-                        let mut interval = tokio::time::interval(duration);
-
-                        interval.tick().await;
-                        interval.tick().await;
-                    }
-                }
+                    .await;
 
                 self.retry_request_if_needed(
                     rate_controller.clone(),
