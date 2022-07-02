@@ -2,6 +2,7 @@ use slack_morphism::prelude::*;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
+use tracing::*;
 
 #[derive(Clone, Debug)]
 pub struct SlackTokioRateController {
@@ -17,7 +18,7 @@ impl SlackTokioRateController {
         }
     }
 
-    pub async fn calc_throttle_delay(
+    async fn calc_throttle_delay(
         &self,
         method_rate_ctl: Option<&SlackApiMethodRateControlConfig>,
         team_id: Option<SlackTeamId>,
@@ -39,6 +40,26 @@ impl SlackTokioRateController {
             }
         } else {
             delayed
+        }
+    }
+
+    pub async fn throttle_delay(
+        &self,
+        method_rate_ctl: Option<&SlackApiMethodRateControlConfig>,
+        team_id: Option<SlackTeamId>,
+        delayed: Option<Duration>,
+    ) {
+        if let Some(duration) = self
+            .calc_throttle_delay(method_rate_ctl, team_id, delayed)
+            .await
+        {
+            if !duration.is_zero() {
+                debug!("Slack throttler postponed request for {:?}", duration);
+                let mut interval = tokio::time::interval(duration);
+
+                interval.tick().await;
+                interval.tick().await;
+            }
         }
     }
 }
