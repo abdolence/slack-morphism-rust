@@ -50,6 +50,22 @@ where
     }
 
     ///
+    /// https://api.slack.com/methods/apps.manifest.delete
+    ///
+    pub async fn apps_manifest_delete(
+        &self,
+        req: &SlackApiAppsManifestDeleteRequest,
+    ) -> ClientResult<()> {
+        self.http_session_api
+            .http_post(
+                "apps.manifest.delete",
+                req,
+                Some(&SLACK_TIER1_METHOD_CONFIG),
+            )
+            .await
+    }
+
+    ///
     /// https://api.slack.com/methods/apps.manifest.export
     ///
     pub async fn apps_manifest_export(
@@ -113,6 +129,12 @@ pub struct SlackApiAppsManifestCreateResponse {
     pub app_id: SlackAppId,
     pub credentials: SlackAppCredentials,
     pub oauth_authorize_url: Url,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiAppsManifestDeleteRequest {
+    pub app_id: SlackAppId,
 }
 
 #[skip_serializing_none]
