@@ -91,6 +91,10 @@ pub struct SlackApiAppsManifestExportResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAppsManifestUpdateRequest {
     pub app_id: SlackAppId,
+
+    // HACK: This API requires a "json-encoded" string in a JSON object.
+    //       Using these `as_json_string` and `from_json_string` functions,
+    //       we enforce serde to encode or decode the field from/to JSON.
     #[serde(
         serialize_with = "as_json_string",
         deserialize_with = "from_json_string"
