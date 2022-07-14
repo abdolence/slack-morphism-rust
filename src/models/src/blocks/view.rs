@@ -94,13 +94,6 @@ pub struct SlackViewStateValue {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackViewStateValueSelectedOption {
-    pub text: SlackViewStateValueSelectedOptionText,
+    pub text: SlackBlockPlainText,
     pub value: String,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackViewStateValueSelectedOptionText {
-    pub text: String,
-    pub emoji: Option<bool>,
 }
