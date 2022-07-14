@@ -195,3 +195,6 @@ pub enum SlackShortcutType {
     #[serde(rename = "global")]
     Global,
 }
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackEventType(pub String);

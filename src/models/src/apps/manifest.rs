@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
-use crate::{SlackApiTokenScope, SlackCallbackId, SlackShortcutType};
+use crate::{SlackApiTokenScope, SlackCallbackId, SlackEventType, SlackShortcutType};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -25,8 +25,8 @@ pub struct SlackAppManifestDisplayInformation {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackAppManifestSettingsEventSubscriptions {
     pub request_url: Option<Url>,
-    pub bot_events: Option<Vec<String>>,
-    pub user_events: Option<Vec<String>>,
+    pub bot_events: Option<Vec<SlackEventType>>,
+    pub user_events: Option<Vec<SlackEventType>>,
 }
 
 #[skip_serializing_none]
