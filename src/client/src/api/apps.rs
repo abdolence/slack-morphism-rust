@@ -3,7 +3,7 @@
 //!
 
 use rsb_derive::Builder;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
@@ -130,12 +130,7 @@ pub struct SlackApiAppsManifestCreateRequest {
     pub app_id: SlackAppId,
 
     // HACK: This API requires a "json-encoded" string in a JSON object.
-    //       Using these `as_json_string` and `from_json_string` functions,
-    //       we enforce serde to encode or decode the field from/to JSON.
-    #[serde(
-        serialize_with = "as_json_string",
-        deserialize_with = "from_json_string"
-    )]
+    #[serde(with = "serde_with::json::nested")]
     pub manifest: SlackAppManifest,
 }
 
@@ -171,12 +166,7 @@ pub struct SlackApiAppsManifestUpdateRequest {
     pub app_id: SlackAppId,
 
     // HACK: This API requires a "json-encoded" string in a JSON object.
-    //       Using these `as_json_string` and `from_json_string` functions,
-    //       we enforce serde to encode or decode the field from/to JSON.
-    #[serde(
-        serialize_with = "as_json_string",
-        deserialize_with = "from_json_string"
-    )]
+    #[serde(with = "serde_with::json::nested")]
     pub manifest: SlackAppManifest,
 }
 
@@ -191,29 +181,8 @@ pub struct SlackApiAppsManifestUpdateResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAppsManifestValidateRequest {
     // HACK: This API requires a "json-encoded" string in a JSON object.
-    //       Using these `as_json_string` and `from_json_string` functions,
-    //       we enforce serde to encode or decode the field from/to JSON.
-    #[serde(
-        serialize_with = "as_json_string",
-        deserialize_with = "from_json_string"
-    )]
+    #[serde(with = "serde_with::json::nested")]
     pub manifest: SlackAppManifest,
 
     pub app_id: Option<SlackAppId>,
-}
-
-fn as_json_string<T, S>(x: &T, s: S) -> Result<S::Ok, S::Error>
-where
-    T: Serialize,
-    S: Serializer,
-{
-    s.serialize_str(&serde_json::to_string(x).map_err(serde::ser::Error::custom)?)
-}
-
-fn from_json_string<'de, T, D>(d: D) -> Result<T, D::Error>
-where
-    T: Deserialize<'de> + 'static,
-    D: Deserializer<'de>,
-{
-    serde_json::from_str(<&str>::deserialize(d)?).map_err(serde::de::Error::custom)
 }
