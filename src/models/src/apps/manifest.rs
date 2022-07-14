@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
-use crate::{SlackCallbackId, SlackShortcutType};
+use crate::{SlackApiTokenScope, SlackCallbackId, SlackShortcutType};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -103,8 +103,8 @@ pub struct SlackAppManifestFeatures {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackAppManifestOAuthConfigScopes {
-    pub bot: Option<Vec<String>>,
-    pub user: Option<Vec<String>>,
+    pub bot: Option<Vec<SlackApiTokenScope>>,
+    pub user: Option<Vec<SlackApiTokenScope>>,
 }
 
 #[skip_serializing_none]

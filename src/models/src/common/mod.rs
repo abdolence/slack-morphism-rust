@@ -110,6 +110,9 @@ pub struct SlackClientId(pub String);
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackClientSecret(pub String);
 
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackApiTokenScope(pub String);
+
 #[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackVerificationToken(pub String);
 

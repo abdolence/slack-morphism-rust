@@ -5,6 +5,9 @@ use serde_with::skip_serializing_none;
 
 use slack_morphism_models::SlackTeamId;
 
+// Re-exports for backward compatibility
+pub use slack_morphism_models::SlackApiTokenScope;
+
 #[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackApiTokenValue(pub String);
 
@@ -13,9 +16,6 @@ impl std::fmt::Debug for SlackApiTokenValue {
         write!(f, "SlackApiTokenValue(len:{})", self.value().len())
     }
 }
-
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
-pub struct SlackApiTokenScope(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub enum SlackApiTokenType {
