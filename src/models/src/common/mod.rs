@@ -110,8 +110,14 @@ pub struct SlackClientId(pub String);
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackClientSecret(pub String);
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackVerificationToken(pub String);
+
+impl fmt::Debug for SlackVerificationToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlackVerificationToken(len:{})", self.value().len())
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackSigningSecret(pub String);
