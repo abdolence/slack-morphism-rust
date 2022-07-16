@@ -97,23 +97,23 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 
     let oauth_listener_config = Arc::new(SlackOAuthListenerConfig::new(
-        config_env_var("SLACK_CLIENT_ID")?,
-        config_env_var("SLACK_CLIENT_SECRET")?,
+        config_env_var("SLACK_CLIENT_ID")?.into(),
+        config_env_var("SLACK_CLIENT_SECRET")?.into(),
         config_env_var("SLACK_BOT_SCOPE")?,
         config_env_var("SLACK_REDIRECT_HOST")?,
     ));
 
-    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(config_env_var(
-        "SLACK_SIGNING_SECRET",
-    )?));
-
-    let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
-        config_env_var("SLACK_SIGNING_SECRET")?,
+    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
-    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(config_env_var(
-        "SLACK_SIGNING_SECRET",
-    )?));
+    let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
+    ));
+
+    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
+    ));
 
     let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())

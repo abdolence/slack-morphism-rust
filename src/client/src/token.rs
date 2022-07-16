@@ -3,10 +3,7 @@ use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use slack_morphism_models::SlackTeamId;
-
-// Re-exports for backward compatibility
-pub use slack_morphism_models::SlackApiTokenScope;
+use slack_morphism_models::{SlackApiTokenScope, SlackTeamId};
 
 #[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackApiTokenValue(pub String);

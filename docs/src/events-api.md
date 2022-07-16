@@ -114,23 +114,23 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     // You can additionally configure HTTP route paths using theses configs,
     // but for simplicity we will skip that part here and configure only required parameters.
     let oauth_listener_config = Arc::new(SlackOAuthListenerConfig::new(
-        std::env::var("SLACK_CLIENT_ID")?,
-        std::env::var("SLACK_CLIENT_SECRET")?,
-        std::env::var("SLACK_BOT_SCOPE")?,
-        std::env::var("SLACK_REDIRECT_HOST")?,
+        config_env_var("SLACK_CLIENT_ID")?.into(),
+        config_env_var("SLACK_CLIENT_SECRET")?.into(),
+        config_env_var("SLACK_BOT_SCOPE")?,
+        config_env_var("SLACK_REDIRECT_HOST")?,
     ));
 
-    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(std::env::var(
-        "SLACK_SIGNING_SECRET",
-    )?));
+    let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
+    ));
 
     let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
-        std::env::var("SLACK_SIGNING_SECRET")?,
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
-    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(std::env::var(
-        "SLACK_SIGNING_SECRET",
-    )?));
+    let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
+    ));
 
     // Creating a shared listener environment with an ability to share client and user state
     let listener_environment = Arc::new(
@@ -189,11 +189,27 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
 }
 ``` 
 
- Also the library provides Slack events signature verifier (`SlackEventSignatureVerifier`),
- which is already integrated in the routes implementation for you and you don't need to use 
- it directly. All you need is provide your client id and secret configuration 
- to route implementation.
+## Testing with ngrok
+For development/testing purposes you can use [ngrok](https://ngrok.com/):
+```
+ngrok http 8080
+```
+and copy the URL it gives for you to the example parameters for `SLACK_REDIRECT_HOST`.
 
+Example testing with ngrok:
+```
+SLACK_CLIENT_ID=<your-client-id> \
+SLACK_CLIENT_SECRET=<your-client-secret> \
+SLACK_BOT_SCOPE=app_mentions:read,incoming-webhook \
+SLACK_REDIRECT_HOST=https://<your-ngrok-url>.ngrok.io \
+SLACK_SIGNING_SECRET=<your-signing-secret> \
+cargo run --example events_api_server
+```
+
+## Slack Signature Verifier
+ The library provides Slack events signature verifier (`SlackEventSignatureVerifier`),
+ which is already integrated in the OAuth routes implementation for you, and you don't need to use it directly.
+ All you need is provide your client id and secret configuration to route implementation.
  Look at the [complete example here](https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples/events_api_server.rs).
 
- 
+ In case you're embedding the library into your own Web/routes-framework, you can use it separately.
