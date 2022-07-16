@@ -7,7 +7,7 @@ use url::Url;
 use crate::common::*;
 
 #[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
 pub struct SlackBlockId(pub String);
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

@@ -1,5 +1,5 @@
 use crate::blocks::kit::SlackBlock;
-use crate::blocks::SlackBlockPlainTextOnly;
+use crate::blocks::{SlackBlockId, SlackBlockPlainText, SlackBlockPlainTextOnly};
 use crate::common::SlackCallbackId;
 use crate::*;
 use rsb_derive::Builder;
@@ -71,5 +71,29 @@ pub struct SlackStatefulStateParams {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackViewState {
-    pub values: HashMap<String, serde_json::Value>,
+    pub values: HashMap<SlackBlockId, HashMap<SlackActionId, SlackViewStateValue>>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackViewStateValue {
+    #[serde(rename = "type")]
+    pub action_type: SlackActionType,
+    pub value: Option<String>,
+    pub selected_date: Option<String>,
+    pub selected_time: Option<String>,
+    pub selected_conversation: Option<SlackConversationId>,
+    pub selected_channel: Option<SlackChannelId>,
+    pub selected_user: Option<SlackUserId>,
+    pub selected_option: Option<SlackViewStateValueSelectedOption>,
+    pub selected_conversations: Option<Vec<SlackConversationId>>,
+    pub selected_users: Option<Vec<SlackUserId>>,
+    pub selected_options: Option<Vec<SlackViewStateValueSelectedOption>>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackViewStateValueSelectedOption {
+    pub text: SlackBlockPlainText,
+    pub value: String,
 }
