@@ -1,9 +1,11 @@
 use ring::hmac;
 use rsb_derive::Builder;
+use rvstruct::*;
+use slack_morphism_models::SlackSigningSecret;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SlackEventSignatureVerifier {
     secret_len: usize,
     key: hmac::Key,
@@ -13,11 +15,11 @@ impl SlackEventSignatureVerifier {
     pub const SLACK_SIGNED_HASH_HEADER: &'static str = "x-slack-signature";
     pub const SLACK_SIGNED_TIMESTAMP: &'static str = "x-slack-request-timestamp";
 
-    pub fn new(secret: &str) -> Self {
-        let secret_bytes = secret.as_bytes();
+    pub fn new(secret: &SlackSigningSecret) -> Self {
+        let secret_bytes = secret.value().as_bytes();
         SlackEventSignatureVerifier {
             secret_len: secret_bytes.len(),
-            key: hmac::Key::new(hmac::HMAC_SHA256, secret.as_bytes()),
+            key: hmac::Key::new(hmac::HMAC_SHA256, secret_bytes),
         }
     }
 
@@ -143,7 +145,7 @@ fn check_signature_success() {
         ring::rand::generate(&rng).unwrap().expose();
     let key_str: String = hex::encode(key_value);
 
-    let verifier = SlackEventSignatureVerifier::new(&key_str);
+    let verifier = SlackEventSignatureVerifier::new(&key_str.to_string().into());
 
     const TEST_BODY: &'static str = "test-body";
     const TEST_TS: &'static str = "test-ts";
@@ -167,7 +169,7 @@ fn test_precoded_data() {
     const TEST_BODY: &'static str = "test-body";
     const TEST_TS: &'static str = "test-ts";
 
-    let verifier = SlackEventSignatureVerifier::new(TEST_SECRET);
+    let verifier = SlackEventSignatureVerifier::new(&TEST_SECRET.to_string().into());
 
     match verifier.verify(TEST_HASH, TEST_BODY, TEST_TS) {
         Ok(_) => {}
@@ -179,7 +181,11 @@ fn test_precoded_data() {
 
 #[test]
 fn check_empty_secret_error_test() {
-    match SlackEventSignatureVerifier::new("").verify("test-hash", "test-body", "test-ts") {
+    match SlackEventSignatureVerifier::new(&"".to_string().into()).verify(
+        "test-hash",
+        "test-body",
+        "test-ts",
+    ) {
         Err(SlackEventSignatureVerifierError::CryptoInitError(ref err)) => {
             assert!(!err.message.is_empty())
         }

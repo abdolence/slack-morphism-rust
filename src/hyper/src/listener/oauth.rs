@@ -10,6 +10,7 @@ use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
 use hyper::client::connect::Connect;
 use hyper::{Method, Request, Response};
+use rvstruct::*;
 use std::future::Future;
 use std::sync::Arc;
 use tracing::*;
@@ -22,9 +23,12 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         let full_uri = SlackClientHttpApiUri::create_url_with_params(
             SlackOAuthListenerConfig::OAUTH_AUTHORIZE_URL_VALUE,
             &vec![
-                ("client_id", Some(&config.client_id)),
+                ("client_id", Some(config.client_id.value())),
                 ("scope", Some(&config.bot_scope)),
-                ("redirect_uri", Some(&config.to_redirect_url())),
+                (
+                    "redirect_uri",
+                    Some(config.to_redirect_url()?.as_str().to_string()).as_ref(),
+                ),
             ],
         );
         debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
@@ -55,7 +59,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                             client_secret: config.client_secret.clone().into(),
                             code: code.into(),
                         })
-                        .with_redirect_uri(config.to_redirect_url()),
+                        .with_redirect_uri(config.to_redirect_url()?),
                     )
                     .await;
 

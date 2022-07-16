@@ -1,12 +1,14 @@
-use crate::{SlackClient, SlackClientHttpConnector};
+use crate::{ClientResult, SlackClient, SlackClientHttpConnector};
 use futures::executor::block_on;
 use futures::FutureExt;
 use rsb_derive::Builder;
+use slack_morphism_models::{SlackClientId, SlackClientSecret, SlackSigningSecret};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
 use tracing::*;
+use url::Url;
 
 type UserStatesMap = HashMap<TypeId, Box<dyn Any + Send + Sync + 'static>>;
 
@@ -100,7 +102,7 @@ pub type ErrorHandler<SCHC> = fn(
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackCommandEventsListenerConfig {
-    pub events_signing_secret: String,
+    pub events_signing_secret: SlackSigningSecret,
     #[default = "SlackCommandEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
     pub events_path: String,
 }
@@ -111,7 +113,7 @@ impl SlackCommandEventsListenerConfig {
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackPushEventsListenerConfig {
-    pub events_signing_secret: String,
+    pub events_signing_secret: SlackSigningSecret,
     #[default = "SlackPushEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
     pub events_path: String,
 }
@@ -122,7 +124,7 @@ impl SlackPushEventsListenerConfig {
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackInteractionEventsListenerConfig {
-    pub events_signing_secret: String,
+    pub events_signing_secret: SlackSigningSecret,
     #[default = "SlackInteractionEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
     pub events_path: String,
 }
@@ -133,8 +135,8 @@ impl SlackInteractionEventsListenerConfig {
 
 #[derive(Debug, PartialEq, Clone, Builder)]
 pub struct SlackOAuthListenerConfig {
-    pub client_id: String,
-    pub client_secret: String,
+    pub client_id: SlackClientId,
+    pub client_secret: SlackClientSecret,
     pub bot_scope: String,
     pub redirect_callback_host: String,
     #[default = "SlackOAuthListenerConfig::DEFAULT_INSTALL_PATH_VALUE.into()"]
@@ -158,11 +160,15 @@ impl SlackOAuthListenerConfig {
 
     pub const OAUTH_AUTHORIZE_URL_VALUE: &'static str = "https://slack.com/oauth/v2/authorize";
 
-    pub fn to_redirect_url(&self) -> String {
-        format!(
-            "{}{}",
-            &self.redirect_callback_host, &self.redirect_callback_path
+    pub fn to_redirect_url(&self) -> ClientResult<Url> {
+        Url::parse(
+            format!(
+                "{}{}",
+                &self.redirect_callback_host, &self.redirect_callback_path
+            )
+            .as_str(),
         )
+        .map_err(|e| e.into())
     }
 }
 

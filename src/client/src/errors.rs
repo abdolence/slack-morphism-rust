@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::time::Duration;
+use url::ParseError;
 
 #[derive(Debug)]
 pub enum SlackClientError {
@@ -190,3 +191,11 @@ impl Display for SlackRateLimitError {
 }
 
 impl Error for SlackRateLimitError {}
+
+impl From<url::ParseError> for SlackClientError {
+    fn from(url_parse_error: ParseError) -> Self {
+        SlackClientError::HttpProtocolError(
+            SlackClientHttpProtocolError::new().with_cause(Box::new(url_parse_error)),
+        )
+    }
+}

@@ -109,8 +109,14 @@ pub struct SlackCommandId(pub String);
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackClientId(pub String);
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackClientSecret(pub String);
+
+impl fmt::Debug for SlackClientSecret {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlackClientSecret(len:{})", self.value().len())
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackApiTokenScope(pub String);
@@ -124,8 +130,14 @@ impl fmt::Debug for SlackVerificationToken {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+#[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackSigningSecret(pub String);
+
+impl fmt::Debug for SlackSigningSecret {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlackSigningSecret(len:{})", self.value().len())
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct EmailAddress(pub String);
