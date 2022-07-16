@@ -9,12 +9,14 @@
 
 mod common;
 
+pub mod apps;
 pub mod blocks;
 pub mod events;
 pub mod files;
 mod messages;
 pub mod socket_mode;
 
+pub use apps::*;
 pub use common::*;
 pub use files::*;
 pub use messages::*;

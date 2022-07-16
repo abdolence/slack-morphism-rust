@@ -111,6 +111,21 @@ pub struct SlackClientId(pub String);
 pub struct SlackClientSecret(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackApiTokenScope(pub String);
+
+#[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackVerificationToken(pub String);
+
+impl fmt::Debug for SlackVerificationToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlackVerificationToken(len:{})", self.value().len())
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackSigningSecret(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct EmailAddress(pub String);
 
 #[skip_serializing_none]
@@ -172,3 +187,14 @@ impl SlackEmoji {
     pub const SPEECH_BALLOON: &'static str = ":speech_balloon:";
     pub const HEAVY_CHECK_MARK: &'static str = ":heavy_check_mark:";
 }
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub enum SlackShortcutType {
+    #[serde(rename = "message")]
+    Message,
+    #[serde(rename = "global")]
+    Global,
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackEventType(pub String);

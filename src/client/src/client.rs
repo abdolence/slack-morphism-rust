@@ -147,6 +147,8 @@ pub type AnyStdResult<T> = std::result::Result<T, Box<dyn std::error::Error + Se
 pub struct SlackEnvelopeMessage {
     pub ok: bool,
     pub error: Option<String>,
+    // apps.manifest.validate returns validation errors in `errors` field with `ok: false`.
+    pub errors: Option<Vec<String>>,
     pub warnings: Option<Vec<String>>,
 }
 

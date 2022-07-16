@@ -192,6 +192,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     }
                     Some(slack_error) => Err(SlackClientError::ApiError(
                         SlackClientApiError::new(slack_error)
+                            .opt_errors(slack_message.errors)
                             .opt_warnings(slack_message.warnings)
                             .with_http_response_body(http_body_str),
                     )),
