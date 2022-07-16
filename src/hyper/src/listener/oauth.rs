@@ -55,8 +55,8 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                 let oauth_access_resp = client
                     .oauth2_access(
                         &SlackOAuthV2AccessTokenRequest::from(SlackOAuthV2AccessTokenRequestInit {
-                            client_id: config.client_id.clone().into(),
-                            client_secret: config.client_secret.clone().into(),
+                            client_id: config.client_id.clone(),
+                            client_secret: config.client_secret.clone(),
                             code: code.into(),
                         })
                         .with_redirect_uri(config.to_redirect_url()?),
