@@ -153,7 +153,7 @@ pub struct SlackLinkSharedEvent {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackEmojiChangedEvent {
-    pub subtype: Option<SlackEmojiEventType>,
+    pub subtype: SlackEmojiEventType,
     pub name: Option<String>,
     pub names: Option<Vec<String>>,
     pub old_name: Option<String>,
