@@ -55,6 +55,7 @@ pub enum SlackEventCallbackBody {
     AppMention(SlackAppMentionEvent),
     AppUninstalled(SlackAppUninstalledEvent),
     LinkShared(SlackLinkSharedEvent),
+    EmojiChanged(SlackEmojiChangedEvent),
 }
 
 #[skip_serializing_none]
@@ -106,6 +107,8 @@ pub enum SlackMessageEventType {
     JoinerNotification,
     #[serde(rename = "slackbot_response")]
     SlackbotResponse,
+    #[serde(rename = "emoji_changed")]
+    EmojiChanged,
 }
 
 #[skip_serializing_none]
@@ -145,6 +148,28 @@ pub struct SlackLinkSharedEvent {
     pub source: String,
     pub unfurl_id: SlackUnfurlId,
     pub user: SlackUserId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackEmojiChangedEvent {
+    pub subtype: SlackEmojiEventType,
+    pub name: Option<String>,
+    pub names: Option<Vec<String>>,
+    pub old_name: Option<String>,
+    pub new_name: Option<String>,
+    pub value: Option<Url>,
+    pub event_ts: SlackTs,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum SlackEmojiEventType {
+    #[serde(rename = "remove")]
+    EmojiRemoved,
+    #[serde(rename = "add")]
+    EmojiAdded,
+    #[serde(rename = "rename")]
+    EmojiRenamed,
 }
 
 #[skip_serializing_none]
