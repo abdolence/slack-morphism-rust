@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: icepuma/rust-action@master
+      - uses: actions-rs/toolchain@v1
         with:
-          args: cargo fmt -- --check && cargo clippy -- -Dwarnings && cargo test
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+      - run: cargo fmt -- --check && cargo clippy -- -Dwarnings && cargo test
