@@ -11,7 +11,6 @@ and don't want to work with HTTP endpoints yourself.
 
 ```rust,noplaypen
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,

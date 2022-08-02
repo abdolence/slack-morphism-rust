@@ -18,13 +18,7 @@ To create a server, you need hyper `make_service_fn` and `service_fn`.
 ## Example
 ```rust,noplaypen
 
-use slack_morphism::api::*;
-use slack_morphism::listener::*;
-use slack_morphism::*;
-use slack_morphism_models::*;
-
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 // Hyper imports
 use hyper::service::{make_service_fn, service_fn};

@@ -5,7 +5,6 @@ You can use `client..post_webhook_message` to post [Slack Incoming Webhook](http
 ```rust,noplaypen
 
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 use url::Url;
 
 let client = SlackClient::new(SlackClientHyperConnector::new());

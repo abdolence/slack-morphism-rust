@@ -3,9 +3,7 @@
 ## Create a client instance
 
 ```rust,noplaypen
-use slack_morphism::*;
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 let client = SlackClient::new( SlackClientHyperConnector::new() );
 
@@ -23,12 +21,7 @@ You should securely and properly store all of Slack tokens.
 
 ```rust,noplaypen
 
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    

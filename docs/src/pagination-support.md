@@ -11,10 +11,8 @@ For example for `users.list`:
 
 ```rust,noplaypen
 
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
+
 use std::time::Duration;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
