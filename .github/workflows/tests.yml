@@ -13,4 +13,4 @@ jobs:
           profile: minimal
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo fmt -- --check && cargo clippy -- -Dwarnings && cargo test --all-features
+      - run: cargo fmt -- --check && cargo clippy --all-features -- -Dwarnings && cargo test --all-features
