@@ -23,7 +23,7 @@ path = "src/lib.rs"
 [features]
 default = []
 hyper = ["dep:tokio","dep:hyper", "dep:hyper-rustls", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
-axum = []
+axum = ["hyper", "dep:axum"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -54,6 +54,7 @@ hyper-rustls = { version="0.23", features = ["rustls-native-certs", "http2"], op
 tokio-tungstenite = { version = "0.17.2", features = ["rustls-tls-native-roots"], optional = true }
 signal-hook = { version = "0.3.14", features = ["extended-siginfo"], optional = true}
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"], optional = true }
+axum = { version = "0.5", optional = true }
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }

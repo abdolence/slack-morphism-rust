@@ -19,4 +19,4 @@ Includes also all type/models definitions that used for Slack Web/Events APIs.
 
 This library provided the following features:
 - `hyper`: Slack client support/binding for Hyper/Tokio/Tungstenite.
-- `axum`:  Slack client support/binding for Axum framework support.
+- `axum`:  Slack client support/binding for [axum framework](https://github.com/tokio-rs/axum) support (WIP, will be available in next releases).
