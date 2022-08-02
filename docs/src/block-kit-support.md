@@ -24,8 +24,7 @@ Let’s take some very simple block example:
 Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:
 
 ```rust,noplaypen
-use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
+use slack_morphism::prelude::*;
 
 let blocks : Vec<SlackBlock> = slack_blocks![
  some_into(
@@ -39,12 +38,7 @@ Let’s look at another more complex example for welcoming message:
 
 ```rust,noplaypen
 
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
-
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 

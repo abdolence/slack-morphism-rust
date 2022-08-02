@@ -11,7 +11,7 @@ Please follow to the official website: https://slack-rust.abdolence.dev.
 
 ## Examples
 
-https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples
+https://github.com/abdolence/slack-morphism-rust/tree/master/examples
 
 The examples require to work the following environment variables (from your Slack bot profile in api.slack.com):
 

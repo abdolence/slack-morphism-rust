@@ -1,7 +1,102 @@
-[workspace]
+[package]
+name = "slack-morphism"
+version = "1.0.0"
+authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Slack Morphism is a modern client library for Slack Web/Events API/Socket Mode and Block Kit"
+homepage = "https://github.com/abdolence/slack-morphism-rust"
+repository = "https://github.com/abdolence/slack-morphism-rust"
+documentation = "https://docs.rs/slack_morphism"
+keywords = ["slack", "client"]
+categories = ["api-bindings"]
+readme = "README.md"
+include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE", "SECURITY.md"]
 
-members = [
-    "src/models",
-    "src/client",
-    "src/hyper"
-]
+[badges]
+maintenance = { status = "actively-developed" }
+
+[lib]
+name = "slack_morphism"
+path = "src/lib.rs"
+
+[features]
+default = []
+hyper = ["dep:tokio","dep:hyper", "dep:hyper-rustls", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
+axum = ["hyper", "dep:axum"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_with = { version = "1.14", features = ["json"] }
+rvstruct = "0.3"
+rsb_derive = "0.5"
+futures = "0.3"
+futures-util = "0.3"
+futures-locks = "0.7"
+base64 = "0.13"
+hex = "0.4"
+tracing = "0.1"
+ring = "0.16"
+lazy_static = "1.4"
+http = "0.2"
+async-trait = "0.1"
+bytes = "1.2"
+rand = "0.8"
+async-recursion="1.0"
+mime = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+url = { version = "2.2", features = ["serde"]}
+hyper = { version ="0.14", features = ["full"], optional = true }
+tokio = { version = "1.20", features = ["full"], optional = true }
+tokio-stream = { version = "0.1.9", optional = true }
+hyper-rustls = { version="0.23", features = ["rustls-native-certs", "http2"], optional = true }
+tokio-tungstenite = { version = "0.17.2", features = ["rustls-tls-native-roots"], optional = true }
+signal-hook = { version = "0.3.14", features = ["extended-siginfo"], optional = true}
+signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"], optional = true }
+axum = { version = "0.5", optional = true }
+
+[dev-dependencies]
+cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
+cargo-audit = "0.17"
+tracing-subscriber = { version ="0.3", features = ["env-filter"] }
+hyper-proxy = "0.9"
+hyper = { version ="0.14", features = ["full"] }
+
+[package.metadata.release]
+tag-prefix=""
+
+[[example]]
+name = "client"
+path = "examples/client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "events_api_server"
+path = "examples/events_api_server.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "proxy_client"
+path = "examples/proxy_client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "rate_control_client"
+path = "examples/rate_control_client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "socket_mode"
+path = "examples/socket_mode.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "state_management"
+path = "examples/state_management.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "webhook_message"
+path = "examples/webhook_message.rs"
+required-features = ["hyper"]

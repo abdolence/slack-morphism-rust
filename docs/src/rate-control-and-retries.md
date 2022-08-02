@@ -7,7 +7,6 @@ By default, throttler *isn't* enabled, so you should enable it explicitly:
 
 ```rust,noplaypen
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 let client = SlackClient::new(
     SlackClientHyperConnector::new()
