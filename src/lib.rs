@@ -7,7 +7,6 @@
 //! ### Create a client instance:
 //! ```ignore
 //! use slack_morphism::prelude::*;
-//! use slack_morphism_hyper::*;
 //!
 //! let client = SlackClient::new(SlackClientHyperConnector::new());
 //!
@@ -26,9 +25,6 @@
 //! ```ignore
 //!
 //! use slack_morphism::prelude::*;
-//! use slack_morphism_hyper::*;
-//! use slack_morphism_models::*;
-//!
 //!
 //!# async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!
@@ -82,8 +78,8 @@
 //!
 //! # Docs and examples
 //!
-//! Please follow to the official website: https://slack-rust.abdolence.dev
-//! Examples available at: https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples
+//! Please follow to the official [website](https://slack-rust.abdolence.dev).
+//! Examples available on: [github](https://github.com/abdolence/slack-morphism-rust/tree/master/examples).
 //!
 
 #![allow(clippy::new_without_default)]
