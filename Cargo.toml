@@ -22,7 +22,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-hyper-tokio = ["dep:tokio","dep:hyper", "dep:hyper-rustls", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
+hyper = ["dep:tokio","dep:hyper", "dep:hyper-rustls", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
 axum = []
 
 [dependencies]
@@ -67,4 +67,4 @@ tag-prefix=""
 [[example]]
 name = "client"
 path = "examples/client.rs"
-required-features = ["hyper-tokio"]
+required-features = ["hyper"]

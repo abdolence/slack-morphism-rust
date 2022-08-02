@@ -7,5 +7,5 @@ pub use crate::models::blocks::*; // Slack Block Kit models
 pub use crate::models::events::*;
 pub use crate::models::*; // common Slack models like SlackUser, etc and macros // Slack Events Models
 
-#[cfg(feature = "hyper-tokio")]
+#[cfg(feature = "hyper")]
 pub use crate::hyper_tokio::*;

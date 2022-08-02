@@ -106,7 +106,10 @@ pub mod signature_verifier;
 mod socket_mode;
 mod token;
 
-#[cfg(feature = "hyper-tokio")]
+#[cfg(feature = "hyper")]
 pub mod hyper_tokio;
+
+// #[cfg(feature = "axum")]
+// pub mod axum_support;
 
 pub mod prelude;
