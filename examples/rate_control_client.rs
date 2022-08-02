@@ -1,5 +1,4 @@
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 use tracing::*;
 
 async fn test_rate_control_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

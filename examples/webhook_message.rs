@@ -1,7 +1,5 @@
-use url::Url;
-
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
+use url::Url;
 
 async fn test_webhook_message() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new(SlackClientHyperConnector::new());

@@ -1,5 +1,4 @@
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 use hyper_proxy::{Intercept, Proxy, ProxyConnector};
 

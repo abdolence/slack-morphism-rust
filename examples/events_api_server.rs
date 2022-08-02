@@ -1,5 +1,4 @@
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response};

@@ -61,6 +61,7 @@ cargo-husky = { version = "1", default-features = false, features = ["run-for-al
 cargo-audit = "0.17"
 tracing-subscriber = { version ="0.3", features = ["env-filter"] }
 hyper-proxy = "0.9"
+hyper = { version ="0.14", features = ["full"] }
 
 [package.metadata.release]
 tag-prefix=""
@@ -68,4 +69,34 @@ tag-prefix=""
 [[example]]
 name = "client"
 path = "examples/client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "events_api_server"
+path = "examples/events_api_server.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "proxy_client"
+path = "examples/proxy_client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "rate_control_client"
+path = "examples/rate_control_client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "socket_mode"
+path = "examples/socket_mode.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "state_management"
+path = "examples/state_management.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "webhook_message"
+path = "examples/webhook_message.rs"
 required-features = ["hyper"]
