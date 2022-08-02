@@ -140,23 +140,10 @@
                         <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
-slack-morphism=&quot;0.41&quot;
-slack-morphism-models=&quot;0.41&quot;
-slack-morphism-hyper=&quot;0.41&quot;
+slack-morphism= { version = &quot;1.0&quot;, features = [&quot;hyper&quot;] }
 </code></pre>
 <p>All imports you need:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
-</code></pre>
-<p>or more granularly:</p>
-<pre><code class="language-rust noplaypen">use slack_morphism::*; // access to network/client functions
-use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
-use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
-use slack_morphism_models::*; // common Slack models like SlackUser, etc and macros
-use slack_morphism_models::blocks::*; // Slack Block Kit models
-use slack_morphism_models::events::*; // Slack Events Models
-
-use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 </code></pre>
 <h2 id="ready-to-use-examples"><a class="header" href="#ready-to-use-examples">Ready to use examples</a></h2>
 <ul>
@@ -164,7 +151,7 @@ use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 <li>Events API server example</li>
 <li>Slack Web API client with Socket Mode</li>
 </ul>
-<p>You can find them on <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples">github</a></p>
+<p>You can find them on <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 
                     </main>
 

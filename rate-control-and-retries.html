@@ -142,7 +142,6 @@
 <p>Slack API defines <a href="https://api.slack.com/docs/rate-limits">rate limits</a> to which all of your applications must follow.</p>
 <p>By default, throttler <em>isn't</em> enabled, so you should enable it explicitly:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 let client = SlackClient::new(
     SlackClientHyperConnector::new()

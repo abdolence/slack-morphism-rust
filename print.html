@@ -148,32 +148,20 @@
 <p>Using latest Rust async/await language features and libraries, the library provides access to all of the functions 
 in asynchronous manner.</p>
 <h2 id="modular-design"><a class="header" href="#modular-design">Modular design</a></h2>
-<p>This library provided as multiple modules:</p>
+<p>Base crate to support frameworks-agnostic client and that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.
+Includes also all type/models definitions that used for Slack Web/Events APIs.</p>
+<p>This library provided the following features:</p>
 <ul>
-<li><code>slack-morphism-models</code>, gives you access to all type/models definitions that used for Slack Web/Events APIs.</li>
-<li><code>slack-morphism</code>, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.</li>
-<li><code>slack-morphism-hyper</code>, Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
+<li><code>hyper</code>: Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
+<li><code>axum</code>:  Slack client support/binding for <a href="https://github.com/tokio-rs/axum">axum framework</a> support (WIP, will be available in next releases).</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
-slack-morphism=&quot;0.41&quot;
-slack-morphism-models=&quot;0.41&quot;
-slack-morphism-hyper=&quot;0.41&quot;
+slack-morphism= { version = &quot;1.0&quot;, features = [&quot;hyper&quot;] }
 </code></pre>
 <p>All imports you need:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
-</code></pre>
-<p>or more granularly:</p>
-<pre><code class="language-rust noplaypen">use slack_morphism::*; // access to network/client functions
-use slack_morphism::api::*; // Slack Web API methods (chat, users, views, etc)
-use slack_morphism::listener::*; // Slack Events API listener (routes) implementation
-use slack_morphism_models::*; // common Slack models like SlackUser, etc and macros
-use slack_morphism_models::blocks::*; // Slack Block Kit models
-use slack_morphism_models::events::*; // Slack Events Models
-
-use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 </code></pre>
 <h2 id="ready-to-use-examples"><a class="header" href="#ready-to-use-examples">Ready to use examples</a></h2>
 <ul>
@@ -181,12 +169,10 @@ use slack_morphism_hyper::*; // Hyper/Tokio client implementation
 <li>Events API server example</li>
 <li>Slack Web API client with Socket Mode</li>
 </ul>
-<p>You can find them on <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/src/hyper/examples">github</a></p>
+<p>You can find them on <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="slack-web-api-client"><a class="header" href="#slack-web-api-client">Slack Web API client</a></h1>
 <h2 id="create-a-client-instance"><a class="header" href="#create-a-client-instance">Create a client instance</a></h2>
-<pre><code class="language-rust noplaypen">use slack_morphism::*;
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
 let client = SlackClient::new( SlackClientHyperConnector::new() );
 
@@ -199,12 +185,7 @@ workspace tokens using Slack OAuth.</p>
 <p>In the example below, we’re using a hardcoded Slack token, but don’t do that for your production bots and apps.
 You should securely and properly store all of Slack tokens.</p>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
    
@@ -243,10 +224,8 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 which deal with all scrolling/batching requests for you.</p>
 <p>For example for <code>users.list</code>:</p>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
+
 use std::time::Duration;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
@@ -310,8 +289,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 }
 </code></pre>
 <p>Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:</p>
-<pre><code class="language-rust noplaypen">use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
 let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
  some_into(
@@ -322,12 +300,7 @@ let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
 </code></pre>
 <p>Let’s look at another more complex example for welcoming message:</p>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
-
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 
@@ -389,7 +362,6 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 <p>You can use <code>client..post_webhook_message</code> to post <a href="https://api.slack.com/messaging/webhooks">Slack Incoming Webhook</a> messages:</p>
 <pre><code class="language-rust noplaypen">
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 use url::Url;
 
 let client = SlackClient::new(SlackClientHyperConnector::new());
@@ -442,7 +414,6 @@ client
 <p>Slack API defines <a href="https://api.slack.com/docs/rate-limits">rate limits</a> to which all of your applications must follow.</p>
 <p>By default, throttler <em>isn't</em> enabled, so you should enable it explicitly:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 let client = SlackClient::new(
     SlackClientHyperConnector::new()
@@ -495,13 +466,7 @@ This is just merely a quick example how to use it with Slack Morphism routes.</p
 <p>To create a server, you need hyper <code>make_service_fn</code> and <code>service_fn</code>.</p>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::api::*;
-use slack_morphism::listener::*;
-use slack_morphism::*;
-use slack_morphism_models::*;
-
-// Slack Morphism Hyper/Tokio support
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 // Hyper imports
 use hyper::service::{make_service_fn, service_fn};
@@ -692,7 +657,6 @@ without exposing a public HTTP endpoint.</p>
 and don't want to work with HTTP endpoints yourself. </p>
 <h2 id="register-your-event-callback-functions"><a class="header" href="#register-your-event-callback-functions">Register your event callback functions</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,

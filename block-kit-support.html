@@ -157,8 +157,7 @@
 }
 </code></pre>
 <p>Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:</p>
-<pre><code class="language-rust noplaypen">use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
 let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
  some_into(
@@ -169,12 +168,7 @@ let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
 </code></pre>
 <p>Let’s look at another more complex example for welcoming message:</p>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_models::blocks::*;
-
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 

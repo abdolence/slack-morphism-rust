@@ -145,10 +145,8 @@
 which deal with all scrolling/batching requests for you.</p>
 <p>For example for <code>users.list</code>:</p>
 <pre><code class="language-rust noplaypen">
-use slack_morphism::*;
-use slack_morphism::api::*;
-use slack_morphism_models::*;
-use slack_morphism_hyper::*;
+use slack_morphism::prelude::*;
+
 use std::time::Duration;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {

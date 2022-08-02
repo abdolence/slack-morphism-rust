@@ -147,11 +147,12 @@
 <p>Using latest Rust async/await language features and libraries, the library provides access to all of the functions 
 in asynchronous manner.</p>
 <h2 id="modular-design"><a class="header" href="#modular-design">Modular design</a></h2>
-<p>This library provided as multiple modules:</p>
+<p>Base crate to support frameworks-agnostic client and that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.
+Includes also all type/models definitions that used for Slack Web/Events APIs.</p>
+<p>This library provided the following features:</p>
 <ul>
-<li><code>slack-morphism-models</code>, gives you access to all type/models definitions that used for Slack Web/Events APIs.</li>
-<li><code>slack-morphism</code>, base module to support frameworks-agnostic client, that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.</li>
-<li><code>slack-morphism-hyper</code>, Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
+<li><code>hyper</code>: Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
+<li><code>axum</code>:  Slack client support/binding for <a href="https://github.com/tokio-rs/axum">axum framework</a> support (WIP, will be available in next releases).</li>
 </ul>
 
                     </main>

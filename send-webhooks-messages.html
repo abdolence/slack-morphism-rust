@@ -141,7 +141,6 @@
 <p>You can use <code>client..post_webhook_message</code> to post <a href="https://api.slack.com/messaging/webhooks">Slack Incoming Webhook</a> messages:</p>
 <pre><code class="language-rust noplaypen">
 use slack_morphism::prelude::*;
-use slack_morphism_hyper::*;
 use url::Url;
 
 let client = SlackClient::new(SlackClientHyperConnector::new());
