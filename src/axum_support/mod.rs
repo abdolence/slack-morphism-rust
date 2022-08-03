@@ -1,1 +1,1 @@
-mod signature_verify_middleware;
+mod slack_events_middleware;
