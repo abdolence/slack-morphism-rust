@@ -8,10 +8,10 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
-use crate::ratectl::SLACK_TIER3_METHOD_CONFIG;
+use crate::models::*;
+use crate::ratectl::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
-use slack_morphism_models::*;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
 where
