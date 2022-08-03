@@ -4,6 +4,7 @@ use crate::listener::*;
 pub use crate::models::events::*;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 
+use crate::hyper_tokio::hyper_reqresp::HyperReqRespUtils;
 use crate::hyper_tokio::*;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
@@ -55,7 +56,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
-                        SlackClientHyperConnector::<H>::decode_signed_response(req, &sign_verifier)
+                        HyperReqRespUtils::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 let body_params: HashMap<String, String> =
                                     url::form_urlencoded::parse(body.as_bytes())

@@ -199,3 +199,15 @@ impl From<url::ParseError> for SlackClientError {
         )
     }
 }
+
+impl From<Box<dyn std::error::Error + Sync + Send>> for SlackClientError {
+    fn from(err: Box<dyn Error + Sync + Send>) -> Self {
+        SlackClientError::SystemError(SlackClientSystemError::new().with_cause(err))
+    }
+}
+
+pub fn map_serde_error(err: serde_json::Error, tried_to_parse: Option<&str>) -> SlackClientError {
+    SlackClientError::ProtocolError(
+        SlackClientProtocolError::new(err).opt_json_body(tried_to_parse.map(|s| s.to_string())),
+    )
+}

@@ -11,6 +11,8 @@ use crate::SlackClient;
 use crate::*;
 
 pub mod connector;
+pub mod hyper_errors;
+pub(crate) mod hyper_reqresp;
 pub mod listener;
 mod ratectl;
 pub mod scroller_ext;
