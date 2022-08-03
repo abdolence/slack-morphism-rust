@@ -15,12 +15,12 @@ use std::future::Future;
 use std::sync::Arc;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
-    pub fn command_events_service_fn<'a, D, F>(
+    pub fn command_events_service_fn<'a, D, F, R>(
         &self,
         config: Arc<SlackCommandEventsListenerConfig>,
         command_service_fn: UserCallbackFunction<
             SlackCommandEvent,
-            impl Future<Output = UserCallbackResult<Option<SlackCommandEventResponse>>> + 'static + Send,
+            impl Future<Output = UserCallbackResult<R>> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
@@ -38,6 +38,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
+        R: Into<Option<SlackCommandEventResponse>>,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -107,7 +108,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         )
                                         .await
                                         {
-                                            Ok(cresp) => match cresp {
+                                            Ok(cresp) => match cresp.into() {
                                                 Some(cresp) => Response::builder()
                                                     .status(StatusCode::OK)
                                                     .header(

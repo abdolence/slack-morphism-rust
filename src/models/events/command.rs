@@ -20,6 +20,6 @@ pub struct SlackCommandEvent {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackCommandEventResponse {
     #[serde(flatten)]
-    pub content: Option<SlackMessageContent>,
+    pub content: SlackMessageContent,
     pub response_type: Option<SlackMessageResponseType>,
 }
