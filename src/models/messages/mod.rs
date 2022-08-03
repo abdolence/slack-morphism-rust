@@ -57,6 +57,8 @@ pub struct SlackMessage {
     #[serde(flatten)]
     pub content: SlackMessageContent,
     #[serde(flatten)]
+    pub sender: SlackMessageSender,
+    #[serde(flatten)]
     pub parent: SlackParentMessageParams,
 }
 
