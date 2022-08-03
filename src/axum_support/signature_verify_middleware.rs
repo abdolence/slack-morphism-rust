@@ -2,12 +2,12 @@ use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::prelude::hyper_reqresp::HyperReqRespUtils;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 use crate::SlackClientHttpConnector;
+use axum::body::BoxBody;
 use axum::{body::Body, http::Request, response::Response};
 use futures_util::future::BoxFuture;
-use futures_util::TryFutureExt;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use tower::{Layer, Service};
+use tower::Service;
 
 #[derive(Clone)]
 struct SlackEventsApiMiddleware<S, SCHC>
@@ -23,10 +23,11 @@ impl<S, SCHC> Service<Request<Body>> for SlackEventsApiMiddleware<S, SCHC>
 where
     S: Service<String, Response = Response> + Send + 'static + Clone,
     S::Future: Send + 'static,
+    S::Error: std::error::Error + 'static + Send + Sync,
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
 {
     type Response = S::Response;
-    type Error = S::Error;
+    type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -37,7 +38,7 @@ where
         }
     }
 
-    fn call(&mut self, mut request: Request<Body>) -> Self::Future {
+    fn call(&mut self, request: Request<Body>) -> Self::Future {
         let mut service = self.inner.take().unwrap();
         self.inner = Some(service.clone());
         let environment = self.environment.clone();
@@ -46,17 +47,30 @@ where
 
         Box::pin(async move {
             match HyperReqRespUtils::decode_signed_response(request, &signature_verifier).await {
-                Ok(verified_body) => {
-                    let response: Response = service.call(verified_body).await?;
-                    Ok(response)
-                }
+                Ok(verified_body) => match service.call(verified_body).await {
+                    Ok(response) => Ok(response),
+                    Err(err) => {
+                        let http_status = (environment.error_handler)(
+                            Box::new(err),
+                            environment.client.clone(),
+                            environment.user_state.clone(),
+                        );
+                        Response::builder()
+                            .status(http_status)
+                            .body(BoxBody::default())
+                            .map_err(|e| e.into())
+                    }
+                },
                 Err(err) => {
-                    (environment.error_handler)(
+                    let http_status = (environment.error_handler)(
                         err,
                         environment.client.clone(),
                         environment.user_state.clone(),
                     );
-                    todo!()
+                    Response::builder()
+                        .status(http_status)
+                        .body(BoxBody::default())
+                        .map_err(|e| e.into())
                 }
             }
         })
