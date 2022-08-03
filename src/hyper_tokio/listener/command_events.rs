@@ -15,12 +15,12 @@ use std::future::Future;
 use std::sync::Arc;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
-    pub fn command_events_service_fn<'a, D, F>(
+    pub fn command_events_service_fn<'a, D, F, R>(
         &self,
         config: Arc<SlackCommandEventsListenerConfig>,
         command_service_fn: UserCallbackFunction<
             SlackCommandEvent,
-            impl Future<Output = UserCallbackResult<SlackCommandEventResponse>> + 'static + Send,
+            impl Future<Output = UserCallbackResult<R>> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
@@ -38,6 +38,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
+        R: Into<Option<SlackCommandEventResponse>>,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -107,14 +108,23 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         )
                                         .await
                                         {
-                                            Ok(cresp) => Response::builder()
-                                                .status(StatusCode::OK)
-                                                .header(
-                                                    "content-type",
-                                                    "application/json; charset=utf-8",
-                                                )
-                                                .body(serde_json::to_string(&cresp).unwrap().into())
-                                                .map_err(|e| e.into()),
+                                            Ok(cresp) => match cresp.into() {
+                                                Some(cresp) => Response::builder()
+                                                    .status(StatusCode::OK)
+                                                    .header(
+                                                        "content-type",
+                                                        "application/json; charset=utf-8",
+                                                    )
+                                                    .body(
+                                                        serde_json::to_string(&cresp)
+                                                            .unwrap()
+                                                            .into(),
+                                                    ),
+                                                None => Response::builder()
+                                                    .status(StatusCode::OK)
+                                                    .body(Body::empty()),
+                                            }
+                                            .map_err(|e| e.into()),
                                             Err(err) => {
                                                 let status_code = thread_error_handler(
                                                     err,
