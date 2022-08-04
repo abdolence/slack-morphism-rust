@@ -17,7 +17,7 @@ use std::sync::Arc;
 use tracing::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
-    async fn slack_oauth_install_service(
+    pub(crate) async fn slack_oauth_install_service(
         _: Request<Body>,
         config: &SlackOAuthListenerConfig,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
@@ -36,7 +36,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         HyperExtensions::hyper_redirect_to(&full_uri.to_string())
     }
 
-    async fn slack_oauth_callback_service(
+    pub(crate) async fn slack_oauth_callback_service(
         req: Request<Body>,
         config: &SlackOAuthListenerConfig,
         client: Arc<SlackClient<SlackClientHyperConnector<H>>>,
