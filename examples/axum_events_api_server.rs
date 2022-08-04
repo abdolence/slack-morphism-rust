@@ -1,9 +1,9 @@
 use slack_morphism::prelude::*;
 
-use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response};
 use tracing::*;
 
+use axum::Router;
 use std::sync::Arc;
 
 async fn test_oauth_install_function(
@@ -120,45 +120,21 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             .with_user_state(UserStateExample(0)),
     );
 
-    let make_svc = make_service_fn(move |_| {
-        let thread_oauth_config = oauth_listener_config.clone();
-        let thread_push_events_config = push_events_config.clone();
-        let thread_interaction_events_config = interactions_events_config.clone();
-        let thread_command_events_config = command_events_config.clone();
-        let listener = SlackClientEventsHyperListener::new(listener_environment.clone());
-        async move {
-            let routes = chain_service_routes_fn(
-                listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
-                chain_service_routes_fn(
-                    listener.push_events_service_fn(
-                        thread_push_events_config,
-                        test_push_events_function,
-                    ),
-                    chain_service_routes_fn(
-                        listener.interaction_events_service_fn(
-                            thread_interaction_events_config,
-                            test_interaction_events_function,
-                        ),
-                        chain_service_routes_fn(
-                            listener.command_events_service_fn(
-                                thread_command_events_config,
-                                test_command_events_function,
-                            ),
-                            your_others_routes,
-                        ),
-                    ),
-                ),
-            );
+    // build our application with a single route
+    let app = axum::routing::Router::new()
+        .route("/", axum::routing::get(|| async { "Hello, World!" }))
+        .route(
+            "/auth/install",
+            axum::routing::get(|| async { "Hello, World!" }),
+        );
 
-            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(service_fn(routes))
-        }
-    });
+    // run it with hyper
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 
-    let server = hyper::server::Server::bind(&addr).serve(make_svc);
-    server.await.map_err(|e| {
-        error!("Server error: {}", e);
-        e.into()
-    })
+    Ok(())
 }
 
 pub fn config_env_var(name: &str) -> Result<String, String> {
@@ -168,7 +144,7 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let subscriber = tracing_subscriber::fmt()
-        .with_env_filter("slack_morphism_hyper=debug,slack_morphism=debug")
+        .with_env_filter("slack_morphism=debug")
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
 

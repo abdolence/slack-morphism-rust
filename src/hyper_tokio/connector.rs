@@ -10,7 +10,7 @@ use hyper::{Body, Request};
 use hyper_rustls::HttpsConnector;
 use rvstruct::ValueStruct;
 
-use crate::prelude::hyper_reqresp::HyperReqRespUtils;
+use crate::prelude::hyper_ext::HyperExtensions;
 use crate::ratectl::{SlackApiMethodRateControlConfig, SlackApiRateControlConfig};
 use std::sync::Arc;
 use std::time::Duration;
@@ -75,8 +75,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         let http_res = self.hyper_connector.request(request).await?;
         let http_status = http_res.status();
         let http_headers = http_res.headers().clone();
-        let http_content_type = HyperReqRespUtils::http_response_content_type(&http_res);
-        let http_body_str = HyperReqRespUtils::http_body_to_string(http_res).await?;
+        let http_content_type = HyperExtensions::http_response_content_type(&http_res);
+        let http_body_str = HyperExtensions::http_body_to_string(http_res).await?;
         let http_content_is_json = http_content_type.iter().all(|response_mime| {
             response_mime.type_() == mime::APPLICATION && response_mime.subtype() == mime::JSON
         });
@@ -239,13 +239,13 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             let body = self
                 .send_rate_controlled_request(
                     || {
-                        let base_http_request = HyperReqRespUtils::create_http_request(
+                        let base_http_request = HyperExtensions::create_http_request(
                             full_uri.clone(),
                             hyper::http::Method::GET,
                         );
 
                         let http_request =
-                            HyperReqRespUtils::setup_token_auth_header(base_http_request, token);
+                            HyperExtensions::setup_token_auth_header(base_http_request, token);
 
                         http_request.body(Body::empty()).map_err(|e| e.into())
                     },
@@ -273,8 +273,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         async move {
             self.send_rate_controlled_request(
                 || {
-                    HyperReqRespUtils::setup_basic_auth_header(
-                        HyperReqRespUtils::create_http_request(
+                    HyperExtensions::setup_basic_auth_header(
+                        HyperExtensions::create_http_request(
                             full_uri.clone(),
                             hyper::http::Method::GET,
                         ),
@@ -312,14 +312,14 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             let response_body = self
                 .send_rate_controlled_request(
                     || {
-                        let base_http_request = HyperReqRespUtils::create_http_request(
+                        let base_http_request = HyperExtensions::create_http_request(
                             full_uri.clone(),
                             hyper::http::Method::POST,
                         )
                         .header("content-type", "application/json; charset=utf-8");
 
                         let http_request =
-                            HyperReqRespUtils::setup_token_auth_header(base_http_request, token);
+                            HyperExtensions::setup_token_auth_header(base_http_request, token);
 
                         http_request
                             .body(post_json.clone().into())

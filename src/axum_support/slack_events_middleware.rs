@@ -1,5 +1,5 @@
 use crate::listener::SlackClientEventsListenerEnvironment;
-use crate::prelude::hyper_reqresp::HyperReqRespUtils;
+use crate::prelude::hyper_ext::HyperExtensions;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 use crate::SlackClientHttpConnector;
 use axum::body::BoxBody;
@@ -46,7 +46,7 @@ where
         let signature_verifier = self.signature_verifier.clone();
 
         Box::pin(async move {
-            match HyperReqRespUtils::decode_signed_response(request, &signature_verifier).await {
+            match HyperExtensions::decode_signed_response(request, &signature_verifier).await {
                 Ok(verified_body) => match service.call(verified_body).await {
                     Ok(response) => Ok(response),
                     Err(err) => {

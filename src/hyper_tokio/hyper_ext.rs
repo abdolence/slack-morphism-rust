@@ -11,9 +11,9 @@ use std::collections::HashMap;
 use std::io::Read;
 use url::Url;
 
-pub struct HyperReqRespUtils;
+pub struct HyperExtensions;
 
-impl HyperReqRespUtils {
+impl HyperExtensions {
     pub fn parse_query_params(request: &Request<Body>) -> HashMap<String, String> {
         request
             .uri()
