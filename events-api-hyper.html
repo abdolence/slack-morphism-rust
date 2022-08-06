@@ -138,13 +138,18 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="events-api-and-oauth-for-hyper"><a class="header" href="#events-api-and-oauth-for-hyper">Events API and OAuth for Hyper</a></h1>
-<p>The library provides routes and middleware implementation in <code>SlackEventsAxumListener</code> for:</p>
+<p>The library provides routes and middleware implementation in <code>SlackClientEventsListener</code> for:</p>
 <ul>
 <li>Push Events</li>
 <li>Interaction Events</li>
 <li>Command Events</li>
 <li>OAuth v2 redirects and client functions nested router</li>
 </ul>
+<p>You can chain all of the routes using <code>chain_service_routes_fn</code> from the library.</p>
+<h2 id="hyper-configuration"><a class="header" href="#hyper-configuration">Hyper configuration</a></h2>
+<p>In order to use Events API/OAuth you need to configure Hyper HTTP server.
+There is nothing special about how to do that, and you can use <a href="https://hyper.rs/">the official hyper docs</a>.
+This is just merely a quick example how to use it with Slack Morphism routes.</p>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <pre><code class="language-rust noplaypen">
 use slack_morphism::prelude::*;
