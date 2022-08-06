@@ -1,3 +1,23 @@
+ # Events API and OAuth
+
+ The library provides route implementation in `SlackClientEventsListener` based on Hyper/Tokio for:
+ - Push Events
+ - Interaction Events
+ - Command Events
+ - OAuth v2 redirects and client functions
+
+ You can chain all of the routes using `chain_service_routes_fn` from the library.
+
+## Hyper configuration
+In order to use Events API/OAuth you need to configure Hyper HTTP server. 
+There is nothing special about how to do that, and you can use [the official hyper docs](https://hyper.rs/).
+This is just merely a quick example how to use it with Slack Morphism routes.
+
+To create a server, you need hyper `make_service_fn` and `service_fn`.
+
+## Example
+```rust,noplaypen
+
 use slack_morphism::prelude::*;
 
 use hyper::{Body, Response};
@@ -12,18 +32,6 @@ async fn test_oauth_install_function(
     _states: SlackClientEventsUserState,
 ) {
     println!("{:#?}", resp);
-}
-
-async fn test_welcome_installed() -> String {
-    "Welcome".to_string()
-}
-
-async fn test_cancelled_install() -> String {
-    "Cancelled".to_string()
-}
-
-async fn test_error_install() -> String {
-    "Error while installing".to_string()
 }
 
 async fn test_push_event(
@@ -95,9 +103,6 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             "/auth",
             listener.oauth_router("/auth", &oauth_listener_config, test_oauth_install_function),
         )
-        .route("/installed", axum::routing::get(test_welcome_installed))
-        .route("/cancelled", axum::routing::get(test_cancelled_install))
-        .route("/error", axum::routing::get(test_error_install))
         .route(
             "/push",
             axum::routing::post(test_push_event).layer(
@@ -131,18 +136,5 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-pub fn config_env_var(name: &str) -> Result<String, String> {
-    std::env::var(name).map_err(|e| format!("{}: {}", name, e))
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let subscriber = tracing_subscriber::fmt()
-        .with_env_filter("slack_morphism=debug")
-        .finish();
-    tracing::subscriber::set_global_default(subscriber)?;
-
-    test_server().await?;
-
-    Ok(())
-}
+``` 
+Complete example look at [github](https://github.com/abdolence/slack-morphism-rust/tree/master/examples)

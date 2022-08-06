@@ -25,5 +25,8 @@ pub use scroller_ext::SlackApiResponseScrollerExt;
 pub use socket_mode::*;
 
 pub type SlackHyperClient = SlackClient<SlackClientHyperHttpsConnector>;
+
 pub type SlackHyperListenerEnvironment =
     SlackClientEventsListenerEnvironment<SlackClientHyperHttpsConnector>;
+
+pub type SlackHyperHttpsConnector = hyper_rustls::HttpsConnector<hyper::client::HttpConnector>;

@@ -22,7 +22,7 @@ The examples require to work the following environment variables (from your Slac
 
 To run example use with environment variables:
 ```
-# SLACK_... cargo run --example <client|events_api_server|socket_mode>
+# SLACK_... cargo run --example <client|events_api_server|axum_events_api_server|socket_mode> --all-features
 ```
 
 Routes for this example are available on http://<your-host>:8080:
@@ -47,7 +47,7 @@ SLACK_CLIENT_SECRET=<your-client-secret> \
 SLACK_BOT_SCOPE=app_mentions:read,incoming-webhook \
 SLACK_REDIRECT_HOST=https://<your-ngrok-url>.ngrok.io \
 SLACK_SIGNING_SECRET=<your-signing-secret> \
-cargo run --example events_api_server
+cargo run --example events_api_server  --all-features
 ```
 
 ## Licence

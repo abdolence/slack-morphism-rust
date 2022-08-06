@@ -9,6 +9,8 @@
   - [Hyper connection types and proxy support](./hyper-connections-types.md)
   - [Rate control and retries](./rate-control-and-retries.md)
 - [Events API](./events-api.md)
+  - [Hyper-based](./events-api-hyper.md)
+  - [Axum-based](./events-api-axum.md)
 - [Socket Mode](./socket-mode.md)
 - [User state](./user-state-in-event-listener.md)
 - [Limitations](./limitations.md)

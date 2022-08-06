@@ -6,7 +6,6 @@ use crate::prelude::hyper_ext::HyperExtensions;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 use crate::{SlackClientHttpConnector, SlackSigningSecret};
 use axum::body::BoxBody;
-use axum::extract::Extension;
 use axum::response::IntoResponse;
 use axum::{body::Body, http::Request, response::Response};
 use futures_util::future::BoxFuture;
