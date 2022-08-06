@@ -1,4 +1,4 @@
- # Events API and OAuth
+ # Events API and OAuth for Axum
 
  The library provides route implementation in `SlackClientEventsListener` based on Hyper/Tokio for:
  - Push Events
