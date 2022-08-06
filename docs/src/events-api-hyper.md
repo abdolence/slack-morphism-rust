@@ -1,4 +1,4 @@
- # Events API and OAuth
+ # Events API and OAuth for Hyper
 
  The library provides routes and middleware implementation in `SlackEventsAxumListener` for:
  - Push Events

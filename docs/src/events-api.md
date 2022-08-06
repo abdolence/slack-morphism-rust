@@ -1,4 +1,4 @@
- # Events API and OAuth for Hyper
+ # Events API and OAuth
 
  The library provides two different ways to work with Slack Events API:
  - Using [pure Hyper-based solution](./events-api-hyper.md)
