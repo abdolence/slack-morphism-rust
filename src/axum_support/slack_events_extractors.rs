@@ -4,58 +4,59 @@ use crate::AnyStdResult;
 use http::Extensions;
 use std::collections::HashMap;
 
-pub trait SlackEventExtractor {
-    fn extract(&self, verified_body: &String, extensions: &mut Extensions) -> AnyStdResult<()>;
+pub trait SlackEventsExtractor {
+    fn extract(&self, verified_body: &str, extensions: &mut Extensions) -> AnyStdResult<()>;
 }
 
-pub struct SlackEventExtractors;
+pub struct SlackEventsExtractors;
 
-impl SlackEventExtractors {
-    pub fn empty() -> SlackEventEmptyExtractor {
-        SlackEventEmptyExtractor::new()
+impl SlackEventsExtractors {
+    pub fn empty() -> SlackEventsEmptyExtractor {
+        SlackEventsEmptyExtractor::new()
     }
 
-    pub fn push_event() -> SlackPushEventExtractor {
-        SlackPushEventExtractor::new()
+    pub fn push_event() -> SlackPushEventsExtractor {
+        SlackPushEventsExtractor::new()
     }
 
-    pub fn command_event() -> SlackCommandEventExtractor {
-        SlackCommandEventExtractor::new()
+    pub fn command_event() -> SlackCommandEventsExtractor {
+        SlackCommandEventsExtractor::new()
     }
 
-    pub fn interaction_event() -> SlackInteractionEventExtractor {
-        SlackInteractionEventExtractor::new()
+    pub fn interaction_event() -> SlackInteractionEventsExtractor {
+        SlackInteractionEventsExtractor::new()
     }
 }
 
 #[derive(Clone)]
-pub struct SlackEventEmptyExtractor;
+pub struct SlackEventsEmptyExtractor;
 
-impl SlackEventEmptyExtractor {
+impl SlackEventsEmptyExtractor {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl SlackEventExtractor for SlackEventEmptyExtractor {
-    fn extract(&self, _verified_body: &String, _extensions: &mut Extensions) -> AnyStdResult<()> {
+impl SlackEventsExtractor for SlackEventsEmptyExtractor {
+    fn extract(&self, _verified_body: &str, _extensions: &mut Extensions) -> AnyStdResult<()> {
         Ok(())
     }
 }
 
 #[derive(Clone)]
-pub struct SlackPushEventExtractor;
+pub struct SlackPushEventsExtractor;
 
-impl SlackPushEventExtractor {
+impl SlackPushEventsExtractor {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl SlackEventExtractor for SlackPushEventExtractor {
-    fn extract(&self, verified_body: &String, extensions: &mut Extensions) -> AnyStdResult<()> {
-        let event = serde_json::from_str::<SlackPushEvent>(verified_body.as_str())
-            .map_err(|e| SlackClientProtocolError::new(e).with_json_body(verified_body.clone()))?;
+impl SlackEventsExtractor for SlackPushEventsExtractor {
+    fn extract(&self, verified_body: &str, extensions: &mut Extensions) -> AnyStdResult<()> {
+        let event = serde_json::from_str::<SlackPushEvent>(verified_body).map_err(|e| {
+            SlackClientProtocolError::new(e).with_json_body(verified_body.to_string())
+        })?;
 
         extensions.insert(event);
 
@@ -64,16 +65,16 @@ impl SlackEventExtractor for SlackPushEventExtractor {
 }
 
 #[derive(Clone)]
-pub struct SlackCommandEventExtractor;
+pub struct SlackCommandEventsExtractor;
 
-impl SlackCommandEventExtractor {
+impl SlackCommandEventsExtractor {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl SlackEventExtractor for SlackCommandEventExtractor {
-    fn extract(&self, verified_body: &String, extensions: &mut Extensions) -> AnyStdResult<()> {
+impl SlackEventsExtractor for SlackCommandEventsExtractor {
+    fn extract(&self, verified_body: &str, extensions: &mut Extensions) -> AnyStdResult<()> {
         let body_params: HashMap<String, String> =
             url::form_urlencoded::parse(verified_body.as_bytes())
                 .into_owned()
@@ -118,16 +119,16 @@ impl SlackEventExtractor for SlackCommandEventExtractor {
 }
 
 #[derive(Clone)]
-pub struct SlackInteractionEventExtractor;
+pub struct SlackInteractionEventsExtractor;
 
-impl SlackInteractionEventExtractor {
+impl SlackInteractionEventsExtractor {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl SlackEventExtractor for SlackInteractionEventExtractor {
-    fn extract(&self, verified_body: &String, extensions: &mut Extensions) -> AnyStdResult<()> {
+impl SlackEventsExtractor for SlackInteractionEventsExtractor {
+    fn extract(&self, verified_body: &str, extensions: &mut Extensions) -> AnyStdResult<()> {
         let body_params: HashMap<String, String> =
             url::form_urlencoded::parse(verified_body.as_bytes())
                 .into_owned()

@@ -21,5 +21,5 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
 mod slack_oauth_routes;
 pub use slack_oauth_routes::*;
 
-mod slack_event_extractors;
-pub use slack_event_extractors::SlackEventExtractors;
+mod slack_events_extractors;
+pub use slack_events_extractors::SlackEventsExtractors;

@@ -1,4 +1,6 @@
-use crate::axum_support::slack_event_extractors::{SlackEventEmptyExtractor, SlackEventExtractor};
+use crate::axum_support::slack_events_extractors::{
+    SlackEventsEmptyExtractor, SlackEventsExtractor,
+};
 use crate::axum_support::SlackEventsAxumListener;
 use crate::hyper_tokio::SlackClientHyperConnector;
 use crate::listener::SlackClientEventsListenerEnvironment;
@@ -21,7 +23,7 @@ use tracing::*;
 pub struct SlackEventsApiMiddlewareService<S, SCHC, SE>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
-    SE: SlackEventExtractor + Clone,
+    SE: SlackEventsExtractor + Clone,
 {
     inner: Option<S>,
     environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
@@ -36,7 +38,7 @@ where
     S::Error: std::error::Error + 'static + Send + Sync,
     I: IntoResponse,
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
-    SE: SlackEventExtractor + Clone,
+    SE: SlackEventsExtractor + Clone,
 {
     pub fn new(
         service: S,
@@ -58,7 +60,7 @@ where
     S: Service<Request<Body>, Response = Response, Error = Infallible> + Send + 'static + Clone,
     S::Future: Send + 'static,
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
-    SE: SlackEventExtractor + Clone + Send + Sync + 'static,
+    SE: SlackEventsExtractor + Clone + Send + Sync + 'static,
 {
     type Response = S::Response;
     type Error = Infallible;
@@ -93,7 +95,7 @@ where
                         .insert(environment.clone());
 
                     if let Err(err) =
-                        extractor.extract(&verified_body, verified_request.extensions_mut())
+                        extractor.extract(verified_body.as_str(), verified_request.extensions_mut())
                     {
                         let http_status = (environment.error_handler)(
                             err,
@@ -150,7 +152,7 @@ where
 pub struct SlackEventsApiMiddleware<SCHC, S, SE>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
-    SE: SlackEventExtractor,
+    SE: SlackEventsExtractor,
 {
     slack_signing_secret: SlackSigningSecret,
     environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
@@ -158,7 +160,7 @@ where
     _ph_s: PhantomData<S>,
 }
 
-impl<SCHC, S> SlackEventsApiMiddleware<SCHC, S, SlackEventEmptyExtractor>
+impl<SCHC, S> SlackEventsApiMiddleware<SCHC, S, SlackEventsEmptyExtractor>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
 {
@@ -169,14 +171,14 @@ where
         Self {
             slack_signing_secret: slack_signing_secret.clone(),
             environment,
-            extractor: SlackEventEmptyExtractor::new(),
+            extractor: SlackEventsEmptyExtractor::new(),
             _ph_s: PhantomData::default(),
         }
     }
 
     pub fn with_event_extractor<SE>(self, extractor: SE) -> SlackEventsApiMiddleware<SCHC, S, SE>
     where
-        SE: SlackEventExtractor,
+        SE: SlackEventsExtractor,
     {
         SlackEventsApiMiddleware {
             slack_signing_secret: self.slack_signing_secret,
@@ -194,7 +196,7 @@ where
     S::Error: std::error::Error + 'static + Send + Sync,
     I: IntoResponse,
     SCHC: SlackClientHttpConnector + Send + Sync + 'static,
-    SE: SlackEventExtractor + Clone,
+    SE: SlackEventsExtractor + Clone,
 {
     type Service = SlackEventsApiMiddlewareService<S, SCHC, SE>;
 
@@ -212,7 +214,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
     pub fn events_layer<S, ReqBody, I>(
         &self,
         slack_signing_secret: &SlackSigningSecret,
-    ) -> SlackEventsApiMiddleware<SlackClientHyperConnector<H>, S, SlackEventEmptyExtractor>
+    ) -> SlackEventsApiMiddleware<SlackClientHyperConnector<H>, S, SlackEventsEmptyExtractor>
     where
         S: Service<Request<ReqBody>, Response = I> + Send + 'static + Clone,
         S::Future: Send + 'static,

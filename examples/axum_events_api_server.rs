@@ -103,7 +103,7 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             axum::routing::post(test_push_event).layer(
                 listener
                     .events_layer(&signing_secret)
-                    .with_event_extractor(SlackEventExtractors::push_event()),
+                    .with_event_extractor(SlackEventsExtractors::push_event()),
             ),
         )
         .route(
@@ -111,7 +111,7 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             axum::routing::post(test_command_event).layer(
                 listener
                     .events_layer(&signing_secret)
-                    .with_event_extractor(SlackEventExtractors::command_event()),
+                    .with_event_extractor(SlackEventsExtractors::command_event()),
             ),
         )
         .route(
@@ -119,7 +119,7 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             axum::routing::post(test_interaction_event).layer(
                 listener
                     .events_layer(&signing_secret)
-                    .with_event_extractor(SlackEventExtractors::interaction_event()),
+                    .with_event_extractor(SlackEventsExtractors::interaction_event()),
             ),
         );
 

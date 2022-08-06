@@ -41,7 +41,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                     ],
                 );
                 debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
-                Ok(HyperExtensions::hyper_redirect_to(&full_uri.to_string())?)
+                HyperExtensions::hyper_redirect_to(&full_uri.to_string())
             }
             .map(|res| Self::handle_error(environment, res))
             .boxed()
