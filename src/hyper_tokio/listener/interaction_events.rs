@@ -4,6 +4,8 @@ use crate::listener::*;
 pub use crate::models::events::*;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 
+use crate::blocks::SlackViewSubmissionResponse;
+use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use crate::hyper_tokio::*;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::body::*;
@@ -14,12 +16,12 @@ use std::future::Future;
 use std::sync::Arc;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
-    pub fn interaction_events_service_fn<'a, D, F>(
+    pub fn interaction_events_service_fn<'a, D, F, R>(
         &self,
         config: Arc<SlackInteractionEventsListenerConfig>,
         interaction_service_fn: UserCallbackFunction<
             SlackInteractionEvent,
-            impl Future<Output = UserCallbackResult<()>> + 'static + Send,
+            impl Future<Output = UserCallbackResult<R>> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
     ) -> impl Fn(
@@ -37,6 +39,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
             + 'a
             + Send,
+        R: SlackInteractionEventResponse,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -55,7 +58,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
-                        SlackClientHyperConnector::<H>::decode_signed_response(req, &sign_verifier)
+                        HyperExtensions::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 let body_params: HashMap<String, String> =
                                     url::form_urlencoded::parse(body.as_bytes())
@@ -79,12 +82,9 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                             .and_then(|event| async move {
                                 match event {
                                     Ok(view_submission_event@SlackInteractionEvent::ViewSubmission(_)) => {
-                                        match interaction_service_fn(view_submission_event, sc.clone(), thread_user_state_storage.clone()).await {
-                                            Ok(_) => {
-                                                Response::builder()
-                                                    .status(StatusCode::OK)
-                                                    .body("".into())
-                                                    .map_err(|e| e.into())
+                                        match interaction_service_fn(view_submission_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
+                                            Ok(response) => {
+                                                response.to_http_response(&view_submission_event)
                                             }
                                             Err(err) => {
                                                 let status_code = thread_error_handler(err, sc, thread_user_state_storage);
@@ -97,11 +97,8 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
 
                                     }
                                     Ok(interaction_event) => {
-                                        match interaction_service_fn(interaction_event, sc.clone(), thread_user_state_storage.clone()).await {
-                                            Ok(_) => Response::builder()
-                                                .status(StatusCode::OK)
-                                                .body(Body::empty())
-                                                .map_err(|e| e.into()),
+                                        match interaction_service_fn(interaction_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
+                                            Ok(response) => response.to_http_response(&interaction_event),
                                             Err(err) => {
                                                 let status_code = thread_error_handler(err, sc, thread_user_state_storage);
                                                 Response::builder()
@@ -127,5 +124,34 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             }
             .boxed()
         }
+    }
+}
+
+pub trait SlackInteractionEventResponse {
+    fn to_http_response(&self, event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>>;
+}
+
+impl SlackInteractionEventResponse for () {
+    fn to_http_response(&self, event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
+        match event {
+            SlackInteractionEvent::ViewSubmission(_) => Response::builder()
+                .status(StatusCode::OK)
+                .body("".into())
+                .map_err(|e| e.into()),
+            _ => Response::builder()
+                .status(StatusCode::OK)
+                .body(Body::empty())
+                .map_err(|e| e.into()),
+        }
+    }
+}
+
+impl SlackInteractionEventResponse for SlackViewSubmissionResponse {
+    fn to_http_response(&self, _event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
+        let json_str = serde_json::to_string(&self)?;
+        Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "application/json; charset=utf-8")
+            .body(Body::from(json_str))?)
     }
 }

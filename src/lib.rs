@@ -105,8 +105,7 @@ mod token;
 #[cfg(feature = "hyper")]
 pub mod hyper_tokio;
 
-// In next releases
-// #[cfg(feature = "axum")]
-// pub mod axum_support;
+#[cfg(feature = "axum")]
+pub mod axum_support;
 
 pub mod prelude;

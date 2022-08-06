@@ -6,6 +6,7 @@ use crate::errors::*;
 use crate::listener::*;
 use crate::{SlackClient, SlackClientHttpApiUri};
 
+use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use futures::future::{BoxFuture, FutureExt};
 use hyper::body::*;
 use hyper::client::connect::Connect;
@@ -16,7 +17,7 @@ use std::sync::Arc;
 use tracing::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
-    async fn slack_oauth_install_service(
+    pub(crate) async fn slack_oauth_install_service(
         _: Request<Body>,
         config: &SlackOAuthListenerConfig,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
@@ -32,10 +33,10 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             ],
         );
         debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
-        SlackClientHyperConnector::<H>::hyper_redirect_to(&full_uri.to_string())
+        HyperExtensions::hyper_redirect_to(&full_uri.to_string())
     }
 
-    async fn slack_oauth_callback_service(
+    pub(crate) async fn slack_oauth_callback_service(
         req: Request<Body>,
         config: &SlackOAuthListenerConfig,
         client: Arc<SlackClient<SlackClientHyperConnector<H>>>,
@@ -47,7 +48,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         >,
         error_handler: BoxedErrorHandler<SlackClientHyperConnector<H>>,
     ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
-        let params = SlackClientHyperConnector::<H>::parse_query_params(&req);
+        let params = HyperExtensions::parse_query_params(&req);
         debug!("Received Slack OAuth callback: {:?}", &params);
 
         match (params.get("code"), params.get("error")) {
@@ -77,16 +78,12 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                             &oauth_resp.authed_user.id
                         );
                         install_service_fn(oauth_resp, client, user_state_storage).await;
-                        SlackClientHyperConnector::<H>::hyper_redirect_to(
-                            &config.redirect_installed_url,
-                        )
+                        HyperExtensions::hyper_redirect_to(&config.redirect_installed_url)
                     }
                     Err(err) => {
                         error!("Slack OAuth error: {}", &err);
                         error_handler(Box::new(err), client, user_state_storage);
-                        SlackClientHyperConnector::<H>::hyper_redirect_to(
-                            &config.redirect_error_redirect_url,
-                        )
+                        HyperExtensions::hyper_redirect_to(&config.redirect_error_redirect_url)
                     }
                 }
             }
@@ -104,7 +101,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                     &config.redirect_error_redirect_url,
                     req.uri().query().map_or("".into(), |q| format!("?{}", &q))
                 );
-                SlackClientHyperConnector::<H>::hyper_redirect_to(&redirect_error_url)
+                HyperExtensions::hyper_redirect_to(&redirect_error_url)
             }
             _ => {
                 error!("Slack OAuth cancelled with unknown reason");
@@ -116,9 +113,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                     client,
                     user_state_storage,
                 );
-                SlackClientHyperConnector::<H>::hyper_redirect_to(
-                    &config.redirect_error_redirect_url,
-                )
+                HyperExtensions::hyper_redirect_to(&config.redirect_error_redirect_url)
             }
         }
     }

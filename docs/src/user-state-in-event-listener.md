@@ -3,6 +3,8 @@
 It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using `SlackClientEventsUserStateStorage`.
 
+This needs for Hyper or Socket Mode. For Axum use its own support for user state management.
+
 ## Defining user state
 ```rust,noplaypen
 
@@ -18,7 +20,7 @@ let listener_environment = Arc::new(
 
 ```
 
-## Reading user state in listeners
+## Reading user state in listeners for Hyper/Socket Mode
 
 ```rust,noplaypen
 async fn test_push_events_function(
@@ -36,7 +38,7 @@ async fn test_push_events_function(
 }
 ```
 
-## Updating user state in listeners 
+## Updating user state in listeners for Hyper/Socket Mode
 
 ```rust,noplaypen
 async fn test_push_events_function(

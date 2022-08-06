@@ -9,3 +9,6 @@ pub use crate::models::*; // common Slack models like SlackUser, etc and macros 
 
 #[cfg(feature = "hyper")]
 pub use crate::hyper_tokio::*;
+
+#[cfg(feature = "axum")]
+pub use crate::axum_support::*;

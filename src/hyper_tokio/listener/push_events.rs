@@ -1,5 +1,6 @@
 use crate::errors::*;
 use crate::hyper_tokio::connector::SlackClientHyperConnector;
+use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use crate::hyper_tokio::*;
 use crate::listener::*;
 pub use crate::models::events::*;
@@ -53,7 +54,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             async move {
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
-                        SlackClientHyperConnector::<H>::decode_signed_response(req, &sign_verifier)
+                        HyperExtensions::decode_signed_response(req, &sign_verifier)
                             .map_ok(|body| {
                                 serde_json::from_str::<SlackPushEvent>(body.as_str()).map_err(|e| {
                                     SlackClientProtocolError::new(e)
