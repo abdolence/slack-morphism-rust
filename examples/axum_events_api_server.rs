@@ -1,14 +1,16 @@
 use slack_morphism::prelude::*;
-use std::convert::Infallible;
 use std::future::Future;
 
 use hyper::{Body, Request, Response};
 use tracing::*;
 
 use axum::response::IntoResponse;
+use axum::Extension;
 use hyper::client::HttpConnector;
 use hyper_rustls::HttpsConnector;
-use slack_morphism::axum_support::{SlackEventsApiMiddleware, SlackEventsAxumListener};
+use slack_morphism::axum_support::{
+    SlackEventExtractors, SlackEventsApiMiddleware, SlackEventsAxumListener,
+};
 use std::sync::Arc;
 use tower::Service;
 
@@ -20,56 +22,45 @@ async fn test_oauth_install_function(
     println!("{:#?}", resp);
 }
 
-async fn test_push_events_function(
-    event: SlackPushEvent,
-    _client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // Read state
-    let current_state = {
-        let states = _states.read().await;
-        println!("{:#?}", states.get_user_state::<UserStateExample>());
-        println!("{:#?}", states.len());
-        UserStateExample(states.get_user_state::<UserStateExample>().unwrap().0 + 1)
-    };
+async fn test_welcome_installed() -> String {
+    "Welcome".to_string()
+}
 
-    // Write state
-    {
-        let mut states = _states.write().await;
-        states.set_user_state::<UserStateExample>(current_state);
-        println!("{:#?}", states.get_user_state::<UserStateExample>());
+async fn test_cancelled_install() -> String {
+    "Cancelled".to_string()
+}
+
+async fn test_error_install() -> String {
+    "Error while installing".to_string()
+}
+
+async fn test_push_event(
+    Extension(_environment): Extension<Arc<SlackHyperListenerEnvironment>>,
+    Extension(event): Extension<SlackPushEvent>,
+) -> Response<Body> {
+    println!("Received push event: {:?}", event);
+
+    match event {
+        SlackPushEvent::UrlVerification(url_ver) => Response::new(Body::from(url_ver.challenge)),
+        _ => Response::new(Body::empty()),
     }
-
-    println!("{:#?}", event);
-    Ok(())
 }
 
-async fn test_interaction_events_function(
-    event: SlackInteractionEvent,
-    _client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("{:#?}", event);
-    Ok(())
-}
-
-async fn test_command_events_function(
-    event: SlackCommandEvent,
-    _client: Arc<SlackHyperClient>,
-    _states: SlackClientEventsUserState,
-) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
-    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-    let session = _client.open_session(&token);
-
-    session
-        .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
-        .await?;
-
-    println!("{:#?}", event);
-    Ok(SlackCommandEventResponse::new(
+async fn test_command_event(
+    Extension(_environment): Extension<Arc<SlackHyperListenerEnvironment>>,
+    Extension(event): Extension<SlackCommandEvent>,
+) -> axum::Json<SlackCommandEventResponse> {
+    println!("Received command event: {:?}", event);
+    axum::Json(SlackCommandEventResponse::new(
         SlackMessageContent::new().with_text("Working on it".into()),
     ))
+}
+
+async fn test_interaction_event(
+    Extension(_environment): Extension<Arc<SlackHyperListenerEnvironment>>,
+    Extension(event): Extension<SlackInteractionEvent>,
+) {
+    println!("Received interaction event: {:?}", event);
 }
 
 fn test_error_handler(
@@ -83,13 +74,6 @@ fn test_error_handler(
     http::StatusCode::BAD_REQUEST
 }
 
-#[derive(Debug)]
-struct UserStateExample(u64);
-
-async fn test_str() -> String {
-    "ssss".to_string()
-}
-
 async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client: Arc<SlackHyperClient> =
         Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
@@ -97,27 +81,16 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
 
-    async fn your_others_routes(
-        _req: Request<Body>,
-    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
-        Response::builder()
-            .body("Hey, this is a default users route handler".into())
-            .map_err(|e| e.into())
-    }
-
     let oauth_listener_config = SlackOAuthListenerConfig::new(
         config_env_var("SLACK_CLIENT_ID")?.into(),
         config_env_var("SLACK_CLIENT_SECRET")?.into(),
         config_env_var("SLACK_BOT_SCOPE")?,
         config_env_var("SLACK_REDIRECT_HOST")?,
-    )
-    .with_install_path("/install".to_string())
-    .with_redirect_callback_path("/callback".to_string());
+    );
 
-    let listener_environment = Arc::new(
+    let listener_environment: Arc<SlackHyperListenerEnvironment> = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
-            .with_error_handler(test_error_handler)
-            .with_user_state(UserStateExample(0)),
+            .with_error_handler(test_error_handler),
     );
     let signing_secret: SlackSigningSecret = config_env_var("SLACK_SIGNING_SECRET")?.into();
 
@@ -126,15 +99,36 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // build our application with a single route
     let app = axum::routing::Router::new()
-        .route(
+        .nest(
             "/auth",
-            listener.oauth_router(&oauth_listener_config, test_oauth_install_function),
+            listener.oauth_router("/auth", &oauth_listener_config, test_oauth_install_function),
+        )
+        .route("/installed", axum::routing::get(test_welcome_installed))
+        .route("/cancelled", axum::routing::get(test_cancelled_install))
+        .route("/error", axum::routing::get(test_error_install))
+        .route(
+            "/push",
+            axum::routing::post(test_push_event).layer(
+                listener
+                    .events_layer(&signing_secret)
+                    .with_event_extractor(SlackEventExtractors::push_event()),
+            ),
         )
         .route(
-            "/slack",
-            axum::routing::Router::new()
-                .route("/push", axum::routing::get(test_str))
-                .layer(listener.events_layer(&signing_secret)),
+            "/command",
+            axum::routing::post(test_command_event).layer(
+                listener
+                    .events_layer(&signing_secret)
+                    .with_event_extractor(SlackEventExtractors::command_event()),
+            ),
+        )
+        .route(
+            "/interaction",
+            axum::routing::post(test_interaction_event).layer(
+                listener
+                    .events_layer(&signing_secret)
+                    .with_event_extractor(SlackEventExtractors::interaction_event()),
+            ),
         );
 
     // run it with hyper

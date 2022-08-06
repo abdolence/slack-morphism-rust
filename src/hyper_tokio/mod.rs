@@ -18,9 +18,12 @@ mod ratectl;
 pub mod scroller_ext;
 mod socket_mode;
 
+use crate::listener::SlackClientEventsListenerEnvironment;
 pub use listener::chain_service_routes_fn;
 pub use listener::SlackClientEventsHyperListener;
 pub use scroller_ext::SlackApiResponseScrollerExt;
 pub use socket_mode::*;
 
 pub type SlackHyperClient = SlackClient<SlackClientHyperHttpsConnector>;
+pub type SlackHyperListenerEnvironment =
+    SlackClientEventsListenerEnvironment<SlackClientHyperHttpsConnector>;

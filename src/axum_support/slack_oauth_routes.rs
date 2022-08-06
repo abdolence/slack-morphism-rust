@@ -1,6 +1,6 @@
 use crate::axum_support::SlackEventsAxumListener;
 use crate::hyper_tokio::hyper_ext::HyperExtensions;
-use crate::listener::UserCallbackFunction;
+use crate::listener::{SlackClientEventsListenerEnvironment, UserCallbackFunction};
 use crate::prelude::SlackOAuthListenerConfig;
 use axum::response::Response;
 use futures_util::future::BoxFuture;
@@ -10,12 +10,13 @@ use hyper::client::connect::Connect;
 use hyper::Body;
 use rvstruct::ValueStruct;
 use std::future::Future;
+use std::sync::Arc;
 use tracing::*;
 
 use crate::api::*;
 use crate::errors::*;
 use crate::hyper_tokio::SlackClientHyperConnector;
-use crate::SlackClientHttpApiUri;
+use crate::{AnyStdResult, SlackClientHttpApiUri};
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
     pub fn slack_oauth_install(
@@ -170,6 +171,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
 
     pub fn oauth_router(
         &self,
+        root_path: &str,
         config: &SlackOAuthListenerConfig,
         install_service_fn: UserCallbackFunction<
             SlackOAuthV2AccessTokenResponse,
@@ -179,12 +181,35 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
     ) -> axum::routing::Router {
         axum::routing::Router::new()
             .route(
-                config.install_path.as_str(),
+                config.install_path.replace(root_path, "").as_str(),
                 axum::routing::get(self.slack_oauth_install(config)),
             )
             .route(
-                config.redirect_callback_path.as_str(),
+                config
+                    .redirect_callback_path
+                    .replace(root_path, "")
+                    .as_str(),
                 axum::routing::get(self.slack_oauth_callback(config, install_service_fn)),
             )
+    }
+
+    fn handle_error(
+        environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector<H>>>,
+        result: AnyStdResult<Response<hyper::Body>>,
+    ) -> Response<hyper::Body> {
+        match result {
+            Err(err) => {
+                let http_status = (environment.error_handler)(
+                    err,
+                    environment.client.clone(),
+                    environment.user_state.clone(),
+                );
+                Response::builder()
+                    .status(http_status)
+                    .body(hyper::Body::empty())
+                    .unwrap()
+            }
+            Ok(result) => result,
+        }
     }
 }
