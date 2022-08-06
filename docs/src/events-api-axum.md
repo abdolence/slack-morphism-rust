@@ -1,19 +1,11 @@
  # Events API and OAuth for Axum
 
- The library provides route implementation in `SlackClientEventsListener` based on Hyper/Tokio for:
+ The library provides route implementation in `SlackEventsAxumListener` based on Hyper/Tokio for:
  - Push Events
  - Interaction Events
  - Command Events
  - OAuth v2 redirects and client functions
 
- You can chain all of the routes using `chain_service_routes_fn` from the library.
-
-## Hyper configuration
-In order to use Events API/OAuth you need to configure Hyper HTTP server. 
-There is nothing special about how to do that, and you can use [the official hyper docs](https://hyper.rs/).
-This is just merely a quick example how to use it with Slack Morphism routes.
-
-To create a server, you need hyper `make_service_fn` and `service_fn`.
 
 ## Example
 ```rust,noplaypen
