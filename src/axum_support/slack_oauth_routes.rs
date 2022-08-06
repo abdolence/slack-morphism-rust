@@ -167,4 +167,24 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
             .boxed()
         }
     }
+
+    pub fn oauth_router(
+        &self,
+        config: &SlackOAuthListenerConfig,
+        install_service_fn: UserCallbackFunction<
+            SlackOAuthV2AccessTokenResponse,
+            impl Future<Output = ()> + 'static + Send,
+            SlackClientHyperConnector<H>,
+        >,
+    ) -> axum::routing::Router {
+        axum::routing::Router::new()
+            .route(
+                config.install_path.as_str(),
+                axum::routing::get(self.slack_oauth_install(config)),
+            )
+            .route(
+                config.redirect_callback_path.as_str(),
+                axum::routing::get(self.slack_oauth_callback(config, install_service_fn)),
+            )
+    }
 }

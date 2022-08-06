@@ -1,12 +1,16 @@
 use slack_morphism::prelude::*;
+use std::convert::Infallible;
+use std::future::Future;
 
 use hyper::{Body, Request, Response};
 use tracing::*;
 
+use axum::response::IntoResponse;
 use hyper::client::HttpConnector;
 use hyper_rustls::HttpsConnector;
-use slack_morphism::axum_support::SlackEventsAxumListener;
+use slack_morphism::axum_support::{SlackEventsApiMiddleware, SlackEventsAxumListener};
 use std::sync::Arc;
+use tower::Service;
 
 async fn test_oauth_install_function(
     resp: SlackOAuthV2AccessTokenResponse,
@@ -82,6 +86,10 @@ fn test_error_handler(
 #[derive(Debug)]
 struct UserStateExample(u64);
 
+async fn test_str() -> String {
+    "ssss".to_string()
+}
+
 async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client: Arc<SlackHyperClient> =
         Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
@@ -102,28 +110,31 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         config_env_var("SLACK_CLIENT_SECRET")?.into(),
         config_env_var("SLACK_BOT_SCOPE")?,
         config_env_var("SLACK_REDIRECT_HOST")?,
-    );
+    )
+    .with_install_path("/install".to_string())
+    .with_redirect_callback_path("/callback".to_string());
 
     let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(test_error_handler)
             .with_user_state(UserStateExample(0)),
     );
+    let signing_secret: SlackSigningSecret = config_env_var("SLACK_SIGNING_SECRET")?.into();
 
     let listener: SlackEventsAxumListener<HttpsConnector<HttpConnector>> =
-        SlackEventsAxumListener::new(listener_environment);
+        SlackEventsAxumListener::new(listener_environment.clone());
 
     // build our application with a single route
     let app = axum::routing::Router::new()
         .route(
-            "/auth/install",
-            axum::routing::get(listener.slack_oauth_install(&oauth_listener_config)),
+            "/auth",
+            listener.oauth_router(&oauth_listener_config, test_oauth_install_function),
         )
         .route(
-            "/auth/callback",
-            axum::routing::get(
-                listener.slack_oauth_callback(&oauth_listener_config, test_oauth_install_function),
-            ),
+            "/slack",
+            axum::routing::Router::new()
+                .route("/push", axum::routing::get(test_str))
+                .layer(listener.events_layer(&signing_secret)),
         );
 
     // run it with hyper

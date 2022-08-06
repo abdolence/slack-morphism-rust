@@ -5,6 +5,7 @@ use hyper::client::connect::Connect;
 use std::sync::Arc;
 
 mod slack_events_middleware;
+pub use slack_events_middleware::SlackEventsApiMiddleware;
 
 pub struct SlackEventsAxumListener<H: 'static + Send + Sync + Connect + Clone> {
     pub environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector<H>>>,
