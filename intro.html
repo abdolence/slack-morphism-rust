@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,7 +144,7 @@
 <h2 id="easy-to-use"><a class="header" href="#easy-to-use">Easy to use</a></h2>
 <p>The library depends only on familiar for Rust developers principles and libraries like Serde, futures, hyper.</p>
 <h2 id="async"><a class="header" href="#async">Async</a></h2>
-<p>Using latest Rust async/await language features and libraries, the library provides access to all of the functions 
+<p>Using the latest Rust async/await language features and libraries, the library provides access to all of the functions 
 in asynchronous manner.</p>
 <h2 id="modular-design"><a class="header" href="#modular-design">Modular design</a></h2>
 <p>Base crate to support frameworks-agnostic client and that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.
@@ -152,7 +152,7 @@ Includes also all type/models definitions that used for Slack Web/Events APIs.</
 <p>This library provided the following features:</p>
 <ul>
 <li><code>hyper</code>: Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
-<li><code>axum</code>:  Slack client support/binding for <a href="https://github.com/tokio-rs/axum">axum framework</a> support (WIP, will be available in next releases).</li>
+<li><code>axum</code>:  Slack client support/binding for <a href="https://github.com/tokio-rs/axum">axum framework</a> support.</li>
 </ul>
 
                     </main>

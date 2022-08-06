@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html" class="active"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html" class="active"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -140,6 +140,7 @@
                         <h1 id="user-state-propagation-for-event-listeners-and-callback-functions"><a class="header" href="#user-state-propagation-for-event-listeners-and-callback-functions">User state propagation for event listeners and callback functions</a></h1>
 <p>It is very common to have some user specific context and state in event handler functions.
 So, all listener handlers has access to it using <code>SlackClientEventsUserStateStorage</code>.</p>
+<p>This needs for Hyper or Socket Mode. For Axum use its own support for user state management.</p>
 <h2 id="defining-user-state"><a class="header" href="#defining-user-state">Defining user state</a></h2>
 <pre><code class="language-rust noplaypen">
 // Defining your state as a struct
@@ -153,7 +154,7 @@ let listener_environment = Arc::new(
 ); 
 
 </code></pre>
-<h2 id="reading-user-state-in-listeners"><a class="header" href="#reading-user-state-in-listeners">Reading user state in listeners</a></h2>
+<h2 id="reading-user-state-in-listeners-for-hypersocket-mode"><a class="header" href="#reading-user-state-in-listeners-for-hypersocket-mode">Reading user state in listeners for Hyper/Socket Mode</a></h2>
 <pre><code class="language-rust noplaypen">async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc&lt;SlackHyperClient&gt;,
@@ -168,7 +169,7 @@ let listener_environment = Arc::new(
     Ok(())
 }
 </code></pre>
-<h2 id="updating-user-state-in-listeners"><a class="header" href="#updating-user-state-in-listeners">Updating user state in listeners</a></h2>
+<h2 id="updating-user-state-in-listeners-for-hypersocket-mode"><a class="header" href="#updating-user-state-in-listeners-for-hypersocket-mode">Updating user state in listeners for Hyper/Socket Mode</a></h2>
 <pre><code class="language-rust noplaypen">async fn test_push_events_function(
     event: SlackPushEvent,
     client: Arc&lt;SlackHyperClient&gt;,

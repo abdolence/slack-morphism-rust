@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html" class="active"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html" class="active"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -140,7 +140,7 @@
                         <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
-slack-morphism = { version = &quot;1.1&quot;, features = [&quot;hyper&quot;] }
+slack-morphism = { version = &quot;1.2&quot;, features = [&quot;hyper&quot;, &quot;axum&quot;] }
 </code></pre>
 <p>All imports you need:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
@@ -148,7 +148,7 @@ slack-morphism = { version = &quot;1.1&quot;, features = [&quot;hyper&quot;] }
 <h2 id="ready-to-use-examples"><a class="header" href="#ready-to-use-examples">Ready to use examples</a></h2>
 <ul>
 <li>Slack Web API client and Block kit example</li>
-<li>Events API server example</li>
+<li>Events API server example using either pure hyper solution or axum</li>
 <li>Slack Web API client with Socket Mode</li>
 </ul>
 <p>You can find them on <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>

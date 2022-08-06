@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Send webhook messages - Slack Morphism for Rust</title>
+        <title>Axum-based - Slack Morphism for Rust</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Slack Morphism is a type-safe and modern client for Rust">
@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html" class="active"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html" class="active"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -137,37 +137,151 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="send-slack-webhook-messages"><a class="header" href="#send-slack-webhook-messages">Send Slack Webhook Messages</a></h1>
-<p>You can use <code>client..post_webhook_message</code> to post <a href="https://api.slack.com/messaging/webhooks">Slack Incoming Webhook</a> messages:</p>
+                        <h1 id="events-api-and-oauth"><a class="header" href="#events-api-and-oauth">Events API and OAuth</a></h1>
+<p>The library provides route implementation in <code>SlackClientEventsListener</code> based on Hyper/Tokio for:</p>
+<ul>
+<li>Push Events</li>
+<li>Interaction Events</li>
+<li>Command Events</li>
+<li>OAuth v2 redirects and client functions</li>
+</ul>
+<p>You can chain all of the routes using <code>chain_service_routes_fn</code> from the library.</p>
+<h2 id="hyper-configuration"><a class="header" href="#hyper-configuration">Hyper configuration</a></h2>
+<p>In order to use Events API/OAuth you need to configure Hyper HTTP server. 
+There is nothing special about how to do that, and you can use <a href="https://hyper.rs/">the official hyper docs</a>.
+This is just merely a quick example how to use it with Slack Morphism routes.</p>
+<p>To create a server, you need hyper <code>make_service_fn</code> and <code>service_fn</code>.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
 <pre><code class="language-rust noplaypen">
 use slack_morphism::prelude::*;
-use url::Url;
 
-let client = SlackClient::new(SlackClientHyperConnector::new());
+use hyper::{Body, Response};
+use tracing::*;
 
-// Your incoming webhook url from config or OAuth/events (ResponseURL)
-let webhook_url: Url = Url::parse(&quot;https://hooks.slack.com/services/...&quot;)?; 
+use axum::Extension;
+use std::sync::Arc;
 
-client
-    .post_webhook_message(
-        &amp;webhook_url,
-        &amp;SlackApiPostWebhookMessageRequest::new(
-            SlackMessageContent::new()
-                .with_text(format!(&quot;Hey&quot;)),
-        ),
-    )
-    .await?;
-    
+async fn test_oauth_install_function(
+    resp: SlackOAuthV2AccessTokenResponse,
+    _client: Arc&lt;SlackHyperClient&gt;,
+    _states: SlackClientEventsUserState,
+) {
+    println!(&quot;{:#?}&quot;, resp);
+}
+
+async fn test_push_event(
+    Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
+    Extension(event): Extension&lt;SlackPushEvent&gt;,
+) -&gt; Response&lt;Body&gt; {
+    println!(&quot;Received push event: {:?}&quot;, event);
+
+    match event {
+        SlackPushEvent::UrlVerification(url_ver) =&gt; Response::new(Body::from(url_ver.challenge)),
+        _ =&gt; Response::new(Body::empty()),
+    }
+}
+
+async fn test_command_event(
+    Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
+    Extension(event): Extension&lt;SlackCommandEvent&gt;,
+) -&gt; axum::Json&lt;SlackCommandEventResponse&gt; {
+    println!(&quot;Received command event: {:?}&quot;, event);
+    axum::Json(SlackCommandEventResponse::new(
+        SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+    ))
+}
+
+async fn test_interaction_event(
+    Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
+    Extension(event): Extension&lt;SlackInteractionEvent&gt;,
+) {
+    println!(&quot;Received interaction event: {:?}&quot;, event);
+}
+
+fn test_error_handler(
+    err: Box&lt;dyn std::error::Error + Send + Sync&gt;,
+    _client: Arc&lt;SlackHyperClient&gt;,
+    _states: SlackClientEventsUserState,
+) -&gt; http::StatusCode {
+    println!(&quot;{:#?}&quot;, err);
+
+    // Defines what we return Slack server
+    http::StatusCode::BAD_REQUEST
+}
+
+async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+    let client: Arc&lt;SlackHyperClient&gt; =
+        Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
+    info!(&quot;Loading server: {}&quot;, addr);
+
+    let oauth_listener_config = SlackOAuthListenerConfig::new(
+        config_env_var(&quot;SLACK_CLIENT_ID&quot;)?.into(),
+        config_env_var(&quot;SLACK_CLIENT_SECRET&quot;)?.into(),
+        config_env_var(&quot;SLACK_BOT_SCOPE&quot;)?,
+        config_env_var(&quot;SLACK_REDIRECT_HOST&quot;)?,
+    );
+
+    let listener_environment: Arc&lt;SlackHyperListenerEnvironment&gt; = Arc::new(
+        SlackClientEventsListenerEnvironment::new(client.clone())
+            .with_error_handler(test_error_handler),
+    );
+    let signing_secret: SlackSigningSecret = config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into();
+
+    let listener: SlackEventsAxumListener&lt;SlackHyperHttpsConnector&gt; =
+        SlackEventsAxumListener::new(listener_environment.clone());
+
+    // build our application route with OAuth nested router and Push/Command/Interaction events
+    let app = axum::routing::Router::new()
+        .nest(
+            &quot;/auth&quot;,
+            listener.oauth_router(&quot;/auth&quot;, &amp;oauth_listener_config, test_oauth_install_function),
+        )
+        .route(
+            &quot;/push&quot;,
+            axum::routing::post(test_push_event).layer(
+                listener
+                    .events_layer(&amp;signing_secret)
+                    .with_event_extractor(SlackEventsExtractors::push_event()),
+            ),
+        )
+        .route(
+            &quot;/command&quot;,
+            axum::routing::post(test_command_event).layer(
+                listener
+                    .events_layer(&amp;signing_secret)
+                    .with_event_extractor(SlackEventsExtractors::command_event()),
+            ),
+        )
+        .route(
+            &quot;/interaction&quot;,
+            axum::routing::post(test_interaction_event).layer(
+                listener
+                    .events_layer(&amp;signing_secret)
+                    .with_event_extractor(SlackEventsExtractors::interaction_event()),
+            ),
+        );
+
+    axum::Server::bind(&amp;addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+
+    Ok(())
+}
+
 </code></pre>
+<p>Complete example look at <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="block-kit-support.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="events-api-hyper.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="hyper-connections-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="socket-mode.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -176,10 +290,10 @@ client
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="block-kit-support.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="events-api-hyper.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="hyper-connections-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="socket-mode.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
