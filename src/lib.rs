@@ -57,15 +57,11 @@
 //!
 //! ```
 //!
-//! ## Events API and OAuth support
+//! ## Events API and OAuth support for Hyper and Axum
 //!
-//! The library provides route implementation in `SlackClientEventsListener` based on Hyper/Tokio for:
-//! - Push Events
-//! - Interaction Events
-//! - Command Events
-//! - OAuth v2 redirects and client functions
-//!
-//! You can chain all of the routes using `chain_service_routes_fn` from the library.
+//! The library provides two different ways to work with Slack Events API:
+//! - Using pure Hyper-based solution
+//! - Using more high-level solution for axum web framework.
 //!
 //! Also the library provides Slack events signature verifier (`SlackEventSignatureVerifier`)
 //! (which is already integrated in the routes implementation for you).
