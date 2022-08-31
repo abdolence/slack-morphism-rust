@@ -45,6 +45,28 @@ where
             )
             .await
     }
+
+    ///
+    /// https://api.slack.com/methods/usergroups.users.list
+    ///
+    pub async fn usergroups_users_list(
+        &self,
+        req: &SlackApiUserGroupsUsersListRequest,
+    ) -> ClientResult<SlackApiUserGroupsUsersListResponse> {
+        self.http_session_api
+            .http_get(
+                "usergroups.users.list",
+                &vec![
+                    (
+                        "include_disabled",
+                        req.include_disabled.map(|v| v.to_string()).as_ref(),
+                    ),
+                    ("team_id", req.team_id.as_ref().map(|x| x.value())),
+                ],
+                Some(&SLACK_TIER2_METHOD_CONFIG),
+            )
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -59,4 +81,16 @@ pub struct SlackApiUserGroupsListRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUserGroupsListResponse {
     pub usergroups: Vec<SlackUserGroup>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiUserGroupsUsersListRequest {
+    pub include_disabled: Option<bool>,
+    pub team_id: Option<SlackTeamId>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiUserGroupsUsersListResponse {
+    pub users: Vec<SlackUserId>,
 }
