@@ -87,7 +87,7 @@ impl Error for SlackEventSignatureVerifierError {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackEventSignatureCryptoInitError {
     pub message: String,
 }
@@ -104,7 +104,7 @@ impl Display for SlackEventSignatureCryptoInitError {
 
 impl Error for SlackEventSignatureCryptoInitError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackEventAbsentSignatureError {}
 
 impl Display for SlackEventAbsentSignatureError {
@@ -115,7 +115,7 @@ impl Display for SlackEventAbsentSignatureError {
 
 impl Error for SlackEventAbsentSignatureError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackEventWrongSignatureError {
     pub body_len: usize,
     pub ts: String,
@@ -145,10 +145,10 @@ fn check_signature_success() {
         ring::rand::generate(&rng).unwrap().expose();
     let key_str: String = hex::encode(key_value);
 
-    let verifier = SlackEventSignatureVerifier::new(&key_str.to_string().into());
+    let verifier = SlackEventSignatureVerifier::new(&key_str.into());
 
-    const TEST_BODY: &'static str = "test-body";
-    const TEST_TS: &'static str = "test-ts";
+    const TEST_BODY: &str = "test-body";
+    const TEST_TS: &str = "test-ts";
 
     let hash = verifier.sign(TEST_BODY, TEST_TS);
 
@@ -162,12 +162,10 @@ fn check_signature_success() {
 
 #[test]
 fn test_precoded_data() {
-    const TEST_SECRET: &'static str =
-        "d058b0b8f3f91e4446ad981890c9b6c16b2acc85367e30a2d76b8a95e525c02a";
-    const TEST_HASH: &'static str =
-        "v0=37ca0519af8b621f18b13586fc72488ebb159fc730a5d1718dd823dec69dea95";
-    const TEST_BODY: &'static str = "test-body";
-    const TEST_TS: &'static str = "test-ts";
+    const TEST_SECRET: &str = "d058b0b8f3f91e4446ad981890c9b6c16b2acc85367e30a2d76b8a95e525c02a";
+    const TEST_HASH: &str = "v0=37ca0519af8b621f18b13586fc72488ebb159fc730a5d1718dd823dec69dea95";
+    const TEST_BODY: &str = "test-body";
+    const TEST_TS: &str = "test-ts";
 
     let verifier = SlackEventSignatureVerifier::new(&TEST_SECRET.to_string().into());
 

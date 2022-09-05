@@ -33,7 +33,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             ],
         );
         debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
-        HyperExtensions::hyper_redirect_to(&full_uri.to_string())
+        HyperExtensions::hyper_redirect_to(full_uri.as_ref())
     }
 
     pub(crate) async fn slack_oauth_callback_service(

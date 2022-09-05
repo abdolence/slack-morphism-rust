@@ -55,7 +55,7 @@ impl Error for SlackClientError {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackClientApiError {
     pub code: String,
     pub errors: Option<Vec<String>>,
@@ -76,7 +76,7 @@ impl Display for SlackClientApiError {
 
 impl Error for SlackClientApiError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackClientHttpError {
     pub status_code: http::StatusCode,
     pub http_response_body: Option<String>,
@@ -108,7 +108,7 @@ impl Display for SlackClientHttpProtocolError {
 
 impl std::error::Error for SlackClientHttpProtocolError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackClientEndOfStreamError {}
 
 impl Display for SlackClientEndOfStreamError {
@@ -138,7 +138,7 @@ impl Display for SlackClientProtocolError {
 
 impl std::error::Error for SlackClientProtocolError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackClientSocketModeProtocolError {
     pub message: String,
 }
@@ -170,7 +170,7 @@ impl Display for SlackClientSystemError {
 
 impl std::error::Error for SlackClientSystemError {}
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackRateLimitError {
     pub retry_after: Option<Duration>,
     pub code: Option<String>,

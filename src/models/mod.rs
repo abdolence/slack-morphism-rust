@@ -5,7 +5,11 @@
 // These warnings disabled mostly since it is important to replicate original models from Slack as is
 // (not for 100% cases though).
 // For example: some of the original models contains more fields then recommended for one model.
-#![allow(clippy::large_enum_variant, clippy::too_many_arguments)]
+#![allow(
+    clippy::large_enum_variant,
+    clippy::too_many_arguments,
+    clippy::derive_partial_eq_without_eq
+)]
 
 mod common;
 

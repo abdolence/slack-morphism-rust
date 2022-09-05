@@ -35,7 +35,7 @@ impl ToString for SlackApiTokenType {
 }
 
 #[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiToken {
     pub token_value: SlackApiTokenValue,
     pub team_id: Option<SlackTeamId>,

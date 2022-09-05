@@ -4,13 +4,13 @@ use lazy_static::lazy_static;
 use rsb_derive::Builder;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackApiMethodRateControlConfig {
     pub tier: Option<SlackApiMethodRateTier>,
     pub special_rate_limit: Option<SlackApiRateControlSpecialLimit>,
 }
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackApiRateControlConfig {
     pub global_max_rate_limit: Option<SlackApiRateControlLimit>,
     pub team_max_rate_limit: Option<SlackApiRateControlLimit>,

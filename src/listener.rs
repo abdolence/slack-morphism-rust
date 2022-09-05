@@ -100,7 +100,7 @@ pub type ErrorHandler<SCHC> = fn(
     SlackClientEventsUserState,
 ) -> http::StatusCode;
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackCommandEventsListenerConfig {
     pub events_signing_secret: SlackSigningSecret,
     #[default = "SlackCommandEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
@@ -111,7 +111,7 @@ impl SlackCommandEventsListenerConfig {
     pub const DEFAULT_EVENTS_URL_VALUE: &'static str = "/command";
 }
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackPushEventsListenerConfig {
     pub events_signing_secret: SlackSigningSecret,
     #[default = "SlackPushEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
@@ -122,7 +122,7 @@ impl SlackPushEventsListenerConfig {
     const DEFAULT_EVENTS_URL_VALUE: &'static str = "/push";
 }
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackInteractionEventsListenerConfig {
     pub events_signing_secret: SlackSigningSecret,
     #[default = "SlackInteractionEventsListenerConfig::DEFAULT_EVENTS_URL_VALUE.into()"]
@@ -133,7 +133,7 @@ impl SlackInteractionEventsListenerConfig {
     pub const DEFAULT_EVENTS_URL_VALUE: &'static str = "/interaction";
 }
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackOAuthListenerConfig {
     pub client_id: SlackClientId,
     pub client_secret: SlackClientSecret,

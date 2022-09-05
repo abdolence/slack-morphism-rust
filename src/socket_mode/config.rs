@@ -1,6 +1,6 @@
 use rsb_derive::Builder;
 
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackClientSocketModeConfig {
     #[default = "SlackClientSocketModeConfig::DEFAULT_CONNECTIONS_COUNT"]
     pub max_connections_count: u32,
