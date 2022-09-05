@@ -9,7 +9,7 @@ async fn test_webhook_message() -> Result<(), Box<dyn std::error::Error + Send +
         .post_webhook_message(
             &webhook_url,
             &SlackApiPostWebhookMessageRequest::new(
-                SlackMessageContent::new().with_text(format!("Hey")),
+                SlackMessageContent::new().with_text("Hey".to_string()),
             ),
         )
         .await?;

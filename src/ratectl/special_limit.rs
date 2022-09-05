@@ -6,7 +6,7 @@ use rvstruct::*;
  * Some Slack Web API methods have special rating limits (e.g. chat.postMessage allowed up to 1rps per workspace
  * channel)
  */
-#[derive(Debug, PartialEq, Clone, Builder)]
+#[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackApiRateControlSpecialLimit {
     pub key: SlackApiRateControlSpecialLimitKey,
     pub limit: SlackApiRateControlLimit,

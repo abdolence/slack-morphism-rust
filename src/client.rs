@@ -143,7 +143,7 @@ pub type ClientResult<T> = std::result::Result<T, SlackClientError>;
 
 pub type AnyStdResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct SlackEnvelopeMessage {
     pub ok: bool,
     pub error: Option<String>,

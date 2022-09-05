@@ -154,6 +154,8 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
     });
 
+    info!("Server is listening on {}", &addr);
+
     let server = hyper::server::Server::bind(&addr).serve(make_svc);
     server.await.map_err(|e| {
         error!("Server error: {}", e);
@@ -168,7 +170,7 @@ pub fn config_env_var(name: &str) -> Result<String, String> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let subscriber = tracing_subscriber::fmt()
-        .with_env_filter("slack_morphism=debug")
+        .with_env_filter("events_api_server=debug,slack_morphism=debug")
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
 
