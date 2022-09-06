@@ -57,6 +57,7 @@ where
             .http_get(
                 "usergroups.users.list",
                 &vec![
+                    ("usergroup", Some(req.usergroup.value())),
                     (
                         "include_disabled",
                         req.include_disabled.map(|v| v.to_string()).as_ref(),
