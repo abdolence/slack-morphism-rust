@@ -86,6 +86,7 @@ pub struct SlackApiUserGroupsListResponse {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUserGroupsUsersListRequest {
+    pub usergroup: SlackUserGroupId,
     pub include_disabled: Option<bool>,
     pub team_id: Option<SlackTeamId>,
 }
