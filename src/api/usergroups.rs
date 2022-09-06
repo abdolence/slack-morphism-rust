@@ -57,6 +57,7 @@ where
             .http_get(
                 "usergroups.users.list",
                 &vec![
+                    ("usergroup", Some(req.usergroup.value())),
                     (
                         "include_disabled",
                         req.include_disabled.map(|v| v.to_string()).as_ref(),
@@ -86,6 +87,7 @@ pub struct SlackApiUserGroupsListResponse {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUserGroupsUsersListRequest {
+    pub usergroup: SlackUserGroupId,
     pub include_disabled: Option<bool>,
     pub team_id: Option<SlackTeamId>,
 }
