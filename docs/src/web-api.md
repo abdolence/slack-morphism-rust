@@ -53,8 +53,9 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 ```
 
-Not that `session` is just auxiliary lightweight structure that stores references to the token and client to make
-easier to have series of calls for the same token. It doesn't make any network calls. There is no need to store it.
+Note that `session` is just an auxiliary lightweight structure that stores references to the token and the client
+to make easier to have series of calls for the same token.
+It doesn't make any network calls. There is no need to store it.
 
 Another option is to use `session` is to use function `run_in_session`:
 
