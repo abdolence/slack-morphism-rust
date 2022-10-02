@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::future::Future;
 use std::sync::Arc;
 
 use crate::token::*;
@@ -217,6 +218,15 @@ where
         };
 
         SlackClientSession { http_session_api }
+    }
+
+    pub async fn run_in_session<'a, FN, F, T>(&'a self, token: &'a SlackApiToken, pred: FN) -> T
+    where
+        FN: Fn(SlackClientSession<'a, SCHC>) -> F,
+        F: Future<Output = T>,
+    {
+        let session = self.open_session(token);
+        pred(session).await
     }
 }
 
