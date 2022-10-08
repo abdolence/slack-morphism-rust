@@ -52,6 +52,7 @@ pub struct SlackClientApiCallContext<'a> {
     pub rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     pub token: Option<&'a SlackApiToken>,
     pub tracing_span: &'a Span,
+    pub is_sensitive_url: bool,
 }
 
 pub trait SlackClientHttpConnector {
@@ -238,6 +239,7 @@ where
             rate_control_params,
             token: Some(self.token),
             tracing_span: &self.span,
+            is_sensitive_url: false,
         };
 
         self.client
@@ -262,6 +264,7 @@ where
             rate_control_params,
             token: Some(self.token),
             tracing_span: &self.span,
+            is_sensitive_url: false,
         };
 
         self.client
@@ -285,6 +288,7 @@ where
             rate_control_params,
             token: Some(self.token),
             tracing_span: &self.span,
+            is_sensitive_url: false,
         };
 
         self.client
@@ -308,6 +312,7 @@ where
             rate_control_params,
             token: Some(self.token),
             tracing_span: &self.span,
+            is_sensitive_url: false,
         };
 
         self.client

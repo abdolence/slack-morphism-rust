@@ -69,7 +69,24 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     where
         RS: for<'de> serde::de::Deserialize<'de>,
     {
-        let uri_str = request.uri().to_string();
+        let uri_str = if context.is_sensitive_url {
+            format!(
+                "{}://{}/<redacted>",
+                request
+                    .uri()
+                    .scheme()
+                    .map(|scheme| scheme.to_string())
+                    .unwrap_or_else(|| "unknown-scheme".to_string()),
+                request
+                    .uri()
+                    .host()
+                    .map(|host| host.to_string())
+                    .unwrap_or_else(|| "unknown-host".to_string())
+            )
+        } else {
+            request.uri().to_string()
+        };
+
         context.tracing_span.in_scope(|| {
             debug!(
                 slack_uri = uri_str.as_str(),
@@ -287,6 +304,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                 rate_control_params: None,
                 token: None,
                 tracing_span: &http_oauth_span,
+                is_sensitive_url: false,
             };
 
             self.send_rate_controlled_request(
