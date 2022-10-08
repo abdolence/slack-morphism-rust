@@ -12,6 +12,8 @@ use rvstruct::ValueStruct;
 
 use crate::prelude::hyper_ext::HyperExtensions;
 use crate::ratectl::SlackApiRateControlConfig;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::*;
@@ -70,8 +72,12 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         RS: for<'de> serde::de::Deserialize<'de>,
     {
         let uri_str = if context.is_sensitive_url {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            request.uri().path().to_string().hash(&mut hasher);
+            let u64 = hasher.finish();
+
             format!(
-                "{}://{}/-redacted-",
+                "{}://{}/-redacted-/{}",
                 request
                     .uri()
                     .scheme()
@@ -81,7 +87,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     .uri()
                     .host()
                     .map(|host| host.to_string())
-                    .unwrap_or_else(|| "unknown-host".to_string())
+                    .unwrap_or_else(|| "unknown-host".to_string()),
+                u64
             )
         } else {
             request.uri().to_string()
@@ -91,7 +98,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
             debug!(
                 slack_uri = uri_str.as_str(),
                 "Sending HTTP request to {}",
-                request.uri()
+                uri_str.as_str()
             );
         });
 
