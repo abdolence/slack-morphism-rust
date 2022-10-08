@@ -13,6 +13,7 @@ use crate::ratectl::*;
 use crate::SlackClient;
 use crate::{ClientResult, SlackClientHttpConnector};
 use rvstruct::ValueStruct;
+use tracing::*;
 
 impl<SCHC> SlackClient<SCHC>
 where
@@ -26,14 +27,17 @@ where
         incoming_webhook_url: &Url,
         req: &SlackApiPostWebhookMessageRequest,
     ) -> ClientResult<SlackApiPostWebhookMessageResponse> {
+        let http_webhook_span = span!(Level::DEBUG, "Slack WebHook");
+
+        let context = crate::SlackClientApiCallContext {
+            rate_control_params: Some(&POST_WEBHOOK_SPECIAL_LIMIT_RATE_CTL),
+            token: None,
+            tracing_span: &http_webhook_span,
+        };
+
         self.http_api
             .connector
-            .http_post_uri(
-                incoming_webhook_url.clone(),
-                req,
-                None,
-                Some(&POST_WEBHOOK_SPECIAL_LIMIT_RATE_CTL),
-            )
+            .http_post_uri(incoming_webhook_url.clone(), req, context)
             .await
     }
 

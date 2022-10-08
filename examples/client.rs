@@ -9,7 +9,7 @@ use url::Url;
 use futures::stream::BoxStream;
 use futures::TryStreamExt;
 
-async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn test_simple_api_calls() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new(SlackClientHyperConnector::new());
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
@@ -27,6 +27,15 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let auth_test = session.auth_test().await?;
     println!("{:#?}", auth_test);
 
+    Ok(())
+}
+
+async fn test_post_message() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = client.open_session(&token);
+
     let message = WelcomeMessageTemplateParams::new("".into());
 
     let post_chat_req =
@@ -34,6 +43,15 @@ async fn test_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
     println!("post chat resp: {:#?}", &post_chat_resp);
+
+    Ok(())
+}
+
+async fn test_scrolling_user_list() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = client.open_session(&token);
 
     let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
     let scroller = scroller_req.scroller();
@@ -156,7 +174,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
 
-    test_client().await?;
+    test_simple_api_calls().await?;
+    test_post_message().await?;
+    test_scrolling_user_list().await?;
 
     Ok(())
 }

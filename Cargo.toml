@@ -1,6 +1,6 @@
 [package]
 name = "slack-morphism"
-version = "1.2.2"
+version = "1.3.0"
 authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -70,6 +70,11 @@ tag-prefix=""
 [[example]]
 name = "client"
 path = "examples/client.rs"
+required-features = ["hyper"]
+
+[[example]]
+name = "client_with_tracing"
+path = "examples/client_with_tracing.rs"
 required-features = ["hyper"]
 
 [[example]]
