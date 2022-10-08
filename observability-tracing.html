@@ -147,10 +147,11 @@ use tracing::*;
 let token: SlackApiToken =
     SlackApiToken::new(token_value).with_team_id(config_env_var(&quot;SLACK_TEST_TEAM_ID&quot;)?.into());
 
-// Sessions are lightweight and basically just a reference to client and token
+// Let's create our own user specific span first
 let my_custom_span = span!(Level::DEBUG, &quot;My scope&quot;, my_scope_attr = &quot;my-scope-value&quot;);
 debug!(&quot;Testing tracing abilities&quot;);
 
+// Sessions are lightweight and basically just a reference to client and token
 client
     .run_in_session(&amp;token, |session| async move {
         let test: SlackApiTestResponse = session
