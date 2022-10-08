@@ -71,7 +71,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
     {
         let uri_str = if context.is_sensitive_url {
             format!(
-                "{}://{}/<redacted>",
+                "{}://{}/-redacted-",
                 request
                     .uri()
                     .scheme()
