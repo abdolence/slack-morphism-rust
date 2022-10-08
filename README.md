@@ -33,7 +33,7 @@ Routes for this example are available on http://<your-host>:8080:
 - /interaction - for Slack Interaction Events
 - /command - for Slack Command Events
 
-### Testing with ngrok
+### Testing Events API with ngrok
 For development/testing purposes you can use [ngrok](https://ngrok.com/):
 ```
 ngrok http 8080
