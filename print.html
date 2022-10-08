@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro and Motivation</a></li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="web-api.html"><strong aria-hidden="true">3.</strong> Slack Web API client</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pagination-support.html"><strong aria-hidden="true">3.1.</strong> Pagination support</a></li><li class="chapter-item expanded "><a href="block-kit-support.html"><strong aria-hidden="true">3.2.</strong> Block Kit support</a></li><li class="chapter-item expanded "><a href="send-webhooks-messages.html"><strong aria-hidden="true">3.3.</strong> Send webhook messages</a></li><li class="chapter-item expanded "><a href="hyper-connections-types.html"><strong aria-hidden="true">3.4.</strong> Hyper connection types and proxy support</a></li><li class="chapter-item expanded "><a href="rate-control-and-retries.html"><strong aria-hidden="true">3.5.</strong> Rate control and retries</a></li><li class="chapter-item expanded "><a href="observability-tracing.html"><strong aria-hidden="true">3.6.</strong> Observability and tracing</a></li></ol></li><li class="chapter-item expanded "><a href="events-api.html"><strong aria-hidden="true">4.</strong> Events API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="events-api-hyper.html"><strong aria-hidden="true">4.1.</strong> Hyper-based</a></li><li class="chapter-item expanded "><a href="events-api-axum.html"><strong aria-hidden="true">4.2.</strong> Axum-based</a></li></ol></li><li class="chapter-item expanded "><a href="socket-mode.html"><strong aria-hidden="true">5.</strong> Socket Mode</a></li><li class="chapter-item expanded "><a href="user-state-in-event-listener.html"><strong aria-hidden="true">6.</strong> User state</a></li><li class="chapter-item expanded "><a href="limitations.html"><strong aria-hidden="true">7.</strong> Limitations</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -215,6 +215,26 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 
     Ok(())
 }
+</code></pre>
+<p>Note that <code>session</code> is just an auxiliary lightweight structure that stores references to the token and the client
+to make easier to have series of calls for the same token.
+It doesn't make any network calls. There is no need to store it.</p>
+<p>Another option is to use <code>session</code> is to use function <code>run_in_session</code>:</p>
+<pre><code class="language-rust noplaypen">    // Sessions are lightweight and basically just a reference to client and token
+    client
+        .run_in_session(&amp;token, |session| async move {
+            let test: SlackApiTestResponse = session
+                .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+                .await?;
+
+            println!(&quot;{:#?}&quot;, test);
+
+            let auth_test = session.auth_test().await?;
+            println!(&quot;{:#?}&quot;, auth_test);
+
+            Ok(())
+        })
+        .await?;
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pagination-support"><a class="header" href="#pagination-support">Pagination support</a></h1>
 <p>Some Web API methods defines cursors and pagination, to give you an ability to load a lot of data continually
@@ -449,6 +469,35 @@ you need to specify <code>max_retries</code> in rate control params (default val
                 SlackApiRateControlConfig::new().with_max_retries(5)
             ),
     );       
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="observability-and-tracing"><a class="header" href="#observability-and-tracing">Observability and tracing</a></h1>
+<p>The library uses popular <code>tracing</code> crate for logs and distributed traces (spans).
+To improve observability for your specific cases, additionally to the fields provided by library,  you can inject your own trace fields:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+use tracing::*;
+
+// While Team ID is optional but still useful for tracing and rate control purposes
+let token: SlackApiToken =
+    SlackApiToken::new(token_value).with_team_id(config_env_var(&quot;SLACK_TEST_TEAM_ID&quot;)?.into());
+
+// Sessions are lightweight and basically just a reference to client and token
+let my_custom_span = span!(Level::DEBUG, &quot;My scope&quot;, my_scope_attr = &quot;my-scope-value&quot;);
+debug!(&quot;Testing tracing abilities&quot;);
+
+client
+    .run_in_session(&amp;token, |session| async move {
+        let test: SlackApiTestResponse = session
+            .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+            .await?;
+        println!(&quot;{:#?}&quot;, test);
+
+        let auth_test = session.auth_test().await?;
+        println!(&quot;{:#?}&quot;, auth_test);
+
+        Ok(())
+    })
+    .instrument(my_custom_span.or_current())
+    .await
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="events-api-and-oauth"><a class="header" href="#events-api-and-oauth">Events API and OAuth</a></h1>
 <p>The library provides two different ways to work with Slack Events API:</p>
