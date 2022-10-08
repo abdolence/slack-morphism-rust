@@ -73,6 +73,11 @@ path = "examples/client.rs"
 required-features = ["hyper"]
 
 [[example]]
+name = "client_with_tracing"
+path = "examples/client_with_tracing.rs"
+required-features = ["hyper"]
+
+[[example]]
 name = "events_api_server"
 path = "examples/events_api_server.rs"
 required-features = ["hyper"]

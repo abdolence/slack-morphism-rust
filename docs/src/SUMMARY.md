@@ -8,6 +8,7 @@
   - [Send webhook messages](./send-webhooks-messages.md)
   - [Hyper connection types and proxy support](./hyper-connections-types.md)
   - [Rate control and retries](./rate-control-and-retries.md)
+  - [Observability and tracing](./observability-tracing.md)
 - [Events API](./events-api.md)
   - [Hyper-based](./events-api-hyper.md)
   - [Axum-based](./events-api-axum.md)

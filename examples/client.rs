@@ -163,31 +163,6 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
     }
 }
 
-async fn test_simple_api_calls_as_predicate() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
-{
-    let client = SlackClient::new(SlackClientHyperConnector::new());
-    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-
-    // Sessions are lightweight and basically just a reference to client and token
-    client
-        .run_in_session(&token, |session| async move {
-            println!("{:#?}", session);
-
-            let test: SlackApiTestResponse = session
-                .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
-                .await?;
-
-            println!("{:#?}", test);
-
-            let auth_test = session.auth_test().await?;
-            println!("{:#?}", auth_test);
-
-            Ok(())
-        })
-        .await
-}
-
 pub fn config_env_var(name: &str) -> Result<String, String> {
     std::env::var(name).map_err(|e| format!("{}: {}", name, e))
 }
@@ -202,7 +177,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     test_simple_api_calls().await?;
     test_post_message().await?;
     test_scrolling_user_list().await?;
-    test_simple_api_calls_as_predicate().await?;
 
     Ok(())
 }
