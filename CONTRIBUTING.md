@@ -65,7 +65,7 @@ These are some of the rules we try to follow:
 ### How to contribute - the Process
 
 1.  Make sure the change would be welcome (e.g. a bugfix or a useful feature); best do so by proposing it in a GitHub issue
-2.  Create a branch forking the cla-assistant repository and do your change
+2.  Create a branch forking this repository and do your change
 3.  Commit and push your changes on that branch
 4.  In the commit message
    - Describe the problem you fix with this change.
