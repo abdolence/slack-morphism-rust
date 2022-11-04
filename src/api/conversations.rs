@@ -279,7 +279,7 @@ where
                 "conversations.replies",
                 &vec![
                     ("channel", Some(req.channel.value())),
-                    ("ts", Some(req.channel.value())),
+                    ("ts", Some(req.ts.value())),
                     ("cursor", req.cursor.as_ref().map(|x| x.value())),
                     ("limit", req.limit.map(|v| v.to_string()).as_ref()),
                     ("inclusive", req.inclusive.map(|v| v.to_string()).as_ref()),
