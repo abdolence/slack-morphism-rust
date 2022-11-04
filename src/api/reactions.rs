@@ -37,6 +37,30 @@ where
             )
             .await
     }
+
+    ///
+    /// https://api.slack.com/methods/reactions.add
+    ///
+    pub async fn reactions_add(
+        &self,
+        req: &SlackApiReactionsAddRequest,
+    ) -> ClientResult<SlackApiReactionsAddResponse> {
+        self.http_session_api
+            .http_post("reactions.add", req, Some(&SLACK_TIER3_METHOD_CONFIG))
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/reactions.remove
+    ///
+    pub async fn reactions_remove(
+        &self,
+        req: &SlackApiReactionsRemoveRequest,
+    ) -> ClientResult<SlackApiReactionsRemoveResponse> {
+        self.http_session_api
+            .http_post("reactions.remove", req, Some(&SLACK_TIER2_METHOD_CONFIG))
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -62,3 +86,29 @@ pub enum SlackApiReactionsGetResponse {
     Message(SlackApiReactionsGetMessageResponse),
     File(SlackFile),
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiReactionsAddRequest {
+    pub channel: SlackChannelId,
+    pub name: SlackReactionName,
+    pub timestamp: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiReactionsAddResponse {}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiReactionsRemoveRequest {
+    pub name: SlackReactionName,
+    pub channel: Option<SlackChannelId>,
+    pub file: Option<SlackFileId>,
+    pub full: Option<bool>,
+    pub timestamp: Option<SlackTs>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiReactionsRemoveResponse {}
