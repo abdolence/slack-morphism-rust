@@ -87,8 +87,8 @@ where
 
         Box::pin(async move {
             match HyperExtensions::decode_signed_response(request, &signature_verifier).await {
-                Ok(verified_body) => {
-                    let mut verified_request = Request::new(Body::empty());
+                Ok((verified_body, parts)) => {
+                    let mut verified_request = Request::from_parts(parts, Body::empty());
 
                     verified_request
                         .extensions_mut()
