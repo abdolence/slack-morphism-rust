@@ -59,7 +59,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
                         HyperExtensions::decode_signed_response(req, &sign_verifier)
-                            .map_ok(|body| {
+                            .map_ok(|(body, _)| {
                                 let body_params: HashMap<String, String> =
                                     url::form_urlencoded::parse(body.as_bytes())
                                         .into_owned()

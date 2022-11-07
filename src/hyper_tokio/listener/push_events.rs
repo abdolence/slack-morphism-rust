@@ -55,7 +55,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                 match (req.method(), req.uri().path()) {
                     (&Method::POST, url) if url == cfg.events_path => {
                         HyperExtensions::decode_signed_response(req, &sign_verifier)
-                            .map_ok(|body| {
+                            .map_ok(|(body, _)| {
                                 serde_json::from_str::<SlackPushEvent>(body.as_str()).map_err(|e| {
                                     SlackClientProtocolError::new(e)
                                         .with_json_body(body.clone())

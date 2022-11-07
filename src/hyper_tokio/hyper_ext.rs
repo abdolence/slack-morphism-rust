@@ -2,6 +2,7 @@ use crate::signature_verifier::*;
 use crate::{AnyStdResult, SlackApiToken};
 use bytes::Buf;
 use futures_util::TryFutureExt;
+use http::request::Parts;
 use http::{Request, Response, Uri};
 use hyper::body::HttpBody;
 use hyper::Body;
@@ -94,14 +95,18 @@ impl HyperExtensions {
     pub async fn decode_signed_response(
         req: Request<Body>,
         signature_verifier: &SlackEventSignatureVerifier,
-    ) -> AnyStdResult<String> {
-        let headers = &req.headers().clone();
-        let req_body = req.into_body();
+    ) -> AnyStdResult<(String, Parts)> {
         match (
-            headers.get(SlackEventSignatureVerifier::SLACK_SIGNED_HASH_HEADER),
-            headers.get(SlackEventSignatureVerifier::SLACK_SIGNED_TIMESTAMP),
+            req.headers()
+                .get(SlackEventSignatureVerifier::SLACK_SIGNED_HASH_HEADER)
+                .cloned(),
+            req.headers()
+                .get(SlackEventSignatureVerifier::SLACK_SIGNED_TIMESTAMP)
+                .cloned(),
         ) {
             (Some(received_hash), Some(received_ts)) => {
+                let (parts, req_body) = req.into_parts();
+
                 Self::http_body_to_string(req_body)
                     .and_then(|body| async {
                         signature_verifier
@@ -110,7 +115,7 @@ impl HyperExtensions {
                                 &body,
                                 received_ts.to_str().unwrap(),
                             )
-                            .map(|_| body)
+                            .map(|_| (body, parts))
                             .map_err(|e| e.into())
                     })
                     .await
