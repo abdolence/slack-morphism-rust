@@ -31,19 +31,19 @@ pub struct SlackTs(pub String);
 
 impl SlackTs {
     #[deprecated(
-        since = "v1.3.5",
+        since = "1.3.5",
         note = "Use to_date_time_opt() with more accurate error handling and results from chrono::timestamp_millis_opt"
     )]
     pub fn to_date_time(&self) -> Result<DateTime<Utc>, num::ParseIntError> {
         let parts: Vec<&str> = self.value().split('.').collect();
         let ts_int: i64 = parts[0].parse()?;
-        #[allow(clippy::deprecated, deprecated)]
+        #[allow(deprecated)]
         Ok(Utc.timestamp_millis(ts_int * 1000))
     }
 
     pub fn to_date_time_opt(&self) -> Option<DateTime<Utc>> {
         let parts: Vec<&str> = self.value().split('.').collect();
-        if let Some(ts_int) = parts[0].parse::<i64>().ok() {
+        if let Ok(ts_int) = parts[0].parse::<i64>() {
             match Utc.timestamp_millis_opt(ts_int * 1000) {
                 chrono::LocalResult::None => None,
                 chrono::LocalResult::Single(result) => Some(result),
