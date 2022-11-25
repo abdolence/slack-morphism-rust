@@ -54,7 +54,7 @@ hyper-rustls = { version="0.23", features = ["rustls-native-certs", "http2"], op
 tokio-tungstenite = { version = "0.17.2", features = ["rustls-tls-native-roots"], optional = true }
 signal-hook = { version = "0.3.14", features = ["extended-siginfo"], optional = true}
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"], optional = true }
-axum = { version = "0.5", optional = true }
+axum = { version = "0.6", optional = true }
 tower = { version = "0.4", optional = true }
 
 [dev-dependencies]
