@@ -149,10 +149,11 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct SlackEventsApiMiddleware<SCHC, S, SE>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync,
-    SE: SlackEventsExtractor,
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone,
+    SE: SlackEventsExtractor + Clone,
 {
     slack_signing_secret: SlackSigningSecret,
     environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
@@ -162,7 +163,7 @@ where
 
 impl<SCHC, S> SlackEventsApiMiddleware<SCHC, S, SlackEventsEmptyExtractor>
 where
-    SCHC: SlackClientHttpConnector + Send + Sync,
+    SCHC: SlackClientHttpConnector + Send + Sync + Clone,
 {
     pub fn new(
         environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
@@ -178,7 +179,7 @@ where
 
     pub fn with_event_extractor<SE>(self, extractor: SE) -> SlackEventsApiMiddleware<SCHC, S, SE>
     where
-        SE: SlackEventsExtractor,
+        SE: SlackEventsExtractor + Clone,
     {
         SlackEventsApiMiddleware {
             slack_signing_secret: self.slack_signing_secret,
@@ -195,7 +196,7 @@ where
     S::Future: Send + 'static,
     S::Error: std::error::Error + 'static + Send + Sync,
     I: IntoResponse,
-    SCHC: SlackClientHttpConnector + Send + Sync + 'static,
+    SCHC: SlackClientHttpConnector + Send + Sync + 'static + Clone,
     SE: SlackEventsExtractor + Clone,
 {
     type Service = SlackEventsApiMiddlewareService<S, SCHC, SE>;
