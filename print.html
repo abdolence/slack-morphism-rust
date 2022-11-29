@@ -6,7 +6,6 @@
         <title>Slack Morphism for Rust</title>
         <meta name="robots" content="noindex" />
         <!-- Custom HTML head -->
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Slack Morphism is a type-safe and modern client for Rust">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -29,13 +28,13 @@
     </head>
     <body>
         <!-- Provide site root to javascript -->
-        <script type="text/javascript">
+        <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script type="text/javascript">
+        <script>
             try {
                 var theme = localStorage.getItem('mdbook-theme');
                 var sidebar = localStorage.getItem('mdbook-sidebar');
@@ -51,7 +50,7 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script type="text/javascript">
+        <script>
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
@@ -63,7 +62,7 @@
         </script>
 
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script type="text/javascript">
+        <script>
             var html = document.querySelector('html');
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080) {
@@ -97,7 +96,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
                         <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
@@ -128,7 +127,7 @@
                     </div>
                 </div>
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script type="text/javascript">
+                <script>
                     document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
                     document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
                     Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
@@ -161,8 +160,7 @@ Includes also all type/models definitions that used for Slack Web/Events APIs.</
 slack-morphism = { version = &quot;1.4&quot;, features = [&quot;hyper&quot;, &quot;axum&quot;] }
 </code></pre>
 <p>All imports you need:</p>
-<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
-</code></pre>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;</code></pre>
 <h2 id="ready-to-use-examples"><a class="header" href="#ready-to-use-examples">Ready to use examples</a></h2>
 <ul>
 <li>Slack Web API client and Block kit example</li>
@@ -175,7 +173,6 @@ slack-morphism = { version = &quot;1.4&quot;, features = [&quot;hyper&quot;, &qu
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
 let client = SlackClient::new( SlackClientHyperConnector::new() );
-
 </code></pre>
 <h3 id="make-web-api-methods-calls"><a class="header" href="#make-web-api-methods-calls">Make Web API methods calls</a></h3>
 <p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
@@ -214,8 +211,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let post_chat_resp = session.chat_post_message(&amp;post_chat_req).await?;
 
     Ok(())
-}
-</code></pre>
+}</code></pre>
 <p>Note that <code>session</code> is just an auxiliary lightweight structure that stores references to the token and the client
 to make easier to have series of calls for the same token.
 It doesn't make any network calls. There is no need to store it.</p>
@@ -234,8 +230,7 @@ It doesn't make any network calls. There is no need to store it.</p>
 
             Ok(())
         })
-        .await?;
-</code></pre>
+        .await?;</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pagination-support"><a class="header" href="#pagination-support">Pagination support</a></h1>
 <p>Some Web API methods defines cursors and pagination, to give you an ability to load a lot of data continually
 (using batching and continually making many requests).</p>
@@ -287,7 +282,6 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 
     Ok(())
 }
-
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="block-kit-support"><a class="header" href="#block-kit-support">Block Kit support</a></h1>
 <p>To support Slack Block Kit rich messages and views, the library provides:</p>
@@ -316,8 +310,7 @@ let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
     SlackSectionBlock::new()
         .with_text(md!(&quot;A message *with some bold text* and _some italicized text_.&quot;))
  )
-];
-</code></pre>
+];</code></pre>
 <p>Let’s look at another more complex example for welcoming message:</p>
 <pre><code class="language-rust noplaypen">
 use slack_morphism::prelude::*;
@@ -375,8 +368,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
         SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(), message.render_template());
 
     Ok(())
-}
-</code></pre>
+}</code></pre>
 <p>Look other examples in examples/templates.rs.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="send-slack-webhook-messages"><a class="header" href="#send-slack-webhook-messages">Send Slack Webhook Messages</a></h1>
 <p>You can use <code>client..post_webhook_message</code> to post <a href="https://api.slack.com/messaging/webhooks">Slack Incoming Webhook</a> messages:</p>
@@ -398,8 +390,7 @@ client
         ),
     )
     .await?;
-    
-</code></pre>
+    </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="different-hyper-connection-types-and-proxy-support"><a class="header" href="#different-hyper-connection-types-and-proxy-support">Different hyper connection types and proxy support</a></h1>
 <p>In some cases you may need to configure hyper connection types. </p>
 <p>Common examples:</p>
@@ -427,8 +418,7 @@ client
     let _client = SlackClient::new(
         SlackClientHyperConnector::with_connector(proxy)
     );
-    
-</code></pre>
+    </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="rate-control-throttling-and-retrying-slack-api-method-requests"><a class="header" href="#rate-control-throttling-and-retrying-slack-api-method-requests">Rate control, throttling and retrying Slack API method requests</a></h1>
 <h2 id="enable-rate-control"><a class="header" href="#enable-rate-control">Enable rate control</a></h2>
 <p>Slack API defines <a href="https://api.slack.com/docs/rate-limits">rate limits</a> to which all of your applications must follow.</p>
@@ -441,8 +431,7 @@ let client = SlackClient::new(
             SlackApiRateControlConfig::new()
         )
 );
-    
-</code></pre>
+    </code></pre>
 <p>The example above creates a Slack API Client that follows the official rate limits from Slack.
 Because the Slack rate limits apply per workspaces (separately),
 to use throttling and limits properly you <em>have to specify</em> team id in tokens:</p>
@@ -468,8 +457,7 @@ you need to specify <code>max_retries</code> in rate control params (default val
             .with_rate_control(
                 SlackApiRateControlConfig::new().with_max_retries(5)
             ),
-    );       
-</code></pre>
+    );       </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="observability-and-tracing"><a class="header" href="#observability-and-tracing">Observability and tracing</a></h1>
 <p>The library uses popular <code>tracing</code> crate for logs and distributed traces (spans).
 To improve observability for your specific cases, additionally to the fields provided by library,  you can inject your own trace fields:</p>
@@ -498,8 +486,7 @@ client
         Ok(())
     })
     .instrument(my_custom_span.or_current())
-    .await
-</code></pre>
+    .await</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="events-api-and-oauth"><a class="header" href="#events-api-and-oauth">Events API and OAuth</a></h1>
 <p>The library provides two different ways to work with Slack Events API:</p>
 <ul>
@@ -702,8 +689,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         error!(&quot;Server error: {}&quot;, e);
         e.into()
     })
-}
-</code></pre>
+}</code></pre>
 <p>Complete example look at <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="events-api-and-oauth-for-axum"><a class="header" href="#events-api-and-oauth-for-axum">Events API and OAuth for Axum</a></h1>
 <p>The library provides route implementation in <code>SlackEventsAxumListener</code> based on Hyper/Tokio for:</p>
@@ -832,7 +818,6 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
 
     Ok(())
 }
-
 </code></pre>
 <p>Complete example look at <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="slack-socket-mode-support"><a class="header" href="#slack-socket-mode-support">Slack Socket Mode support</a></h1>
@@ -889,7 +874,6 @@ let socket_mode_listener = SlackClientSocketModeListener::new(
       listener_environment.clone(),
       socket_mode_callbacks,
 );
-
 </code></pre>
 <h2 id="connect-using-socket-mode-to-slack"><a class="header" href="#connect-using-socket-mode-to-slack">Connect using socket mode to Slack</a></h2>
 <p>The following code initiates Web-sockets based connections to Slack endpoints using Slack Web methods 
@@ -909,7 +893,6 @@ socket_mode_listener.listen_for(&amp;app_token).await?;
 // and wait for Ctrl-C to shutdown
 // There are also `.start()`/`.shutdown()` available to manage manually 
 socket_mode_listener.serve().await;
-
 </code></pre>
 <h2 id="important-caveats"><a class="header" href="#important-caveats">Important caveats</a></h2>
 <h3 id="the-time-blocking-of-the-sm-listener-callbacks-is-important"><a class="header" href="#the-time-blocking-of-the-sm-listener-callbacks-is-important">The time blocking of the SM listener callbacks is important</a></h3>
@@ -924,8 +907,7 @@ you should spawn your own future, e.g:</p>
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         tokio::spawn(async move { process_message(client, event).await; });
         Ok(())
-    }
-</code></pre>
+    }</code></pre>
 <h3 id="error-handling-function"><a class="header" href="#error-handling-function">Error handling function</a></h3>
 <p>It is highly recommended implementing your own error handling function:</p>
 <pre><code class="language-rust noplaypen">
@@ -947,8 +929,7 @@ fn test_error_handler(
     let listener_environment = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(test_error_handler),
-    );
-</code></pre>
+    );</code></pre>
 <p>The implementation allows you:</p>
 <ul>
 <li>Return positive ack using http::StatusCode result / implement complex logic related to it.
@@ -970,7 +951,6 @@ let listener_environment = Arc::new(
         .with_error_handler(test_error_handler)
         .with_user_state(UserStateExample(555)),
 ); 
-
 </code></pre>
 <h2 id="reading-user-state-in-listeners-for-hypersocket-mode"><a class="header" href="#reading-user-state-in-listeners-for-hypersocket-mode">Reading user state in listeners for Hyper/Socket Mode</a></h2>
 <pre><code class="language-rust noplaypen">async fn test_push_events_function(
@@ -985,8 +965,7 @@ let listener_environment = Arc::new(
         states.get_user_state::&lt;UserStateExample&gt;();
 
     Ok(())
-}
-</code></pre>
+}</code></pre>
 <h2 id="updating-user-state-in-listeners-for-hypersocket-mode"><a class="header" href="#updating-user-state-in-listeners-for-hypersocket-mode">Updating user state in listeners for Hyper/Socket Mode</a></h2>
 <pre><code class="language-rust noplaypen">async fn test_push_events_function(
     event: SlackPushEvent,
@@ -999,8 +978,7 @@ let listener_environment = Arc::new(
     states.set_user_state(UserStateExample(555));
 
     Ok(())
-}
-</code></pre>
+}</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="limitations"><a class="header" href="#limitations">Limitations</a></h1>
 <p>Slack Morphism doesn't provide:</p>
 <ul>
@@ -1022,18 +1000,18 @@ let listener_environment = Arc::new(
 
         </div>
 
-        <script type="text/javascript">
+        <script>
             window.playground_copyable = true;
         </script>
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script type="text/javascript">
+        <script>
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);
         });
