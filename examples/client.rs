@@ -53,7 +53,7 @@ async fn test_scrolling_user_list() -> Result<(), Box<dyn std::error::Error + Se
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
 
-    let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(1);
+    let scroller_req: SlackApiUsersListRequest = SlackApiUsersListRequest::new().with_limit(100);
     let scroller = scroller_req.scroller();
 
     let mut resp_stream: BoxStream<ClientResult<SlackApiUsersListResponse>> =
