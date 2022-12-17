@@ -52,7 +52,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
             let last_client_id_value = clients_write.len();
             let new_clients_range = last_client_id_value as u32
-                ..(last_client_id_value as u32 + config.max_connections_count) as u32;
+                ..(last_client_id_value as u32 + config.max_connections_count);
 
             for client_id_value in new_clients_range {
                 let wss_client_result = SlackTungsteniteWssClient::new(
