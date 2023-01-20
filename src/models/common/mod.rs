@@ -169,6 +169,7 @@ pub struct EmailAddress(pub String);
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackResponseMetadata {
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub next_cursor: Option<SlackCursorId>,
 }

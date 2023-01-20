@@ -20,10 +20,13 @@ pub enum SlackView {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackHomeView {
     pub blocks: Vec<SlackBlock>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub private_metadata: Option<String>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub callback_id: Option<SlackCallbackId>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub external_id: Option<String>,
 }
@@ -35,13 +38,16 @@ pub struct SlackModalView {
     pub blocks: Vec<SlackBlock>,
     pub close: Option<SlackBlockPlainTextOnly>,
     pub submit: Option<SlackBlockPlainTextOnly>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub private_metadata: Option<String>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub callback_id: Option<SlackCallbackId>,
     pub clear_on_close: Option<bool>,
     pub notify_on_close: Option<bool>,
     pub hash: Option<String>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub external_id: Option<String>,
 }
