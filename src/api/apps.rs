@@ -129,7 +129,7 @@ pub struct SlackApiAppsConnectionOpenResponse {
 pub struct SlackApiAppsManifestCreateRequest {
     pub app_id: SlackAppId,
 
-    // HACK: This API requires a "json-encoded" string in a JSON object.
+    // This API requires a "json-encoded" string in a JSON object.
     #[serde(with = "serde_with::json::nested")]
     pub manifest: SlackAppManifest,
 }
@@ -165,7 +165,7 @@ pub struct SlackApiAppsManifestExportResponse {
 pub struct SlackApiAppsManifestUpdateRequest {
     pub app_id: SlackAppId,
 
-    // HACK: This API requires a "json-encoded" string in a JSON object.
+    // This API requires a "json-encoded" string in a JSON object.
     #[serde(with = "serde_with::json::nested")]
     pub manifest: SlackAppManifest,
 }
@@ -180,7 +180,7 @@ pub struct SlackApiAppsManifestUpdateResponse {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAppsManifestValidateRequest {
-    // HACK: This API requires a "json-encoded" string in a JSON object.
+    // This API requires a "json-encoded" string in a JSON object.
     #[serde(with = "serde_with::json::nested")]
     pub manifest: SlackAppManifest,
 

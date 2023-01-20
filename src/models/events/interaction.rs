@@ -82,6 +82,7 @@ pub struct SlackInteractionDialogueSubmissionEvent {
     pub team: SlackBasicTeamInfo,
     pub user: SlackBasicUserInfo,
     pub channel: Option<SlackBasicChannelInfo>,
+    #[serde(default)]
     #[serde(with = "serde_with::rust::string_empty_as_none")]
     pub callback_id: Option<SlackCallbackId>,
     pub state: Option<String>,
