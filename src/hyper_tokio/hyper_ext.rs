@@ -57,7 +57,7 @@ impl HyperExtensions {
     ) -> hyper::http::request::Builder {
         let header_value = format!(
             "Basic {}",
-            BASE64_STANDARD.encode(format!("{}:{}", username, password))
+            BASE64_STANDARD.encode(format!("{username}:{password}"))
         );
         request_builder.header(hyper::header::AUTHORIZATION, header_value)
     }

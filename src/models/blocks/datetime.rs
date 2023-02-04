@@ -38,7 +38,7 @@ where
     <TZ as chrono::offset::TimeZone>::Offset: std::fmt::Display,
 {
     let link_part = link
-        .map(|value| format!("^{}", value))
+        .map(|value| format!("^{value}"))
         .unwrap_or_else(|| "".into());
     let fallback = date.to_rfc2822();
     format!(

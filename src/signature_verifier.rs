@@ -24,7 +24,7 @@ impl SlackEventSignatureVerifier {
     }
 
     fn sign<'a, 'b>(&'a self, body: &'b str, ts: &'b str) -> String {
-        let data_to_sign = format!("v0:{}:{}", ts, body);
+        let data_to_sign = format!("v0:{ts}:{body}");
         format!(
             "v0={}",
             hex::encode(hmac::sign(&self.key, data_to_sign.as_bytes()))
