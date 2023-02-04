@@ -183,6 +183,10 @@ pub enum SlackSectionBlockElement {
     DatePicker(SlackBlockDatePickerElement),
     #[serde(rename = "plain_text_input")]
     PlainTextInput(SlackBlockPlainTextInputElement),
+    #[serde(rename = "number_input")]
+    NumberInput(SlackBlockNumberInputElement),
+    #[serde(rename = "url_text_input")]
+    UrlInput(SlackBlockUrlInputElement),
     #[serde(rename = "radio_buttons")]
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
@@ -200,6 +204,10 @@ pub enum SlackActionBlockElement {
     DatePicker(SlackBlockDatePickerElement),
     #[serde(rename = "plain_text_input")]
     PlainTextInput(SlackBlockPlainTextInputElement),
+    #[serde(rename = "number_input")]
+    NumberInput(SlackBlockNumberInputElement),
+    #[serde(rename = "url_text_input")]
+    UrlInput(SlackBlockUrlInputElement),
     #[serde(rename = "radio_buttons")]
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
@@ -244,6 +252,10 @@ pub enum SlackInputBlockElement {
     DatePicker(SlackBlockDatePickerElement),
     #[serde(rename = "plain_text_input")]
     PlainTextInput(SlackBlockPlainTextInputElement),
+    #[serde(rename = "number_input")]
+    NumberInput(SlackBlockNumberInputElement),
+    #[serde(rename = "url_text_input")]
+    UrlInput(SlackBlockUrlInputElement),
     #[serde(rename = "radio_buttons")]
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
@@ -596,6 +608,26 @@ pub struct SlackBlockPlainTextInputElement {
     pub multiline: Option<bool>,
     pub min_length: Option<u64>,
     pub max_length: Option<u64>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockNumberInputElement {
+    pub action_id: SlackActionId,
+    pub is_decimal_allowed: bool,
+    pub focus_on_load: Option<bool>,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub initial_value: Option<String>,
+    pub min_value: Option<String>,
+    pub max_value: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockUrlInputElement {
+    pub action_id: SlackActionId,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub initial_value: Option<String>,
 }
 
 impl From<SlackBlockPlainTextInputElement> for SlackSectionBlockElement {
