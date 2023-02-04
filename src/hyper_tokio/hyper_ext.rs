@@ -1,5 +1,6 @@
 use crate::signature_verifier::*;
 use crate::{AnyStdResult, SlackApiToken};
+use base64::prelude::*;
 use bytes::Buf;
 use futures_util::TryFutureExt;
 use http::request::Parts;
@@ -56,7 +57,7 @@ impl HyperExtensions {
     ) -> hyper::http::request::Builder {
         let header_value = format!(
             "Basic {}",
-            base64::encode(format!("{}:{}", username, password))
+            BASE64_STANDARD.encode(format!("{username}:{password}"))
         );
         request_builder.header(hyper::header::AUTHORIZATION, header_value)
     }

@@ -32,7 +32,7 @@ impl Serialize for SlackIconImages {
         } else {
             let mut res_map = serializer.serialize_map(Some(self.resolutions.len()))?;
             for (res, link) in &self.resolutions {
-                let key: String = format!("{}{}", SLACK_ICON_JSON_PREFIX, res);
+                let key: String = format!("{SLACK_ICON_JSON_PREFIX}{res}");
                 res_map.serialize_entry(&key, link)?;
             }
             res_map.end()

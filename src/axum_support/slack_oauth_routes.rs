@@ -156,7 +156,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                     (err_environment.error_handler)(
                         Box::new(SlackClientError::SystemError(
                             SlackClientSystemError::new()
-                                .with_message(format!("OAuth cancelled system error: {}", err)),
+                                .with_message(format!("OAuth cancelled system error: {err}")),
                         )),
                         err_environment.client.clone(),
                         err_environment.user_state.clone(),
