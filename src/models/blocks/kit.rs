@@ -610,26 +610,6 @@ pub struct SlackBlockPlainTextInputElement {
     pub max_length: Option<u64>,
 }
 
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackBlockNumberInputElement {
-    pub action_id: SlackActionId,
-    pub is_decimal_allowed: bool,
-    pub focus_on_load: Option<bool>,
-    pub placeholder: Option<SlackBlockPlainTextOnly>,
-    pub initial_value: Option<String>,
-    pub min_value: Option<String>,
-    pub max_value: Option<String>,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackBlockUrlInputElement {
-    pub action_id: SlackActionId,
-    pub placeholder: Option<SlackBlockPlainTextOnly>,
-    pub initial_value: Option<String>,
-}
-
 impl From<SlackBlockPlainTextInputElement> for SlackSectionBlockElement {
     fn from(element: SlackBlockPlainTextInputElement) -> Self {
         SlackSectionBlockElement::PlainTextInput(element)
@@ -645,6 +625,62 @@ impl From<SlackBlockPlainTextInputElement> for SlackInputBlockElement {
 impl From<SlackBlockPlainTextInputElement> for SlackActionBlockElement {
     fn from(element: SlackBlockPlainTextInputElement) -> Self {
         SlackActionBlockElement::PlainTextInput(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockNumberInputElement {
+    pub action_id: SlackActionId,
+    pub is_decimal_allowed: bool,
+    pub focus_on_load: Option<bool>,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub initial_value: Option<String>,
+    pub min_value: Option<String>,
+    pub max_value: Option<String>,
+}
+
+impl From<SlackBlockNumberInputElement> for SlackSectionBlockElement {
+    fn from(element: SlackBlockNumberInputElement) -> Self {
+        SlackSectionBlockElement::NumberInput(element)
+    }
+}
+
+impl From<SlackBlockNumberInputElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockNumberInputElement) -> Self {
+        SlackInputBlockElement::NumberInput(element)
+    }
+}
+
+impl From<SlackBlockNumberInputElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockNumberInputElement) -> Self {
+        SlackActionBlockElement::NumberInput(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockUrlInputElement {
+    pub action_id: SlackActionId,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub initial_value: Option<String>,
+}
+
+impl From<SlackBlockUrlInputElement> for SlackSectionBlockElement {
+    fn from(element: SlackBlockUrlInputElement) -> Self {
+        SlackSectionBlockElement::UrlInput(element)
+    }
+}
+
+impl From<SlackBlockUrlInputElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockUrlInputElement) -> Self {
+        SlackInputBlockElement::UrlInput(element)
+    }
+}
+
+impl From<SlackBlockUrlInputElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockUrlInputElement) -> Self {
+        SlackActionBlockElement::UrlInput(element)
     }
 }
 
