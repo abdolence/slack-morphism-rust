@@ -660,7 +660,6 @@ impl From<SlackBlockDatePickerElement> for SlackActionBlockElement {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockDateTimePickerElement {
     pub action_id: SlackActionId,
-    pub initial_date: Option<String>,
     pub initial_date_time: Option<SlackDateTime>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub focus_on_load: Option<bool>,
