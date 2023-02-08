@@ -736,6 +736,7 @@ pub struct SlackBlockRadioButtonsElement {
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockText>>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockRadioButtonsElement> for SlackSectionBlockElement {
