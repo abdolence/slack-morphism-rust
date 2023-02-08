@@ -637,6 +637,7 @@ pub struct SlackBlockPlainTextInputElement {
     pub multiline: Option<bool>,
     pub min_length: Option<u64>,
     pub max_length: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockPlainTextInputElement> for SlackSectionBlockElement {
