@@ -202,6 +202,8 @@ pub enum SlackActionBlockElement {
     Overflow(SlackBlockOverflowElement),
     #[serde(rename = "datepicker")]
     DatePicker(SlackBlockDatePickerElement),
+    #[serde(rename = "datetimepicker")]
+    DateTimePicker(SlackBlockDateTimePickerElement),
     #[serde(rename = "plain_text_input")]
     PlainTextInput(SlackBlockPlainTextInputElement),
     #[serde(rename = "number_input")]
@@ -212,6 +214,16 @@ pub enum SlackActionBlockElement {
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
     Checkboxes(SlackBlockCheckboxesElement),
+    #[serde(rename = "static_select")]
+    StaticSelect(SlackBlockStaticSelectElement),
+    #[serde(rename = "external_select")]
+    ExternalSelect(SlackBlockExternalSelectElement),
+    #[serde(rename = "users_select")]
+    UsersSelect(SlackBlockUsersSelectElement),
+    #[serde(rename = "conversations_select")]
+    ConversationsSelect(SlackBlockConversationsSelectElement),
+    #[serde(rename = "channels_select")]
+    ChannelsSelect(SlackBlockChannelsSelectElement),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -250,6 +262,8 @@ pub enum SlackInputBlockElement {
     MultiChannelsSelect(SlackBlockMultiChannelsSelectElement),
     #[serde(rename = "datepicker")]
     DatePicker(SlackBlockDatePickerElement),
+    #[serde(rename = "datetimepicker")]
+    DateTimePicker(SlackBlockDateTimePickerElement),
     #[serde(rename = "plain_text_input")]
     PlainTextInput(SlackBlockPlainTextInputElement),
     #[serde(rename = "number_input")]
@@ -260,6 +274,8 @@ pub enum SlackInputBlockElement {
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
     Checkboxes(SlackBlockCheckboxesElement),
+    #[serde(rename = "email_text_input")]
+    EmailInput(SlackBlockEmailInputElement),
 }
 
 #[skip_serializing_none]
@@ -338,6 +354,7 @@ pub struct SlackBlockStaticSelectElement {
     pub option_groups: Option<Vec<SlackBlockOptionGroup<SlackBlockPlainTextOnly>>>,
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockStaticSelectElement> for SlackSectionBlockElement {
@@ -352,6 +369,12 @@ impl From<SlackBlockStaticSelectElement> for SlackInputBlockElement {
     }
 }
 
+impl From<SlackBlockStaticSelectElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockStaticSelectElement) -> Self {
+        SlackActionBlockElement::StaticSelect(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiStaticSelectElement {
@@ -362,6 +385,7 @@ pub struct SlackBlockMultiStaticSelectElement {
     pub initial_options: Option<Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockMultiStaticSelectElement> for SlackSectionBlockElement {
@@ -383,6 +407,7 @@ pub struct SlackBlockExternalSelectElement {
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockExternalSelectElement> for SlackSectionBlockElement {
@@ -397,6 +422,12 @@ impl From<SlackBlockExternalSelectElement> for SlackInputBlockElement {
     }
 }
 
+impl From<SlackBlockExternalSelectElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockExternalSelectElement) -> Self {
+        SlackActionBlockElement::ExternalSelect(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiExternalSelectElement {
@@ -405,6 +436,7 @@ pub struct SlackBlockMultiExternalSelectElement {
     pub initial_options: Option<Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockMultiExternalSelectElement> for SlackSectionBlockElement {
@@ -426,6 +458,7 @@ pub struct SlackBlockUsersSelectElement {
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_user: Option<String>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockUsersSelectElement> for SlackSectionBlockElement {
@@ -440,6 +473,12 @@ impl From<SlackBlockUsersSelectElement> for SlackInputBlockElement {
     }
 }
 
+impl From<SlackBlockUsersSelectElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockUsersSelectElement) -> Self {
+        SlackActionBlockElement::UsersSelect(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiUsersSelectElement {
@@ -448,6 +487,7 @@ pub struct SlackBlockMultiUsersSelectElement {
     pub initial_users: Option<Vec<String>>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockMultiUsersSelectElement> for SlackSectionBlockElement {
@@ -471,6 +511,7 @@ pub struct SlackBlockConversationsSelectElement {
     pub default_to_current_conversation: Option<bool>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub response_url_enabled: Option<bool>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockConversationsSelectElement> for SlackSectionBlockElement {
@@ -485,6 +526,12 @@ impl From<SlackBlockConversationsSelectElement> for SlackInputBlockElement {
     }
 }
 
+impl From<SlackBlockConversationsSelectElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockConversationsSelectElement) -> Self {
+        SlackActionBlockElement::ConversationsSelect(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiConversationsSelectElement {
@@ -494,6 +541,7 @@ pub struct SlackBlockMultiConversationsSelectElement {
     pub default_to_current_conversation: Option<bool>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockMultiConversationsSelectElement> for SlackSectionBlockElement {
@@ -516,6 +564,7 @@ pub struct SlackBlockChannelsSelectElement {
     pub initial_channel: Option<SlackChannelId>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub response_url_enabled: Option<bool>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockChannelsSelectElement> for SlackSectionBlockElement {
@@ -530,6 +579,12 @@ impl From<SlackBlockChannelsSelectElement> for SlackInputBlockElement {
     }
 }
 
+impl From<SlackBlockChannelsSelectElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockChannelsSelectElement) -> Self {
+        SlackActionBlockElement::ChannelsSelect(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiChannelsSelectElement {
@@ -538,6 +593,7 @@ pub struct SlackBlockMultiChannelsSelectElement {
     pub initial_channels: Option<Vec<SlackChannelId>>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockMultiChannelsSelectElement> for SlackSectionBlockElement {
@@ -579,6 +635,7 @@ pub struct SlackBlockDatePickerElement {
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_date: Option<String>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockDatePickerElement> for SlackSectionBlockElement {
@@ -601,6 +658,28 @@ impl From<SlackBlockDatePickerElement> for SlackActionBlockElement {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockDateTimePickerElement {
+    pub action_id: SlackActionId,
+    pub initial_date: Option<String>,
+    pub initial_date_time: Option<SlackDateTime>,
+    pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
+}
+
+impl From<SlackBlockDateTimePickerElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockDateTimePickerElement) -> Self {
+        SlackInputBlockElement::DateTimePicker(element)
+    }
+}
+
+impl From<SlackBlockDateTimePickerElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockDateTimePickerElement) -> Self {
+        SlackActionBlockElement::DateTimePicker(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockPlainTextInputElement {
     pub action_id: SlackActionId,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
@@ -608,6 +687,7 @@ pub struct SlackBlockPlainTextInputElement {
     pub multiline: Option<bool>,
     pub min_length: Option<u64>,
     pub max_length: Option<u64>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockPlainTextInputElement> for SlackSectionBlockElement {
@@ -686,11 +766,27 @@ impl From<SlackBlockUrlInputElement> for SlackActionBlockElement {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockEmailInputElement {
+    pub action_id: SlackActionId,
+    pub focus_on_load: Option<bool>,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub initial_value: Option<EmailAddress>,
+}
+
+impl From<SlackBlockEmailInputElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockEmailInputElement) -> Self {
+        SlackInputBlockElement::EmailInput(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockRadioButtonsElement {
     pub action_id: SlackActionId,
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockText>>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockRadioButtonsElement> for SlackSectionBlockElement {
@@ -718,6 +814,7 @@ pub struct SlackBlockCheckboxesElement {
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
     pub initial_options: Option<Vec<SlackBlockChoiceItem<SlackBlockText>>>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockCheckboxesElement> for SlackSectionBlockElement {
