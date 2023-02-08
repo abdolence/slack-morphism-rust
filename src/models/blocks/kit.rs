@@ -264,6 +264,8 @@ pub enum SlackInputBlockElement {
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
     Checkboxes(SlackBlockCheckboxesElement),
+    #[serde(rename = "email_text_input")]
+    EmailInput(SlackBlockEmailInputElement),
 }
 
 #[skip_serializing_none]
@@ -713,6 +715,21 @@ impl From<SlackBlockUrlInputElement> for SlackActionBlockElement {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockEmailInputElement {
+    pub action_id: SlackActionId,
+    pub focus_on_load: Option<bool>,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub initial_value: Option<EmailAddress>,
+}
+
+impl From<SlackBlockEmailInputElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockEmailInputElement) -> Self {
+        SlackInputBlockElement::EmailInput(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockRadioButtonsElement {
     pub action_id: SlackActionId,
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
@@ -745,6 +762,7 @@ pub struct SlackBlockCheckboxesElement {
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
     pub initial_options: Option<Vec<SlackBlockChoiceItem<SlackBlockText>>>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
 }
 
 impl From<SlackBlockCheckboxesElement> for SlackSectionBlockElement {
