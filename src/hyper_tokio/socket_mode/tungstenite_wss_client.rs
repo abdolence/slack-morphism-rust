@@ -356,7 +356,7 @@ where
                         Ok(tokio_tungstenite::tungstenite::Message::Text(body)) => {
                             trace!(
                                 slack_wss_client_id = thread_identity.id.to_string().as_str(),
-                                "[{}] Received from Slack: {:?}",
+                                "[{}] Received from Slack: {}",
                                 thread_identity.id.to_string(),
                                 body
                             );

@@ -37,6 +37,7 @@ pub struct SlackInteractionBlockActionsEvent {
     pub view: Option<SlackView>,
     pub response_url: Option<SlackResponseUrl>,
     pub actions: Option<Vec<SlackInteractionActionInfo>>,
+    pub state: Option<SlackActionState>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
