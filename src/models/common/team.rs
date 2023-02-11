@@ -20,6 +20,7 @@ pub struct SlackTeamInfo {
 pub struct SlackBasicTeamInfo {
     pub id: SlackTeamId,
     pub name: Option<String>,
+    pub domain: Option<String>,
 }
 
 #[skip_serializing_none]

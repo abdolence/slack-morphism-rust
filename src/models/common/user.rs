@@ -64,6 +64,7 @@ pub struct SlackBasicUserInfo {
     pub id: SlackUserId,
     pub team_id: Option<SlackTeamId>,
     pub username: Option<String>,
+    pub name: Option<String>,
 }
 
 #[serde_as]

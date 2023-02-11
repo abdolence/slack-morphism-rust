@@ -97,6 +97,9 @@ pub struct SlackViewStateValue {
     pub selected_options: Option<Vec<SlackViewStateValueSelectedOption>>,
 }
 
+pub type SlackActionState = SlackViewState;
+pub type SlackActionStateValue = SlackViewStateValue;
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackViewStateValueSelectedOption {
