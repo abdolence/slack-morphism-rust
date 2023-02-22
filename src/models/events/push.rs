@@ -56,6 +56,14 @@ pub enum SlackEventCallbackBody {
     AppUninstalled(SlackAppUninstalledEvent),
     LinkShared(SlackLinkSharedEvent),
     EmojiChanged(SlackEmojiChangedEvent),
+    MemberJoinedChannel(SlackMemberJoinedChannelEvent),
+    MemberLeftChannel(SlackMemberLeftChannelEvent),
+    ChannelCreated(SlackChannelCreatedEvent),
+    ChannelDeleted(SlackChannelDeletedEvent),
+    ChannelArchive(SlackChannelArchiveEvent),
+    ChannelRename(SlackChannelRenameEvent),
+    ChannelUnarchive(SlackChannelUnarchiveEvent),
+    TeamJoin(SlackTeamJoinEvent),
 }
 
 #[skip_serializing_none]
@@ -177,4 +185,61 @@ pub enum SlackEmojiEventType {
 pub struct SlackLinkObject {
     pub domain: String,
     pub url: Url,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMemberJoinedChannelEvent {
+    pub user: SlackUserId,
+    pub channel: SlackChannelId,
+    pub channel_type: SlackChannelType,
+    pub team: SlackTeamId,
+    pub inviter: Option<SlackUserId>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMemberLeftChannelEvent {
+    pub user: SlackUserId,
+    pub channel: SlackChannelId,
+    pub channel_type: SlackChannelType,
+    pub team: SlackTeamId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChannelCreatedEvent {
+    pub channel: SlackChannelInfo,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChannelDeletedEvent {
+    pub channel: SlackChannelId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChannelArchiveEvent {
+    pub channel: SlackChannelId,
+    pub user: SlackUserId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChannelRenameEvent {
+    pub channel: SlackChannelInfo,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChannelUnarchiveEvent {
+    pub channel: SlackChannelId,
+    pub user: SlackUserId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTeamJoinEvent {
+    pub user: SlackUser,
 }

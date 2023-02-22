@@ -15,6 +15,7 @@ pub struct SlackChannelInfo {
     pub id: SlackChannelId,
     pub created: SlackDateTime,
     pub creator: Option<SlackUserId>,
+    pub name: Option<String>,
     pub name_normalized: Option<String>,
     pub topic: Option<SlackChannelTopicInfo>,
     pub purpose: Option<SlackChannelPurposeInfo>,
