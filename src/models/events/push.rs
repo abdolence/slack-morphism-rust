@@ -63,6 +63,7 @@ pub enum SlackEventCallbackBody {
     ChannelArchive(ChannelArchiveEvent),
     ChannelRename(ChannelRenameEvent),
     ChannelUnarchive(ChannelUnarchiveEvent),
+    TeamJoin(TeamJoinEvent),
 }
 
 #[skip_serializing_none]
@@ -252,4 +253,10 @@ pub struct ChannelRenameObject {
 pub struct ChannelUnarchiveEvent {
     pub channel: SlackChannelId,
     pub user: SlackUserId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct TeamJoinEvent {
+    pub user: SlackUser,
 }
