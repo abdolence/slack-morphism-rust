@@ -209,16 +209,7 @@ pub struct SlackMemberLeftChannelEvent {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackChannelCreatedEvent {
-    pub channel: SlackChannelCreatedObject,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackChannelCreatedObject {
-    pub id: SlackChannelId,
-    pub name: String,
-    pub created: SlackDateTime,
-    pub creator: SlackUserId,
+    pub channel: SlackChannelInfo,
 }
 
 #[skip_serializing_none]
@@ -237,15 +228,7 @@ pub struct SlackChannelArchiveEvent {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackChannelRenameEvent {
-    pub channel: SlackChannelRenameObject,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackChannelRenameObject {
-    pub id: SlackChannelId,
-    pub name: String,
-    pub created: SlackDateTime,
+    pub channel: SlackChannelInfo,
 }
 
 #[skip_serializing_none]
