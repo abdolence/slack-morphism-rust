@@ -56,14 +56,14 @@ pub enum SlackEventCallbackBody {
     AppUninstalled(SlackAppUninstalledEvent),
     LinkShared(SlackLinkSharedEvent),
     EmojiChanged(SlackEmojiChangedEvent),
-    MemberJoinedChannel(MemberJoinedChannelEvent),
-    MemberLeftChannel(MemberLeftChannelEvent),
-    ChannelCreated(ChannelCreatedEvent),
-    ChannelDeleted(ChannelDeletedEvent),
-    ChannelArchive(ChannelArchiveEvent),
-    ChannelRename(ChannelRenameEvent),
-    ChannelUnarchive(ChannelUnarchiveEvent),
-    TeamJoin(TeamJoinEvent),
+    MemberJoinedChannel(SlackMemberJoinedChannelEvent),
+    MemberLeftChannel(SlackMemberLeftChannelEvent),
+    ChannelCreated(SlackChannelCreatedEvent),
+    ChannelDeleted(SlackChannelDeletedEvent),
+    ChannelArchive(SlackChannelArchiveEvent),
+    ChannelRename(SlackChannelRenameEvent),
+    ChannelUnarchive(SlackChannelUnarchiveEvent),
+    TeamJoin(SlackTeamJoinEvent),
 }
 
 #[skip_serializing_none]
@@ -189,7 +189,7 @@ pub struct SlackLinkObject {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct MemberJoinedChannelEvent {
+pub struct SlackMemberJoinedChannelEvent {
     pub user: SlackUserId,
     pub channel: SlackChannelId,
     pub channel_type: SlackChannelType,
@@ -199,7 +199,7 @@ pub struct MemberJoinedChannelEvent {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct MemberLeftChannelEvent {
+pub struct SlackMemberLeftChannelEvent {
     pub user: SlackUserId,
     pub channel: SlackChannelId,
     pub channel_type: SlackChannelType,
@@ -208,13 +208,13 @@ pub struct MemberLeftChannelEvent {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelCreatedEvent {
-    pub channel: ChannelCreatedObject,
+pub struct SlackChannelCreatedEvent {
+    pub channel: SlackChannelCreatedObject,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelCreatedObject {
+pub struct SlackChannelCreatedObject {
     pub id: SlackChannelId,
     pub name: String,
     pub created: SlackDateTime,
@@ -223,26 +223,26 @@ pub struct ChannelCreatedObject {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelDeletedEvent {
+pub struct SlackChannelDeletedEvent {
     pub channel: SlackChannelId,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelArchiveEvent {
+pub struct SlackChannelArchiveEvent {
     pub channel: SlackChannelId,
     pub user: SlackUserId,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelRenameEvent {
-    pub channel: ChannelRenameObject,
+pub struct SlackChannelRenameEvent {
+    pub channel: SlackChannelRenameObject,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelRenameObject {
+pub struct SlackChannelRenameObject {
     pub id: SlackChannelId,
     pub name: String,
     pub created: SlackDateTime,
@@ -250,13 +250,13 @@ pub struct ChannelRenameObject {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct ChannelUnarchiveEvent {
+pub struct SlackChannelUnarchiveEvent {
     pub channel: SlackChannelId,
     pub user: SlackUserId,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct TeamJoinEvent {
+pub struct SlackTeamJoinEvent {
     pub user: SlackUser,
 }
