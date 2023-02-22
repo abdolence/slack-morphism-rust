@@ -56,6 +56,8 @@ pub enum SlackEventCallbackBody {
     AppUninstalled(SlackAppUninstalledEvent),
     LinkShared(SlackLinkSharedEvent),
     EmojiChanged(SlackEmojiChangedEvent),
+    MemberJoinedChannel(MemberJoinedChannelEvent),
+    MemberLeftChannel(MemberLeftChannelEvent),
 }
 
 #[skip_serializing_none]
@@ -177,4 +179,23 @@ pub enum SlackEmojiEventType {
 pub struct SlackLinkObject {
     pub domain: String,
     pub url: Url,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct MemberJoinedChannelEvent {
+    pub user: SlackUserId,
+    pub channel: SlackChannelId,
+    pub channel_type: SlackChannelType,
+    pub team: SlackTeamId,
+    pub inviter: Option<SlackUserId>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct MemberLeftChannelEvent {
+    pub user: SlackUserId,
+    pub channel: SlackChannelId,
+    pub channel_type: SlackChannelType,
+    pub team: SlackTeamId,
 }
