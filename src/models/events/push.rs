@@ -61,6 +61,8 @@ pub enum SlackEventCallbackBody {
     ChannelCreated(ChannelCreatedEvent),
     ChannelDeleted(ChannelDeletedEvent),
     ChannelArchive(ChannelArchiveEvent),
+    ChannelRename(ChannelRenameEvent),
+    ChannelUnarchive(ChannelUnarchiveEvent),
 }
 
 #[skip_serializing_none]
@@ -227,6 +229,27 @@ pub struct ChannelDeletedEvent {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct ChannelArchiveEvent {
+    pub channel: SlackChannelId,
+    pub user: SlackUserId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct ChannelRenameEvent {
+    pub channel: ChannelRenameObject,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct ChannelRenameObject {
+    pub id: SlackChannelId,
+    pub name: String,
+    pub created: SlackDateTime,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct ChannelUnarchiveEvent {
     pub channel: SlackChannelId,
     pub user: SlackUserId,
 }
