@@ -56,6 +56,7 @@ signal-hook = { version = "0.3", features = ["extended-siginfo"], optional = tru
 signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"], optional = true }
 axum = { version = "0.6", optional = true }
 tower = { version = "0.4", optional = true }
+serde_urlencoded = "0.7.1"
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
