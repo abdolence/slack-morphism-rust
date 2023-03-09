@@ -43,7 +43,5 @@ pub struct SlackApiFilesUploadRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiFilesUploadResponse {
-    pub channel: SlackChannelId,
-    pub ts: SlackTs,
-    pub message: SlackMessage,
+    pub file: SlackFile,
 }
