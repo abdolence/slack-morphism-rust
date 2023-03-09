@@ -13,7 +13,7 @@ use rvstruct::ValueStruct;
 use tracing::*;
 use url::Url;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SlackClient<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send,
@@ -21,7 +21,7 @@ where
     pub http_api: SlackClientHttpApi<SCHC>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SlackClientHttpApi<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send,
