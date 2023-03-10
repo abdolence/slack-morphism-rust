@@ -406,8 +406,9 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                         )
                         .header("content-type", "application/x-www-form-urlencoded");
 
-                        let toke_body_prefix =
-                            HyperExtensions::token_auth_form_urlencoded(context_token);
+                        let toke_body_prefix = context_token.map_or_else(String::new, |t| {
+                            format!("token={}&", t.token_value.value())
+                        });
                         let full_body = toke_body_prefix + &post_url_form;
                         http_request.body(full_body.into()).map_err(|e| e.into())
                     },

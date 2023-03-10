@@ -50,14 +50,6 @@ impl HyperExtensions {
         }
     }
 
-    pub fn token_auth_form_urlencoded(token: Option<&SlackApiToken>) -> String {
-        if token.is_none() {
-            String::new()
-        } else {
-            format!("token={}&", token.unwrap().token_value.value())
-        }
-    }
-
     pub fn setup_basic_auth_header(
         request_builder: hyper::http::request::Builder,
         username: &str,

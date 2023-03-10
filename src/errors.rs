@@ -13,7 +13,7 @@ pub enum SlackClientError {
     EndOfStream(SlackClientEndOfStreamError),
     SystemError(SlackClientSystemError),
     ProtocolError(SlackClientProtocolError),
-    UrlProtocolError(SlackClientUrlProtocolError),
+    FormUrlEncodingError(SlackClientFormUrlEncodingError),
     SocketModeProtocolError(SlackClientSocketModeProtocolError),
     RateLimitError(SlackRateLimitError),
 }
@@ -34,7 +34,7 @@ impl Display for SlackClientError {
             SlackClientError::HttpProtocolError(ref err) => err.fmt(f),
             SlackClientError::EndOfStream(ref err) => err.fmt(f),
             SlackClientError::ProtocolError(ref err) => err.fmt(f),
-            SlackClientError::UrlProtocolError(ref err) => err.fmt(f),
+            SlackClientError::FormUrlEncodingError(ref err) => err.fmt(f),
             SlackClientError::SocketModeProtocolError(ref err) => err.fmt(f),
             SlackClientError::SystemError(ref err) => err.fmt(f),
             SlackClientError::RateLimitError(ref err) => err.fmt(f),
@@ -50,7 +50,7 @@ impl Error for SlackClientError {
             SlackClientError::HttpProtocolError(ref err) => Some(err),
             SlackClientError::EndOfStream(ref err) => Some(err),
             SlackClientError::ProtocolError(ref err) => Some(err),
-            SlackClientError::UrlProtocolError(ref err) => Some(err),
+            SlackClientError::FormUrlEncodingError(ref err) => Some(err),
             SlackClientError::SocketModeProtocolError(ref err) => Some(err),
             SlackClientError::SystemError(ref err) => Some(err),
             SlackClientError::RateLimitError(ref err) => Some(err),
@@ -142,12 +142,12 @@ impl Display for SlackClientProtocolError {
 impl std::error::Error for SlackClientProtocolError {}
 
 #[derive(Debug, Builder)]
-pub struct SlackClientUrlProtocolError {
+pub struct SlackClientFormUrlEncodingError {
     pub serialization_error: serde_urlencoded::ser::Error,
     pub json_body: Option<String>,
 }
 
-impl Display for SlackClientUrlProtocolError {
+impl Display for SlackClientFormUrlEncodingError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -158,7 +158,7 @@ impl Display for SlackClientUrlProtocolError {
     }
 }
 
-impl std::error::Error for SlackClientUrlProtocolError {}
+impl std::error::Error for SlackClientFormUrlEncodingError {}
 
 #[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackClientSocketModeProtocolError {
@@ -238,7 +238,8 @@ pub fn map_serde_urlencoded_error(
     err: serde_urlencoded::ser::Error,
     tried_to_parse: Option<&str>,
 ) -> SlackClientError {
-    SlackClientError::UrlProtocolError(
-        SlackClientUrlProtocolError::new(err).opt_json_body(tried_to_parse.map(|s| s.to_string())),
+    SlackClientError::FormUrlEncodingError(
+        SlackClientFormUrlEncodingError::new(err)
+            .opt_json_body(tried_to_parse.map(|s| s.to_string())),
     )
 }

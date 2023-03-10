@@ -3,7 +3,7 @@
 //!
 
 use rsb_derive::Builder;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use serde_with::skip_serializing_none;
 
 use crate::models::*;
@@ -31,7 +31,8 @@ where
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiFilesUploadRequest {
-    pub channels: SlackChannelId,
+    #[serde(serialize_with = "to_csv")]
+    pub channels: Option<Vec<SlackChannelId>>,
     pub content: Option<String>,
     pub filename: Option<String>,
     pub filetype: Option<SlackFileType>,
@@ -44,4 +45,17 @@ pub struct SlackApiFilesUploadRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiFilesUploadResponse {
     pub file: SlackFile,
+}
+
+fn to_csv<S: Serializer>(x: &Option<Vec<SlackChannelId>>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match x {
+        None => s.serialize_none(),
+        Some(ids) => {
+            let y: Vec<String> = ids.iter().map(|v| v.0.clone()).collect();
+            y.join(",").serialize(s)
+        }
+    }
 }
