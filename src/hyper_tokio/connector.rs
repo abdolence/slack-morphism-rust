@@ -394,7 +394,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         let context_token = context.token;
 
         async move {
-            let post_url_form = serde_urlencoded::to_string(&request_body)
+            let post_url_form = serde_urlencoded::to_string(request_body)
                 .map_err(|err| map_serde_urlencoded_error(err, None))?;
 
             let response_body = self
