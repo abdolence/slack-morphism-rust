@@ -22,9 +22,9 @@ pub struct SlackFileExternalType(pub String);
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFile {
     pub id: SlackFileId,
-    pub created: SlackDateTime,
-    pub timestamp: SlackDateTime,
-    pub name: String,
+    pub created: Option<SlackDateTime>,
+    pub timestamp: Option<SlackDateTime>,
+    pub name: Option<String>,
     pub title: Option<String>,
     pub mimetype: Option<SlackMimeType>,
     pub filetype: Option<SlackFileType>,
