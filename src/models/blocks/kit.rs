@@ -181,6 +181,8 @@ pub enum SlackSectionBlockElement {
     Overflow(SlackBlockOverflowElement),
     #[serde(rename = "datepicker")]
     DatePicker(SlackBlockDatePickerElement),
+    #[serde(rename = "timepicker")]
+    TimePicker(SlackBlockTimePickerElement),
     #[serde(rename = "plain_text_input")]
     PlainTextInput(SlackBlockPlainTextInputElement),
     #[serde(rename = "number_input")]
@@ -202,6 +204,8 @@ pub enum SlackActionBlockElement {
     Overflow(SlackBlockOverflowElement),
     #[serde(rename = "datepicker")]
     DatePicker(SlackBlockDatePickerElement),
+    #[serde(rename = "timepicker")]
+    TimePicker(SlackBlockTimePickerElement),
     #[serde(rename = "datetimepicker")]
     DateTimePicker(SlackBlockDateTimePickerElement),
     #[serde(rename = "plain_text_input")]
@@ -262,6 +266,8 @@ pub enum SlackInputBlockElement {
     MultiChannelsSelect(SlackBlockMultiChannelsSelectElement),
     #[serde(rename = "datepicker")]
     DatePicker(SlackBlockDatePickerElement),
+    #[serde(rename = "timepicker")]
+    TimePicker(SlackBlockTimePickerElement),
     #[serde(rename = "datetimepicker")]
     DateTimePicker(SlackBlockDateTimePickerElement),
     #[serde(rename = "plain_text_input")]
@@ -653,6 +659,35 @@ impl From<SlackBlockDatePickerElement> for SlackInputBlockElement {
 impl From<SlackBlockDatePickerElement> for SlackActionBlockElement {
     fn from(element: SlackBlockDatePickerElement) -> Self {
         SlackActionBlockElement::DatePicker(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockTimePickerElement {
+    pub action_id: SlackActionId,
+    pub initial_time: Option<String>,
+    pub confirm: Option<SlackBlockConfirmItem>,
+    pub focus_on_load: Option<bool>,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+    pub timezone: Option<String>,
+}
+
+impl From<SlackBlockTimePickerElement> for SlackSectionBlockElement {
+    fn from(element: SlackBlockTimePickerElement) -> Self {
+        SlackSectionBlockElement::TimePicker(element)
+    }
+}
+
+impl From<SlackBlockTimePickerElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockTimePickerElement) -> Self {
+        SlackInputBlockElement::TimePicker(element)
+    }
+}
+
+impl From<SlackBlockTimePickerElement> for SlackActionBlockElement {
+    fn from(element: SlackBlockTimePickerElement) -> Self {
+        SlackActionBlockElement::TimePicker(element)
     }
 }
 
