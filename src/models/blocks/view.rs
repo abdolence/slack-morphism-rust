@@ -88,6 +88,7 @@ pub struct SlackViewStateValue {
     pub value: Option<String>,
     pub selected_date: Option<String>,
     pub selected_time: Option<String>,
+    pub selected_date_time: Option<i64>,
     pub selected_conversation: Option<SlackConversationId>,
     pub selected_channel: Option<SlackChannelId>,
     pub selected_user: Option<SlackUserId>,
