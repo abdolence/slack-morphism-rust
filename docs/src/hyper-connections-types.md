@@ -31,3 +31,5 @@ For example for proxy server config it might be used as:
     );
     
 ```
+
+Please note that this configuration available only for Slack Client, and doesn't work for Socket Mode (WS) mode.
