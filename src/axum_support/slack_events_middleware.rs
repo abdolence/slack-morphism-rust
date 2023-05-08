@@ -27,7 +27,7 @@ where
 {
     inner: Option<S>,
     environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
-    signature_verifier: SlackEventSignatureVerifier,
+    signature_verifier: Arc<SlackEventSignatureVerifier>,
     extractor: SE,
 }
 
@@ -49,7 +49,7 @@ where
         Self {
             inner: Some(service),
             environment,
-            signature_verifier: SlackEventSignatureVerifier::new(secret),
+            signature_verifier: Arc::new(SlackEventSignatureVerifier::new(secret)),
             extractor,
         }
     }
