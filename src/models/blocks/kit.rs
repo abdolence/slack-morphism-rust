@@ -414,6 +414,7 @@ pub struct SlackBlockExternalSelectElement {
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub focus_on_load: Option<bool>,
+    pub min_query_length: Option<u64>,
 }
 
 impl From<SlackBlockExternalSelectElement> for SlackSectionBlockElement {
@@ -443,6 +444,7 @@ pub struct SlackBlockMultiExternalSelectElement {
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
     pub focus_on_load: Option<bool>,
+    pub min_query_length: Option<u64>,
 }
 
 impl From<SlackBlockMultiExternalSelectElement> for SlackSectionBlockElement {
