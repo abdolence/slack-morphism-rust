@@ -29,6 +29,8 @@ pub enum SlackBlock {
     Input(SlackInputBlock),
     #[serde(rename = "file")]
     File(SlackFileBlock),
+    #[serde(rename = "event")]
+    Event(SlackFileBlock),
 
     // This block is still undocumented, so we don't define any structure yet we can return it back,
     #[serde(rename = "rich_text")]

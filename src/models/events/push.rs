@@ -117,6 +117,12 @@ pub enum SlackMessageEventType {
     SlackbotResponse,
     #[serde(rename = "emoji_changed")]
     EmojiChanged,
+    #[serde(rename = "sh_room_created")]
+    SlackHuddleRoomCreated,
+    #[serde(rename = "channel_archive")]
+    ChannelArchive,
+    #[serde(rename = "channel_unarchive")]
+    ChannelUnarchive,
 }
 
 #[skip_serializing_none]
