@@ -123,6 +123,18 @@ pub enum SlackMessageEventType {
     ChannelArchive,
     #[serde(rename = "channel_unarchive")]
     ChannelUnarchive,
+    #[serde(rename = "app_conversation_leave")]
+    AppConversationLeave,
+    #[serde(rename = "bot_enable")]
+    BotEnable,
+    #[serde(rename = "bot_disable")]
+    BotDisable,
+    #[serde(rename = "pinned_item")]
+    PinnedItem,
+    #[serde(rename = "reminder_add")]
+    ReminderAdd,
+    #[serde(rename = "file_comment")]
+    FileComment,
 }
 
 #[skip_serializing_none]
