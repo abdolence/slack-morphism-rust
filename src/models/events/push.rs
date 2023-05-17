@@ -117,6 +117,24 @@ pub enum SlackMessageEventType {
     SlackbotResponse,
     #[serde(rename = "emoji_changed")]
     EmojiChanged,
+    #[serde(rename = "sh_room_created")]
+    SlackHuddleRoomCreated,
+    #[serde(rename = "channel_archive")]
+    ChannelArchive,
+    #[serde(rename = "channel_unarchive")]
+    ChannelUnarchive,
+    #[serde(rename = "app_conversation_leave")]
+    AppConversationLeave,
+    #[serde(rename = "bot_enable")]
+    BotEnable,
+    #[serde(rename = "bot_disable")]
+    BotDisable,
+    #[serde(rename = "pinned_item")]
+    PinnedItem,
+    #[serde(rename = "reminder_add")]
+    ReminderAdd,
+    #[serde(rename = "file_comment")]
+    FileComment,
 }
 
 #[skip_serializing_none]
