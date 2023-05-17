@@ -6,7 +6,6 @@ use std::sync::Arc;
 use crate::hyper_tokio::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;
 use crate::socket_mode::SlackSocketModeWssClientId;
 use futures::future;
-use futures::stream::StreamExt;
 
 use crate::clients_manager::SlackSocketModeClientsManager;
 use crate::hyper_tokio::SlackClientHyperConnector;
@@ -150,6 +149,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
     #[cfg(not(windows))]
     async fn await_term_signals(&self) {
+        use futures::stream::StreamExt;
         use signal_hook::consts::TERM_SIGNALS;
         use signal_hook::iterator::exfiltrator::WithOrigin;
         use signal_hook_tokio::SignalsInfo;
