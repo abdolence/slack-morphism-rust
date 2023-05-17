@@ -151,11 +151,17 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         }
     }
 
+    #[cfg(not(windows))]
     async fn await_term_signals(&self) {
         let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
 
         if let Some(info) = signals.next().await {
             debug!("Received a signal: {:?}. Terminating...", info);
         }
+    }
+
+    #[cfg(windows)]
+    async fn await_term_signals(&self) {
+        not_implemented!("Windows signals are not supported yet. Please implement it on the client side using start/shutdown methods.")
     }
 }
