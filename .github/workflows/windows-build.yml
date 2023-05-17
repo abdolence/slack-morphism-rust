@@ -1,0 +1,16 @@
+name: windows build test
+on: 
+  push:
+  pull_request:
+    types: [opened]  
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+      - run: cargo fmt -- --check && cargo clippy --all-features -- -Dwarnings && cargo test --all-features
