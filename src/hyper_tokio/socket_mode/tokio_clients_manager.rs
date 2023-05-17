@@ -7,9 +7,6 @@ use crate::hyper_tokio::socket_mode::tungstenite_wss_client::SlackTungsteniteWss
 use crate::socket_mode::SlackSocketModeWssClientId;
 use futures::future;
 use futures::stream::StreamExt;
-use signal_hook::consts::TERM_SIGNALS;
-use signal_hook::iterator::exfiltrator::WithOrigin;
-use signal_hook_tokio::SignalsInfo;
 
 use crate::clients_manager::SlackSocketModeClientsManager;
 use crate::hyper_tokio::SlackClientHyperConnector;
@@ -153,6 +150,10 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
     #[cfg(not(windows))]
     async fn await_term_signals(&self) {
+        use signal_hook::consts::TERM_SIGNALS;
+        use signal_hook::iterator::exfiltrator::WithOrigin;
+        use signal_hook_tokio::SignalsInfo;
+
         let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
 
         if let Some(info) = signals.next().await {
@@ -162,6 +163,12 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
 
     #[cfg(windows)]
     async fn await_term_signals(&self) {
-        not_implemented!("Windows signals are not supported yet. Please implement it on the client side using start/shutdown methods.")
+        use ctrlc;
+        use std::sync::mpsc::channel;
+        let (tx, rx) = channel();
+        ctrlc::set_handler(move || tx.send(()).expect("Could not send signal on channel."))
+            .expect("Error setting Ctrl-C handler");
+        rx.recv().expect("Could not receive from channel.");
+        debug!("Received a signal to terminate...");
     }
 }

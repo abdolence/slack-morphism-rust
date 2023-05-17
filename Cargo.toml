@@ -60,6 +60,9 @@ serde_urlencoded = "0.7.1"
 signal-hook = { version = "0.3", default-features = false, features = ["extended-siginfo"], optional = true}
 signal-hook-tokio = { version = "0.3", default-features = false, features = ["futures-v0_3"], optional = true }
 
+[target.'cfg(windows)'.dependencies]
+ctrlc = { version = "3.0", features = ["termination"] }
+
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
 cargo-audit = "0.17"
