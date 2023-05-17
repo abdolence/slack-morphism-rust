@@ -71,7 +71,6 @@ where
         self.clients_manager.shutdown().await;
     }
 
-    #[cfg(not(windows))]
     pub async fn serve(&self) -> i32 {
         self.start().await;
 
