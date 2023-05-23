@@ -64,6 +64,7 @@ pub enum SlackEventCallbackBody {
     ChannelRename(SlackChannelRenameEvent),
     ChannelUnarchive(SlackChannelUnarchiveEvent),
     TeamJoin(SlackTeamJoinEvent),
+    FileCreated(SlackFileCreatedEvent),
 }
 
 #[skip_serializing_none]
@@ -135,6 +136,8 @@ pub enum SlackMessageEventType {
     ReminderAdd,
     #[serde(rename = "file_comment")]
     FileComment,
+    #[serde(rename = "file_created")]
+    FileCreated,
 }
 
 #[skip_serializing_none]
@@ -260,4 +263,12 @@ pub struct SlackChannelUnarchiveEvent {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackTeamJoinEvent {
     pub user: SlackUser,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFileCreatedEvent {
+    pub user_id: SlackUserId, 
+    pub file_id: SlackFileId,
+    pub file: SlackFile,
 }
