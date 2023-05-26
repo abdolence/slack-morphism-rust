@@ -64,6 +64,12 @@ pub enum SlackEventCallbackBody {
     ChannelRename(SlackChannelRenameEvent),
     ChannelUnarchive(SlackChannelUnarchiveEvent),
     TeamJoin(SlackTeamJoinEvent),
+    FileCreated(SlackFileCreatedEvent),
+    FileChange(SlackFileChangedEvent),
+    FileDeleted(SlackFileDeletedEvent),
+    FileShared(SlackFileSharedEvent),
+    FileUnshared(SlackFileUnsharedEvent),
+    FilePublic(SlackFilePublicEvent),
 }
 
 #[skip_serializing_none]
@@ -135,6 +141,18 @@ pub enum SlackMessageEventType {
     ReminderAdd,
     #[serde(rename = "file_comment")]
     FileComment,
+    #[serde(rename = "file_created")]
+    FileCreated,
+    #[serde(rename = "file_change")]
+    FileChanged,
+    #[serde(rename = "file_deleted")]
+    FileDeleted,
+    #[serde(rename = "file_shared")]
+    FileShared,
+    #[serde(rename = "file_unshared")]
+    FileUnshared,
+    #[serde(rename = "file_public")]
+    FilePublic,
 }
 
 #[skip_serializing_none]
@@ -260,4 +278,46 @@ pub struct SlackChannelUnarchiveEvent {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackTeamJoinEvent {
     pub user: SlackUser,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFileCreatedEvent {
+    pub user_id: SlackUserId,
+    pub file_id: SlackFileId,
+    pub file: SlackFile,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFileChangedEvent {
+    pub file_id: SlackFileId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFileDeletedEvent {
+    pub file_id: SlackFileId,
+    pub event_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFileSharedEvent {
+    pub channel_id: SlackChannelId,
+    pub file_id: SlackFileId,
+    pub user_id: SlackUserId,
+    pub event_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFileUnsharedEvent {
+    pub file_id: SlackFileId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFilePublicEvent {
+    pub file_id: SlackFileId,
 }
