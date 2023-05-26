@@ -283,7 +283,7 @@ pub struct SlackTeamJoinEvent {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFileCreatedEvent {
-    pub user_id: SlackUserId, 
+    pub user_id: SlackUserId,
     pub file_id: SlackFileId,
     pub file: SlackFile,
 }
