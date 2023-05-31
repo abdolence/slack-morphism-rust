@@ -60,6 +60,8 @@ pub struct SlackApiPostWebhookMessageRequest {
     #[serde(flatten)]
     pub content: SlackMessageContent,
     pub thread_ts: Option<SlackTs>,
+    pub replace_original: Option<bool>,
+    pub delete_original: Option<bool>,
 }
 
 #[skip_serializing_none]
