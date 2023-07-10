@@ -18,6 +18,7 @@ pub struct SlackReaction {
 pub struct SlackReactionName(pub String);
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 #[allow(clippy::large_enum_variant)]
 pub enum SlackReactionsItem {
