@@ -1,6 +1,10 @@
+#![allow(ambiguous_glob_reexports)] // Allowing reexporting listener not to break existing code
+
 pub use super::api::*; // Slack Web API methods (chat, users, views, etc)
-pub use super::listener::*;
 pub use super::ratectl::*;
+
+pub use super::listener::*;
+
 pub use super::*; // access to network/client functions // Slack Events API listener (routes) implementation
 
 pub use crate::models::blocks::*; // Slack Block Kit models

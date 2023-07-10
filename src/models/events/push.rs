@@ -70,6 +70,10 @@ pub enum SlackEventCallbackBody {
     FileShared(SlackFileSharedEvent),
     FileUnshared(SlackFileUnsharedEvent),
     FilePublic(SlackFilePublicEvent),
+    ReactionAdded(SlackReactionAddedEvent),
+    ReactionRemoved(SlackReactionRemovedEvent),
+    UserChange(SlackUserChangeEvent),
+    UserStatusChanged(SlackUserStatusChangedEvent),
 }
 
 #[skip_serializing_none]
@@ -320,4 +324,40 @@ pub struct SlackFileUnsharedEvent {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFilePublicEvent {
     pub file_id: SlackFileId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackReactionAddedEvent {
+    pub user: SlackUserId,
+    pub reaction: SlackReactionName,
+    pub item_user: Option<SlackUserId>,
+    pub item: SlackReactionsItem,
+    pub event_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackReactionRemovedEvent {
+    pub user: SlackUserId,
+    pub reaction: SlackReactionName,
+    pub item_user: Option<SlackUserId>,
+    pub item: SlackReactionsItem,
+    pub event_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUserChangeEvent {
+    pub user: SlackUser,
+    pub event_ts: SlackTs,
+    pub cache_ts: SlackDateTime,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUserStatusChangedEvent {
+    pub user: SlackUser,
+    pub event_ts: SlackTs,
+    pub cache_ts: SlackDateTime,
 }

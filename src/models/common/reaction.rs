@@ -16,3 +16,11 @@ pub struct SlackReaction {
 #[skip_serializing_none]
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackReactionName(pub String);
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[allow(clippy::large_enum_variant)]
+pub enum SlackReactionsItem {
+    Message(SlackHistoryMessage),
+    File(SlackFile),
+}
