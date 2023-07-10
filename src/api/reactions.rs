@@ -74,13 +74,13 @@ pub struct SlackApiReactionsGetRequest {
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiReactionsGetMessageResponse {
-    #[serde(flatten)]
     pub message: SlackHistoryMessage,
-    pub permalink: Url,
+    pub permalink: Option<Url>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[serde(tag = "type")]
 #[allow(clippy::large_enum_variant)]
 pub enum SlackApiReactionsGetResponse {
     Message(SlackApiReactionsGetMessageResponse),
