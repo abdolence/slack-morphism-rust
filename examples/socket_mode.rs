@@ -1,5 +1,6 @@
+use chrono::prelude::*;
+use rsb_derive::Builder;
 use slack_morphism::prelude::*;
-
 use std::sync::Arc;
 
 async fn test_interaction_events_function(
@@ -7,7 +8,7 @@ async fn test_interaction_events_function(
     _client: Arc<SlackHyperClient>,
     _states: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("{:#?}", event);
+    println!("Interaction event: {:#?}", event);
     Ok(())
 }
 
@@ -55,11 +56,98 @@ async fn test_command_events_function(
 
 async fn test_push_events_sm_function(
     event: SlackPushEventCallback,
-    _client: Arc<SlackHyperClient>,
+    client: Arc<SlackHyperClient>,
     _states: SlackClientEventsUserState,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("{:#?}", event);
-    Ok(())
+    println!("Push event: {:#?}", event);
+    match event.event {
+        SlackEventCallbackBody::AppHomeOpened(home_event) if home_event.tab == "home" => {
+            let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+            let token: SlackApiToken = SlackApiToken::new(token_value);
+
+            let session = client.open_session(&token);
+
+            let home_tab = SlackHomeTabBlocksTemplateExample::new(
+                    vec![
+                        SlackHomeNewsItem::new(
+                        "Google claimed quantum supremacy in 2019 — and sparked controversy".into(),
+                        "In October, researchers from Google claimed to have achieved a milestone known as quantum supremacy. They had created the first quantum computer that could perform a calculation that is impossible for a standard computer.".into(),
+                        DateTime::parse_from_rfc3339("2019-12-16T12:00:09Z").unwrap().into()),
+                        SlackHomeNewsItem::new(
+                            "Quantum jitter lets heat travel across a vacuum".into(),
+                            "A new experiment shows that quantum fluctuations permit heat to bridge empty space.".into(),
+                            DateTime::parse_from_rfc3339("2019-12-16T12:00:09Z").unwrap().into())
+                    ],
+                    home_event.user.clone(),
+                );
+            session
+                .views_publish(&SlackApiViewsPublishRequest::new(
+                    home_event.user,
+                    SlackView::Home(SlackHomeView::new(home_tab.render_template())),
+                ))
+                .await?;
+            Ok(())
+        }
+        _ => Ok(()),
+    }
+}
+
+#[derive(Debug, Clone, Builder)]
+pub struct SlackHomeNewsItem {
+    pub title: String,
+    pub body: String,
+    pub published: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Builder)]
+pub struct SlackHomeTabBlocksTemplateExample {
+    pub latest_news: Vec<SlackHomeNewsItem>,
+    pub user_id: SlackUserId,
+}
+
+impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
+    fn render_template(&self) -> Vec<SlackBlock> {
+        let new_blocks: Vec<SlackBlock> = self
+            .latest_news
+            .clone()
+            .into_iter()
+            .map(|news_item| {
+                vec![
+                    SlackSectionBlock::new()
+                        .with_text(md!(" • *{}*\n>{}", news_item.title, news_item.body))
+                        .into(),
+                    SlackContextBlock::new(slack_blocks![some(md!(
+                        "Published: {}",
+                        fmt_slack_date(
+                            &news_item.published,
+                            SlackDateTimeFormats::DatePretty.to_string().as_str(),
+                            None
+                        )
+                    ))])
+                    .into(),
+                ]
+            })
+            .flatten()
+            .collect();
+
+        [
+            slack_blocks![
+                some_into(
+                    SlackSectionBlock::new()
+                        .with_text(md!("Home tab for {}", self.user_id.to_slack_format()))
+                ),
+                some_into(SlackImageBlock::new(
+                    "https://www.gstatic.com/webp/gallery/4.png"
+                        .try_into()
+                        .unwrap(),
+                    "Test image".into()
+                )),
+                some_into(SlackSectionBlock::new().with_text(md!("Latest news:")))
+            ],
+            new_blocks,
+        ]
+        .concat()
+    }
 }
 
 fn test_error_handler(
