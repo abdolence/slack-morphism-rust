@@ -173,7 +173,7 @@ where
             slack_signing_secret: slack_signing_secret.clone(),
             environment,
             extractor: SlackEventsEmptyExtractor::new(),
-            _ph_s: PhantomData::default(),
+            _ph_s: PhantomData,
         }
     }
 
@@ -185,7 +185,7 @@ where
             slack_signing_secret: self.slack_signing_secret,
             environment: self.environment,
             extractor,
-            _ph_s: PhantomData::default(),
+            _ph_s: PhantomData,
         }
     }
 }
