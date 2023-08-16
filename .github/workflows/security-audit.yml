@@ -16,4 +16,4 @@ jobs:
           profile: minimal
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo install cargo-audit && cargo audit || true && cargo audit --ignore RUSTSEC-2020-0159 --ignore RUSTSEC-2020-0071
+      - run: cargo install cargo-audit && cargo audit || true && cargo audit
