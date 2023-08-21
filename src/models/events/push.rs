@@ -177,6 +177,7 @@ pub struct SlackAppMentionEvent {
     pub content: SlackMessageContent,
     #[serde(flatten)]
     pub origin: SlackMessageOrigin,
+    pub edited: Option<SlackMessageEdited>,
 }
 
 type SlackMessageEventEdited = SlackMessageEdited;
