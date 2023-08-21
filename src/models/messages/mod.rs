@@ -74,6 +74,7 @@ pub struct SlackHistoryMessage {
     #[serde(flatten)]
     pub parent: SlackParentMessageParams,
     pub subtype: Option<SlackMessageEventType>,
+    pub edited: Option<SlackMessageEdited>,
 }
 
 #[skip_serializing_none]
