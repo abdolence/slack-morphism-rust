@@ -65,7 +65,7 @@ ctrlc = { version = "3.4", features = ["termination"] }
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
-cargo-audit = "0.17"
+cargo-audit = "0.18"
 tracing-subscriber = { version ="0.3", features = ["env-filter"] }
 hyper-proxy = "0.9"
 hyper = { version ="0.14", features = ["full"] }
