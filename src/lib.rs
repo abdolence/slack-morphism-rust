@@ -95,7 +95,8 @@ pub mod listener;
 mod ratectl;
 mod scroller;
 pub mod signature_verifier;
-mod socket_mode;
+pub mod socket_mode;
+
 mod token;
 
 #[cfg(feature = "hyper")]
