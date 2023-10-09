@@ -25,7 +25,7 @@ impl HyperExtensions {
                     .into_owned()
                     .collect()
             })
-            .unwrap_or_else(HashMap::new)
+            .unwrap_or_default()
     }
 
     pub fn hyper_redirect_to(
