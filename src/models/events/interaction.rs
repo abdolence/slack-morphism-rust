@@ -1,6 +1,6 @@
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
+use serde_with::{serde_as, skip_serializing_none};
 
 use crate::blocks::*;
 use crate::models::messages::*;
@@ -77,6 +77,7 @@ pub struct SlackInteractionActionInfo {
     pub action_ts: Option<SlackTs>,
 }
 
+#[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackInteractionDialogueSubmissionEvent {
@@ -84,7 +85,7 @@ pub struct SlackInteractionDialogueSubmissionEvent {
     pub user: SlackBasicUserInfo,
     pub channel: Option<SlackBasicChannelInfo>,
     #[serde(default)]
-    #[serde(with = "serde_with::rust::string_empty_as_none")]
+    #[serde_as(as = "serde_with::NoneAsEmptyString")]
     pub callback_id: Option<SlackCallbackId>,
     pub state: Option<String>,
     pub submission: HashMap<String, String>,
