@@ -10,7 +10,8 @@ use serde_with::{serde_as, skip_serializing_none, DisplayFromStr};
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackUser {
     pub id: SlackUserId,
-    pub team_id: SlackTeamId,
+    pub team_id: Option<SlackTeamId>,
+    pub teams: Option<Vec<SlackTeamId>>,
     pub name: Option<String>,
     pub locale: Option<SlackLocale>,
     pub profile: Option<SlackUserProfile>,
