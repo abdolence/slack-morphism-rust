@@ -6,6 +6,9 @@ on:
       - '**/Cargo.lock'
   schedule:
     - cron: '5 4 * * 6'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_protected && github.run_id || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   security_audit:
     runs-on: ubuntu-latest

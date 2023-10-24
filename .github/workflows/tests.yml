@@ -2,7 +2,10 @@ name: tests & formatting
 on: 
   push:
   pull_request:
-    types: [opened]  
+    types: [opened]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_protected && github.run_id || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
