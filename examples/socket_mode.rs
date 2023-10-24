@@ -29,13 +29,18 @@ async fn test_command_events_function(
         .api_test(&SlackApiTestRequest::new().with_foo("Test".into()))
         .await?;
 
+    let user_info_resp = session
+        .users_info(&SlackApiUsersInfoRequest::new(event.user_id.clone()))
+        .await?;
+
     Ok(SlackCommandEventResponse::new(
         SlackMessageContent::new()
-            .with_text("Working on it".into())
+            .with_text(format!("Working on it: {:?}", user_info_resp.user.team_id).into())
             .with_blocks(slack_blocks![
                 some_into(SlackSectionBlock::new().with_text(md!(
-                    "Working section for {}",
-                    event.user_id.to_slack_format()
+                    "Working section for {}. Team ID: {:?}",
+                    event.user_id.to_slack_format(),
+                    user_info_resp.user.teams
                 ))),
                 some_into(SlackActionsBlock::new(slack_blocks![
                     some_into(SlackBlockButtonElement::new(
