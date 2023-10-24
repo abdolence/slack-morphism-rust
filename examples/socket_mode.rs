@@ -33,6 +33,8 @@ async fn test_command_events_function(
         .users_info(&SlackApiUsersInfoRequest::new(event.user_id.clone()))
         .await?;
 
+    println!("{:#?}", user_info_resp);
+
     Ok(SlackCommandEventResponse::new(
         SlackMessageContent::new()
             .with_text(format!("Working on it: {:?}", user_info_resp.user.team_id).into())
@@ -40,7 +42,7 @@ async fn test_command_events_function(
                 some_into(SlackSectionBlock::new().with_text(md!(
                     "Working section for {}. Team ID: {:?}",
                     event.user_id.to_slack_format(),
-                    user_info_resp.user.teams
+                    user_info_resp.user.team_id
                 ))),
                 some_into(SlackActionsBlock::new(slack_blocks![
                     some_into(SlackBlockButtonElement::new(
