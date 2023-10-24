@@ -24,6 +24,7 @@ pub struct SlackUser {
     pub deleted: Option<bool>,
     pub color: Option<SlackColor>,
     pub real_name: Option<String>,
+    pub enterprise_user: Option<SlackEnterpriseUser>,
 }
 
 #[skip_serializing_none]
@@ -113,3 +114,14 @@ pub struct SlackUserGroupPrefs {
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackAvatarHash(pub String);
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackEnterpriseUser {
+    pub id: SlackUserId,
+    pub enterprise_id: SlackEnterpriseId,
+    pub enterprise_name: Option<String>,
+    #[serde(flatten)]
+    pub flags: SlackUserFlags,
+    pub teams: Option<Vec<SlackTeamId>>,
+}

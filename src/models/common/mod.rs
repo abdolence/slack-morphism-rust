@@ -237,3 +237,6 @@ pub enum SlackShortcutType {
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackEventType(pub String);
+
+#[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackEnterpriseId(pub String);
