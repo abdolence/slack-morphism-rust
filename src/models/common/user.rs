@@ -11,7 +11,6 @@ use serde_with::{serde_as, skip_serializing_none, DisplayFromStr};
 pub struct SlackUser {
     pub id: SlackUserId,
     pub team_id: Option<SlackTeamId>,
-    pub teams: Option<Vec<SlackTeamId>>,
     pub name: Option<String>,
     pub locale: Option<SlackLocale>,
     pub profile: Option<SlackUserProfile>,
