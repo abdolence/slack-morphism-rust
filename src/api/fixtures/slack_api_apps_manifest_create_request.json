@@ -1,0 +1,4 @@
+{
+  "app_id" : "test-app-id",
+  "manifest": "{ \"display_information\": { \"name\" : \"My App\" } }"
+}

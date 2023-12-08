@@ -189,3 +189,16 @@ pub struct SlackApiAppsManifestValidateRequest {
 
     pub app_id: Option<SlackAppId>,
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_api_apps_manifest_create_request() {
+        let payload = include_str!("./fixtures/slack_api_apps_manifest_create_request.json");
+        let model: SlackApiAppsManifestCreateRequest = serde_json::from_str(payload).unwrap();
+        assert_eq!(model.app_id, SlackAppId::from("test-app-id"));
+        assert_eq!(model.manifest.display_information.name, "My App");
+    }
+}
