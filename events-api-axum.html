@@ -235,11 +235,11 @@ fn test_error_handler(
     err: Box&lt;dyn std::error::Error + Send + Sync&gt;,
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
-) -&gt; http::StatusCode {
+) -&gt; HttpStatusCode {
     println!(&quot;{:#?}&quot;, err);
 
     // Defines what we return Slack server
-    http::StatusCode::BAD_REQUEST
+    HttpStatusCode::BAD_REQUEST
 }
 
 async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
