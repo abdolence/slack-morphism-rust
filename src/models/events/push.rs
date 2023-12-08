@@ -87,7 +87,7 @@ pub struct SlackMessageEvent {
     pub sender: SlackMessageSender,
     pub subtype: Option<SlackMessageEventType>,
     pub hidden: Option<bool>,
-    pub edited: Option<SlackMessageEventEdited>,
+    pub message: Option<SlackMessageEventEdited>,
     pub deleted_ts: Option<SlackTs>,
 }
 
@@ -180,7 +180,15 @@ pub struct SlackAppMentionEvent {
     pub edited: Option<SlackMessageEdited>,
 }
 
-type SlackMessageEventEdited = SlackMessageEdited;
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageEventEdited {
+    #[serde(flatten)]
+    pub content: Option<SlackMessageContent>,
+    pub user: SlackUserId,
+    pub ts: SlackTs,
+    pub edited: SlackMessageEdited,
+}
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -361,4 +369,33 @@ pub struct SlackUserStatusChangedEvent {
     pub user: SlackUser,
     pub event_ts: SlackTs,
     pub cache_ts: SlackDateTime,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_event_message_change_event() {
+        let payload = include_str!("./fixtures/message_changed.json");
+        let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();
+        match event.event {
+            SlackEventCallbackBody::Message(SlackMessageEvent {
+                subtype, message, ..
+            }) => {
+                assert_eq!(subtype, Some(SlackMessageEventType::MessageChanged));
+                if let Some(message) = message {
+                    assert_eq!(message.ts, "1701735043.989889".into());
+                    assert_eq!(message.edited.ts, "1701743154.000000".into());
+                    assert_eq!(
+                        message.content.unwrap().text,
+                        Some("edited message".to_string())
+                    );
+                } else {
+                    panic!("Message is None");
+                }
+            }
+            _ => panic!("Unexpected event type"),
+        }
+    }
 }
