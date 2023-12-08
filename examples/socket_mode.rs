@@ -161,13 +161,13 @@ fn test_error_handler(
     err: Box<dyn std::error::Error + Send + Sync>,
     _client: Arc<SlackHyperClient>,
     _states: SlackClientEventsUserState,
-) -> http::StatusCode {
+) -> HttpStatusCode {
     println!("{:#?}", err);
 
     // This return value should be OK if we want to return successful ack to the Slack server using Web-sockets
     // https://api.slack.com/apis/connections/socket-implement#acknowledge
     // so that Slack knows whether to retry
-    http::StatusCode::OK
+    HttpStatusCode::OK
 }
 
 async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
