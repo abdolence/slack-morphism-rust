@@ -1,0 +1,21 @@
+{
+  "blocks" : [
+    {
+      "type": "rich_text",
+      "block_id": "test-block-id",
+      "elements": [
+        {
+          "type": "rich_text_section",
+          "elements": [
+            {
+              "type": "text",
+              "text": "hi!"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "private_metadata" : "",
+  "callback_id" : "test-callback-id"
+}

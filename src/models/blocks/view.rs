@@ -153,4 +153,15 @@ mod test {
         .unwrap();
         assert_eq!(output, r#"{"response_action":"clear"}"#);
     }
+
+    #[test]
+    fn test_slack_api_apps_manifest_create_request() {
+        let payload = include_str!("./fixtures/slack_home_view.json");
+        let model: SlackHomeView = serde_json::from_str(payload).unwrap();
+        assert!(model.private_metadata.is_none());
+        assert_eq!(
+            model.callback_id,
+            Some(SlackCallbackId::from("test-callback-id"))
+        );
+    }
 }
