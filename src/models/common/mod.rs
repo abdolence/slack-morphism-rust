@@ -241,3 +241,19 @@ pub struct SlackEventType(pub String);
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackEnterpriseId(pub String);
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_date_time() {
+        let dt = SlackDateTime(
+            DateTime::parse_from_rfc3339("2020-01-01T00:42:42Z")
+                .unwrap()
+                .into(),
+        );
+        let json = serde_json::to_value(&dt).unwrap();
+        assert_eq!(json.as_u64().unwrap(), 1577839362);
+    }
+}
