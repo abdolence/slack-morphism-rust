@@ -3,7 +3,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
+use serde_with::{serde_as, skip_serializing_none};
 use std::hash::Hash;
 use std::*;
 use url::Url;
@@ -166,11 +166,12 @@ impl fmt::Debug for SlackSigningSecret {
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct EmailAddress(pub String);
 
+#[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackResponseMetadata {
     #[serde(default)]
-    #[serde(with = "serde_with::rust::string_empty_as_none")]
+    #[serde_as(as = "serde_with::NoneAsEmptyString")]
     pub next_cursor: Option<SlackCursorId>,
 }
 
