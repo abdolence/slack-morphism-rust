@@ -12,6 +12,8 @@ use url::Url;
 
 type UserStatesMap = HashMap<TypeId, Box<dyn Any + Send + Sync + 'static>>;
 
+pub type HttpStatusCode = http::StatusCode;
+
 pub struct SlackClientEventsListenerEnvironment<SCHC>
 where
     SCHC: SlackClientHttpConnector + Send + Sync,
@@ -98,7 +100,7 @@ pub type ErrorHandler<SCHC> = fn(
     Box<dyn std::error::Error + Send + Sync + 'static>,
     Arc<SlackClient<SCHC>>,
     SlackClientEventsUserState,
-) -> http::StatusCode;
+) -> HttpStatusCode;
 
 #[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackCommandEventsListenerConfig {
