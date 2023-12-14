@@ -1,0 +1,92 @@
+{
+  "token": "XXXXXXXXXXXXXXXXXXXXXXXX",
+  "team_id": "TXXXXXXXXXX",
+  "context_team_id": "TXXXXXXXXXX",
+  "context_enterprise_id": null,
+  "api_app_id": "AXXXXXXXXXX",
+  "event": {
+    "type": "message",
+    "subtype": "message_changed",
+    "message": {
+      "client_msg_id": "000000000000000000000000000000000000",
+      "type": "message",
+      "text": "edited message",
+      "bot_id": "BXXXXXXXXXX",
+      "app_id": "AXXXXXXXXXX",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "wcwS3",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "hi!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "team": "TXXXXXXXXXX",
+      "edited": {
+        "user": "UXXXXXXXXXX",
+        "ts": "1701743154.000000"
+      },
+      "ts": "1701735043.989889",
+      "source_team": "TXXXXXXXXXX",
+      "user_team": "TXXXXXXXXXX"
+    },
+    "previous_message": {
+      "client_msg_id": "000000000000000000000000000000000000",
+      "type": "message",
+      "text": "hey!",
+      "bot_id": "BXXXXXXXXXX",
+      "app_id": "AXXXXXXXXXX",
+      "ts": "1701735043.989889",
+      "blocks": [
+        {
+          "type": "rich_text",
+          "block_id": "zUXnE",
+          "elements": [
+            {
+              "type": "rich_text_section",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "hey!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "team": "TXXXXXXXXXX",
+      "edited": {
+        "user": "UXXXXXXXXXX",
+        "ts": "1701742890.000000"
+      }
+    },
+    "channel": "CXXXXXXXXXX",
+    "hidden": true,
+    "ts": "1701743154.000500",
+    "event_ts": "1701743154.000500",
+    "channel_type": "group"
+  },
+  "type": "event_callback",
+  "event_id": "EXXXXXXXXXXX",
+  "event_time": 1701743154,
+  "authorizations": [
+    {
+      "enterprise_id": null,
+      "team_id": "TXXXXXXXXXX",
+      "user_id": "UXXXXXXXXXX",
+      "is_bot": true,
+      "is_enterprise_install": false
+    }
+  ],
+  "is_ext_shared_channel": false,
+  "event_context": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+}
