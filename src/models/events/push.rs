@@ -386,6 +386,8 @@ mod test {
             }) => {
                 assert_eq!(subtype, Some(SlackMessageEventType::MessageChanged));
                 if let Some(message) = message {
+                    assert_eq!(message.sender.user, Some("UXXXXXXXXXX".into()));
+                    assert_eq!(message.sender.bot_id, None);
                     assert_eq!(message.ts, "1701735043.989889".into());
                     assert_eq!(message.edited.ts, "1701743154.000000".into());
                     assert_eq!(
@@ -410,6 +412,8 @@ mod test {
             }) => {
                 assert_eq!(subtype, Some(SlackMessageEventType::MessageChanged));
                 if let Some(message) = message {
+                    assert_eq!(message.sender.user, None);
+                    assert_eq!(message.sender.bot_id, Some("BXXXXXXXXXX".into()));
                     assert_eq!(message.ts, "1701735043.989889".into());
                     assert_eq!(message.edited.ts, "1701743154.000000".into());
                     assert_eq!(
