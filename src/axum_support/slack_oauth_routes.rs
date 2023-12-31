@@ -2,12 +2,12 @@ use crate::axum_support::SlackEventsAxumListener;
 use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use crate::listener::{SlackClientEventsListenerEnvironment, UserCallbackFunction};
 use crate::prelude::SlackOAuthListenerConfig;
-use axum::response::Response;
+use axum::body::Body;
+use axum::response::{IntoResponse, Response};
 use futures_util::future::BoxFuture;
 use futures_util::FutureExt;
 use http::Request;
-use hyper::client::connect::Connect;
-use hyper::Body;
+use hyper_util::client::legacy::connect::Connect;
 use rvstruct::ValueStruct;
 use std::future::Future;
 use std::sync::Arc;
@@ -22,7 +22,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
     pub fn slack_oauth_install(
         &self,
         config: &SlackOAuthListenerConfig,
-    ) -> impl Fn(Request<Body>) -> BoxFuture<'static, Response<Body>> + 'static + Send + Clone {
+    ) -> impl Fn(Request<Body>) -> BoxFuture<'static, Response> + 'static + Send + Clone {
         let environment = self.environment.clone();
         let config = config.clone();
         move |_| {
@@ -41,7 +41,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                     ],
                 );
                 debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
-                HyperExtensions::hyper_redirect_to(full_uri.as_ref())
+                HyperExtensions::hyper_redirect_to(full_uri.as_ref()).map(|r| r.into_response())
             }
             .map(|res| Self::handle_error(environment, res))
             .boxed()
@@ -66,7 +66,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
             let err_config = config.clone();
 
             async move {
-                let params = HyperExtensions::parse_query_params(&req);
+                let params = HyperExtensions::parse_query_params(req.uri());
                 debug!("Received Slack OAuth callback: {:?}", &params);
 
                 match (params.get("code"), params.get("error")) {
@@ -105,6 +105,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                                 )
                                 .await;
                                 HyperExtensions::hyper_redirect_to(&config.redirect_installed_url)
+                                    .map(|r| r.into_response())
                             }
                             Err(err) => {
                                 error!("Slack OAuth error: {}", &err);
@@ -116,6 +117,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                                 HyperExtensions::hyper_redirect_to(
                                     &config.redirect_error_redirect_url,
                                 )
+                                .map(|r| r.into_response())
                             }
                         }
                     }
@@ -134,6 +136,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                             req.uri().query().map_or("".into(), |q| format!("?{}", &q))
                         );
                         HyperExtensions::hyper_redirect_to(&redirect_error_url)
+                            .map(|r| r.into_response())
                     }
                     _ => {
                         error!("Slack OAuth cancelled with unknown reason");
@@ -146,6 +149,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                             environment.user_state.clone(),
                         );
                         HyperExtensions::hyper_redirect_to(&config.redirect_error_redirect_url)
+                            .map(|r| r.into_response())
                     }
                 }
             }
@@ -163,6 +167,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                     );
                     HyperExtensions::hyper_redirect_to(&err_config.redirect_error_redirect_url)
                         .unwrap()
+                        .into_response()
                 }
             })
             .boxed()
@@ -195,8 +200,8 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
 
     fn handle_error(
         environment: Arc<SlackClientEventsListenerEnvironment<SlackClientHyperConnector<H>>>,
-        result: AnyStdResult<Response<hyper::Body>>,
-    ) -> Response<hyper::Body> {
+        result: AnyStdResult<Response>,
+    ) -> Response {
         match result {
             Err(err) => {
                 let http_status = (environment.error_handler)(
@@ -206,7 +211,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                 );
                 Response::builder()
                     .status(http_status)
-                    .body(hyper::Body::empty())
+                    .body(Body::empty())
                     .unwrap()
             }
             Ok(result) => result,

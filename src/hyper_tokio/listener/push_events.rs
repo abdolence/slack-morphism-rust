@@ -3,15 +3,17 @@ use crate::hyper_tokio::connector::SlackClientHyperConnector;
 use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use crate::hyper_tokio::*;
 use crate::listener::*;
-pub use crate::models::events::*;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
-use hyper::body::*;
-use hyper::client::connect::Connect;
+use http_body_util::{BodyExt, Empty, Full};
+use hyper::body::Incoming;
 use hyper::{Method, Request, Response};
+use hyper_util::client::legacy::connect::Connect;
 use std::future::Future;
 use std::sync::Arc;
 use tracing::*;
+
+pub use crate::models::events::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     pub fn push_events_service_fn<'a, D, F>(
@@ -22,21 +24,10 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             impl Future<Output = UserCallbackResult<()>> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
-    ) -> impl Fn(
-        Request<Body>,
-        D,
-    ) -> BoxFuture<
-        'a,
-        Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>,
-    >
-           + 'a
-           + Send
-           + Clone
+    ) -> impl Fn(Request<Incoming>, D) -> BoxFuture<'a, AnyStdResult<Response<Body>>> + 'a + Send + Clone
     where
-        D: Fn(Request<Body>) -> F + 'a + Send + Sync + Clone,
-        F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
-            + 'a
-            + Send,
+        D: Fn(Request<Incoming>) -> F + 'a + Send + Sync + Clone,
+        F: Future<Output = AnyStdResult<Response<Body>>> + 'a + Send,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
             SlackEventSignatureVerifier::new(&config.events_signing_secret),
@@ -45,7 +36,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         let error_handler = self.environment.error_handler.clone();
         let user_state_storage = self.environment.user_state.clone();
 
-        move |req: Request<Body>, chain: D| {
+        move |req: Request<Incoming>, chain: D| {
             let cfg = config.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
@@ -76,9 +67,9 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         )
                                         .await
                                         {
-                                            Ok(_) => {
-                                                Ok(Response::new(Body::from(url_ver.challenge)))
-                                            }
+                                            Ok(_) => Ok(Response::new(
+                                                Full::new(url_ver.challenge.into()).boxed(),
+                                            )),
                                             Err(err) => {
                                                 let status_code = thread_error_handler(
                                                     err,
@@ -87,7 +78,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                                 );
                                                 Response::builder()
                                                     .status(status_code)
-                                                    .body(Body::empty())
+                                                    .body(Empty::new().boxed())
                                                     .map_err(|e| e.into())
                                             }
                                         }
@@ -101,7 +92,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                             )
                                             .await
                                             {
-                                                Ok(_) => Ok(Response::new(Body::empty())),
+                                                Ok(_) => Ok(Response::new(Empty::new().boxed())),
                                                 Err(err) => {
                                                     let status_code = thread_error_handler(
                                                         err,
@@ -110,7 +101,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                                     );
                                                     Response::builder()
                                                         .status(status_code)
-                                                        .body(Body::empty())
+                                                        .body(Empty::new().boxed())
                                                         .map_err(|e| e.into())
                                                 }
                                             }
@@ -123,7 +114,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                             );
                                             Response::builder()
                                                 .status(status_code)
-                                                .body(Body::empty())
+                                                .body(Empty::new().boxed())
                                                 .map_err(|e| e.into())
                                         }
                                     },

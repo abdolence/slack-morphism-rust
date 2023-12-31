@@ -2,7 +2,7 @@ use slack_morphism::prelude::*;
 use url::Url;
 
 async fn test_webhook_message() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     let webhook_url: Url = Url::parse(config_env_var("SLACK_TEST_WEBHOOK_URL")?.as_str())?;
 
     client

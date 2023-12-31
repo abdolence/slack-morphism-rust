@@ -2,7 +2,7 @@ use crate::clients_manager::{SlackSocketModeClientsManager, SlackSocketModeClien
 use crate::hyper_tokio::connector::SlackClientHyperConnector;
 use crate::hyper_tokio::socket_mode::tokio_clients_manager::SlackSocketModeTokioClientsManager;
 use crate::listener::SlackClientEventsListenerEnvironment;
-use hyper::client::connect::Connect;
+use hyper_util::client::legacy::connect::Connect;
 use std::sync::Arc;
 
 mod tokio_clients_manager;

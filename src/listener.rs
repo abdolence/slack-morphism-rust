@@ -1,5 +1,5 @@
 use crate::models::*;
-use crate::{ClientResult, SlackClient, SlackClientHttpConnector};
+use crate::{BoxError, ClientResult, SlackClient, SlackClientHttpConnector};
 use futures::executor::block_on;
 use futures::FutureExt;
 use rsb_derive::Builder;
@@ -45,7 +45,7 @@ where
     }
 
     fn empty_error_handler(
-        err: Box<dyn std::error::Error + Send + Sync>,
+        err: BoxError,
         _client: Arc<SlackClient<SCHC>>,
         _user_state_storage: SlackClientEventsUserState,
     ) -> http::StatusCode {
@@ -96,11 +96,8 @@ impl SlackClientEventsUserStateStorage {
 
 pub type BoxedErrorHandler<SCHC> = Box<ErrorHandler<SCHC>>;
 
-pub type ErrorHandler<SCHC> = fn(
-    Box<dyn std::error::Error + Send + Sync + 'static>,
-    Arc<SlackClient<SCHC>>,
-    SlackClientEventsUserState,
-) -> HttpStatusCode;
+pub type ErrorHandler<SCHC> =
+    fn(BoxError, Arc<SlackClient<SCHC>>, SlackClientEventsUserState) -> HttpStatusCode;
 
 #[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackCommandEventsListenerConfig {

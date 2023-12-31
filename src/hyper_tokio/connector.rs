@@ -1,13 +1,16 @@
 use crate::errors::*;
 use crate::hyper_tokio::ratectl::SlackTokioRateController;
+use crate::hyper_tokio::Body;
 use crate::models::{SlackClientId, SlackClientSecret};
 use crate::*;
 use async_recursion::async_recursion;
 use futures::future::{BoxFuture, FutureExt};
-use hyper::client::*;
+use http_body_util::{BodyExt, Empty, Full};
 use hyper::http::StatusCode;
-use hyper::{Body, Request};
+use hyper::Request;
 use hyper_rustls::HttpsConnector;
+use hyper_util::client::legacy::*;
+use hyper_util::rt::TokioExecutor;
 use rvstruct::ValueStruct;
 
 use crate::prelude::hyper_ext::HyperExtensions;
@@ -21,27 +24,28 @@ use url::Url;
 
 #[derive(Clone, Debug)]
 pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> {
-    hyper_connector: Client<H>,
+    hyper_connector: Client<H, Body>,
     tokio_rate_controller: Option<Arc<SlackTokioRateController>>,
 }
 
-pub type SlackClientHyperHttpsConnector = SlackClientHyperConnector<HttpsConnector<HttpConnector>>;
+pub type SlackClientHyperHttpsConnector =
+    SlackClientHyperConnector<HttpsConnector<connect::HttpConnector>>;
 
-impl SlackClientHyperConnector<HttpsConnector<HttpConnector>> {
-    pub fn new() -> Self {
+impl SlackClientHyperConnector<HttpsConnector<connect::HttpConnector>> {
+    pub fn new() -> std::io::Result<Self> {
         let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_native_roots()
+            .with_native_roots()?
             .https_only()
             .enable_http2()
             .build();
-        Self::with_connector(https_connector)
+        Ok(Self::with_connector(https_connector))
     }
 }
 
-impl From<HttpsConnector<HttpConnector>>
-    for SlackClientHyperConnector<HttpsConnector<HttpConnector>>
+impl From<HttpsConnector<connect::HttpConnector>>
+    for SlackClientHyperConnector<HttpsConnector<connect::HttpConnector>>
 {
-    fn from(https_connector: hyper_rustls::HttpsConnector<HttpConnector>) -> Self {
+    fn from(https_connector: HttpsConnector<connect::HttpConnector>) -> Self {
         Self::with_connector(https_connector)
     }
 }
@@ -49,7 +53,7 @@ impl From<HttpsConnector<HttpConnector>>
 impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnector<H> {
     pub fn with_connector(connector: H) -> Self {
         Self {
-            hyper_connector: Client::builder().build::<_, hyper::Body>(connector),
+            hyper_connector: Client::builder(TokioExecutor::new()).build::<_, Body>(connector),
             tokio_rate_controller: None,
         }
     }
@@ -282,7 +286,9 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                             context_token,
                         );
 
-                        http_request.body(Body::empty()).map_err(|e| e.into())
+                        http_request
+                            .body(Empty::new().boxed())
+                            .map_err(|e| e.into())
                     },
                     context,
                     None,
@@ -324,7 +330,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                         client_id.value(),
                         client_secret.value(),
                     )
-                    .body(Body::empty())
+                    .body(Empty::new().boxed())
                     .map_err(|e| e.into())
                 },
                 context,
@@ -367,7 +373,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                         );
 
                         http_request
-                            .body(post_json.clone().into())
+                            .body(Full::new(post_json.clone().into()).boxed())
                             .map_err(|e| e.into())
                     },
                     context,
@@ -410,7 +416,9 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                             format!("token={}&", token.token_value.value())
                         });
                         let full_body = toke_body_prefix + &post_url_form;
-                        http_request.body(full_body.into()).map_err(|e| e.into())
+                        http_request
+                            .body(Full::new(full_body.into()).boxed())
+                            .map_err(|e| e.into())
                     },
                     context,
                     None,

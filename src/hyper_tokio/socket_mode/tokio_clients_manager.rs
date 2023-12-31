@@ -1,6 +1,6 @@
 use crate::*;
 use async_trait::async_trait;
-use hyper::client::connect::Connect;
+use hyper_util::client::legacy::connect::Connect;
 use std::sync::Arc;
 
 use crate::hyper_tokio::socket_mode::tungstenite_wss_client::SlackTungsteniteWssClient;

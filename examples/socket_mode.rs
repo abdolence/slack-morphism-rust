@@ -171,7 +171,7 @@ fn test_error_handler(
 }
 
 async fn test_client_with_socket_mode() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+    let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
     let socket_mode_callbacks = SlackSocketModeListenerCallbacks::new()
         .with_command_events(test_command_events_function)

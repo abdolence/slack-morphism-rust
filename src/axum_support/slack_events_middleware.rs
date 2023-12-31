@@ -7,11 +7,10 @@ use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::prelude::hyper_ext::HyperExtensions;
 use crate::signature_verifier::SlackEventSignatureVerifier;
 use crate::{SlackClientHttpConnector, SlackSigningSecret};
-use axum::body::BoxBody;
 use axum::response::IntoResponse;
 use axum::{body::Body, http::Request, response::Response};
 use futures_util::future::BoxFuture;
-use hyper::client::connect::Connect;
+use hyper_util::client::legacy::connect::Connect;
 use std::convert::Infallible;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -104,7 +103,7 @@ where
                         );
                         Ok(Response::builder()
                             .status(http_status)
-                            .body(BoxBody::default())
+                            .body(Body::default())
                             .unwrap())
                     } else {
                         *verified_request.body_mut() = Body::from(verified_body);
@@ -126,7 +125,7 @@ where
                                 );
                                 Ok(Response::builder()
                                     .status(http_status)
-                                    .body(BoxBody::default())
+                                    .body(Body::default())
                                     .unwrap())
                             }
                         }
@@ -141,7 +140,7 @@ where
                     );
                     Ok(Response::builder()
                         .status(http_status)
-                        .body(BoxBody::default())
+                        .body(Body::default())
                         .unwrap())
                 }
             }
@@ -212,12 +211,12 @@ where
 }
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
-    pub fn events_layer<S, ReqBody, I>(
+    pub fn events_layer<S, I>(
         &self,
         slack_signing_secret: &SlackSigningSecret,
     ) -> SlackEventsApiMiddleware<SlackClientHyperConnector<H>, S, SlackEventsEmptyExtractor>
     where
-        S: Service<Request<ReqBody>, Response = I> + Send + 'static + Clone,
+        S: Service<Request<Body>, Response = I> + Send + 'static + Clone,
         S::Future: Send + 'static,
         S::Error: std::error::Error + 'static + Send + Sync,
         I: IntoResponse,
