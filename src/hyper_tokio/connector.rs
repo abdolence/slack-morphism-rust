@@ -422,4 +422,57 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         }
         .boxed()
     }
+
+    fn http_post_uri_multipart<'a, 'p, RS, PT, TS>(
+        &'a self,
+        full_uri: Url,
+        file_name: String,
+        file_content_type: String,
+        file_content: &'p [u8],
+        params: &'p PT,
+        context: SlackClientApiCallContext<'a>,
+    ) -> BoxFuture<'a, ClientResult<RS>>
+    where
+        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
+        TS: std::string::ToString + 'p + 'a + Send,
+    {
+        let context_token = context.token;
+        let boundary = HyperExtensions::generate_multipart_boundary();
+        match HyperExtensions::create_multipart_file_content(
+            params,
+            boundary.as_str(),
+            file_name.as_str(),
+            file_content_type.as_str(),
+            file_content,
+        ) {
+            Ok(file_bytes) => self
+                .send_rate_controlled_request(
+                    move || {
+                        let http_body = file_bytes.clone().into();
+
+                        let http_base_request = HyperExtensions::create_http_request(
+                            full_uri.clone(),
+                            hyper::http::Method::POST,
+                        )
+                        .header(
+                            "content-type",
+                            format!("multipart/form-data; boundary={}", boundary),
+                        );
+
+                        let http_request = HyperExtensions::setup_token_auth_header(
+                            http_base_request,
+                            context_token,
+                        );
+
+                        http_request.body(http_body).map_err(|e| e.into())
+                    },
+                    context,
+                    None,
+                    0,
+                )
+                .boxed(),
+            Err(err) => futures::future::err(err.into()).boxed(),
+        }
+    }
 }
