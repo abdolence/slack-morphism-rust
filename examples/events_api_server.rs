@@ -1,9 +1,16 @@
 use slack_morphism::prelude::*;
 
-use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Request, Response};
+use bytes::Bytes;
+use http_body_util::combinators::BoxBody;
+use http_body_util::{BodyExt, Full};
+use hyper::body::Incoming;
+use hyper::service::service_fn;
+use hyper::{Request, Response};
+use hyper_util::rt::TokioIo;
+use tokio::net::TcpListener;
 use tracing::*;
 
+use std::convert::Infallible;
 use std::sync::Arc;
 
 async fn test_oauth_install_function(
@@ -82,16 +89,17 @@ struct UserStateExample(u64);
 
 async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client: Arc<SlackHyperClient> =
-        Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+        Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
 
     async fn your_others_routes(
-        _req: Request<Body>,
-    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
+        _req: Request<Incoming>,
+    ) -> Result<Response<BoxBody<Bytes, Infallible>>, Box<dyn std::error::Error + Send + Sync>>
+    {
         Response::builder()
-            .body("Hey, this is a default users route handler".into())
+            .body(Full::new("Hey, this is a default users route handler".into()).boxed())
             .map_err(|e| e.into())
     }
 
@@ -120,47 +128,49 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             .with_user_state(UserStateExample(0)),
     );
 
-    let make_svc = make_service_fn(move |_| {
+    let listener = TcpListener::bind(&addr).await?;
+
+    info!("Server is listening on {}", &addr);
+
+    loop {
+        let (tcp, _) = listener.accept().await?;
+        let io = TokioIo::new(tcp);
+
         let thread_oauth_config = oauth_listener_config.clone();
         let thread_push_events_config = push_events_config.clone();
         let thread_interaction_events_config = interactions_events_config.clone();
         let thread_command_events_config = command_events_config.clone();
         let listener = SlackClientEventsHyperListener::new(listener_environment.clone());
-        async move {
-            let routes = chain_service_routes_fn(
-                listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
+        let routes = chain_service_routes_fn(
+            listener.oauth_service_fn(thread_oauth_config, test_oauth_install_function),
+            chain_service_routes_fn(
+                listener
+                    .push_events_service_fn(thread_push_events_config, test_push_events_function),
                 chain_service_routes_fn(
-                    listener.push_events_service_fn(
-                        thread_push_events_config,
-                        test_push_events_function,
+                    listener.interaction_events_service_fn(
+                        thread_interaction_events_config,
+                        test_interaction_events_function,
                     ),
                     chain_service_routes_fn(
-                        listener.interaction_events_service_fn(
-                            thread_interaction_events_config,
-                            test_interaction_events_function,
+                        listener.command_events_service_fn(
+                            thread_command_events_config,
+                            test_command_events_function,
                         ),
-                        chain_service_routes_fn(
-                            listener.command_events_service_fn(
-                                thread_command_events_config,
-                                test_command_events_function,
-                            ),
-                            your_others_routes,
-                        ),
+                        your_others_routes,
                     ),
                 ),
-            );
+            ),
+        );
 
-            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(service_fn(routes))
-        }
-    });
-
-    info!("Server is listening on {}", &addr);
-
-    let server = hyper::server::Server::bind(&addr).serve(make_svc);
-    server.await.map_err(|e| {
-        error!("Server error: {}", e);
-        e.into()
-    })
+        tokio::task::spawn(async move {
+            if let Err(err) = hyper::server::conn::http1::Builder::new()
+                .serve_connection(io, service_fn(routes))
+                .await
+            {
+                println!("Error serving connection: {:?}", err);
+            }
+        });
+    }
 }
 
 pub fn config_env_var(name: &str) -> Result<String, String> {

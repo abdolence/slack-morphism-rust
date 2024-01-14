@@ -8,9 +8,11 @@ use crate::hyper_tokio::*;
 pub use crate::models::events::*;
 pub use crate::models::SlackResponseUrl;
 use futures::future::{BoxFuture, FutureExt, TryFutureExt};
-use hyper::body::*;
-use hyper::client::connect::Connect;
+use http_body_util::Empty;
+use http_body_util::{BodyExt, Full};
+use hyper::body::Incoming;
 use hyper::{Method, Request, Response, StatusCode};
+use hyper_util::client::legacy::connect::Connect;
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
@@ -24,21 +26,10 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             impl Future<Output = UserCallbackResult<R>> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
-    ) -> impl Fn(
-        Request<Body>,
-        D,
-    ) -> BoxFuture<
-        'a,
-        Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>,
-    >
-           + 'a
-           + Send
-           + Clone
+    ) -> impl Fn(Request<Incoming>, D) -> BoxFuture<'a, AnyStdResult<Response<Body>>> + 'a + Send + Clone
     where
-        D: Fn(Request<Body>) -> F + 'a + Send + Sync + Clone,
-        F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
-            + 'a
-            + Send,
+        D: Fn(Request<Incoming>) -> F + 'a + Send + Sync + Clone,
+        F: Future<Output = AnyStdResult<Response<Body>>> + 'a + Send,
         R: Into<Option<SlackCommandEventResponse>>,
     {
         let signature_verifier: Arc<SlackEventSignatureVerifier> = Arc::new(
@@ -48,7 +39,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
         let error_handler = self.environment.error_handler.clone();
         let user_state_storage = self.environment.user_state.clone();
 
-        move |req: Request<Body>, chain: D| {
+        move |req: Request<Incoming>, chain: D| {
             let cfg = config.clone();
             let sign_verifier = signature_verifier.clone();
             let sc = client.clone();
@@ -117,13 +108,16 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                                         "application/json; charset=utf-8",
                                                     )
                                                     .body(
-                                                        serde_json::to_string(&cresp)
-                                                            .unwrap()
-                                                            .into(),
+                                                        Full::new(
+                                                            serde_json::to_string(&cresp)
+                                                                .unwrap()
+                                                                .into(),
+                                                        )
+                                                        .boxed(),
                                                     ),
                                                 None => Response::builder()
                                                     .status(StatusCode::OK)
-                                                    .body(Body::empty()),
+                                                    .body(Empty::new().boxed()),
                                             }
                                             .map_err(|e| e.into()),
                                             Err(err) => {
@@ -134,7 +128,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                                 );
                                                 Response::builder()
                                                     .status(status_code)
-                                                    .body(Body::empty())
+                                                    .body(Empty::new().boxed())
                                                     .map_err(|e| e.into())
                                             }
                                         }
@@ -147,7 +141,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         );
                                         Response::builder()
                                             .status(status_code)
-                                            .body(Body::empty())
+                                            .body(Empty::new().boxed())
                                             .map_err(|e| e.into())
                                     }
                                 }

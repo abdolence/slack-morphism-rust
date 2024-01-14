@@ -3,7 +3,7 @@ use crate::events::*;
 use crate::listener::{SlackClientEventsUserState, UserCallbackFunction};
 use crate::models::events::{SlackCommandEvent, SlackCommandEventResponse};
 use crate::models::socket_mode::SlackSocketModeHelloEvent;
-use crate::{SlackClient, SlackClientHttpConnector, UserCallbackResult};
+use crate::{AnyStdResult, SlackClient, SlackClientHttpConnector, UserCallbackResult};
 use futures::future::BoxFuture;
 use std::future::Future;
 use std::sync::Arc;
@@ -115,7 +115,7 @@ where
         event: SlackCommandEvent,
         _client: Arc<SlackClient<SCHC>>,
         _states: SlackClientEventsUserState,
-    ) -> Result<SlackCommandEventResponse, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> AnyStdResult<SlackCommandEventResponse> {
         warn!("No callback is specified for a command event: {:?}", event);
         Err(Box::new(SlackClientError::SystemError(
             SlackClientSystemError::new()

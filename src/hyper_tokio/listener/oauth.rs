@@ -1,16 +1,16 @@
 use crate::hyper_tokio::connector::SlackClientHyperConnector;
-use crate::hyper_tokio::SlackClientEventsHyperListener;
+use crate::hyper_tokio::hyper_ext::HyperExtensions;
+use crate::hyper_tokio::{Body, SlackClientEventsHyperListener};
 
 use crate::api::*;
 use crate::errors::*;
 use crate::listener::*;
-use crate::{SlackClient, SlackClientHttpApiUri};
+use crate::{AnyStdResult, SlackClient, SlackClientHttpApiUri};
 
-use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use futures::future::{BoxFuture, FutureExt};
-use hyper::body::*;
-use hyper::client::connect::Connect;
+use hyper::body::Incoming;
 use hyper::{Method, Request, Response};
+use hyper_util::client::legacy::connect::Connect;
 use rvstruct::*;
 use std::future::Future;
 use std::sync::Arc;
@@ -18,9 +18,9 @@ use tracing::*;
 
 impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<H> {
     pub(crate) async fn slack_oauth_install_service(
-        _: Request<Body>,
+        _: Request<Incoming>,
         config: &SlackOAuthListenerConfig,
-    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> AnyStdResult<Response<Body>> {
         let full_uri = SlackClientHttpApiUri::create_url_with_params(
             SlackOAuthListenerConfig::OAUTH_AUTHORIZE_URL_VALUE,
             &vec![
@@ -37,7 +37,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
     }
 
     pub(crate) async fn slack_oauth_callback_service(
-        req: Request<Body>,
+        req: Request<Incoming>,
         config: &SlackOAuthListenerConfig,
         client: Arc<SlackClient<SlackClientHyperConnector<H>>>,
         user_state_storage: SlackClientEventsUserState,
@@ -47,8 +47,8 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             SlackClientHyperConnector<H>,
         >,
         error_handler: BoxedErrorHandler<SlackClientHyperConnector<H>>,
-    ) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
-        let params = HyperExtensions::parse_query_params(&req);
+    ) -> AnyStdResult<Response<Body>> {
+        let params = HyperExtensions::parse_query_params(req.uri());
         debug!("Received Slack OAuth callback: {:?}", &params);
 
         match (params.get("code"), params.get("error")) {
@@ -126,27 +126,16 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             impl Future<Output = ()> + 'static + Send,
             SlackClientHyperConnector<H>,
         >,
-    ) -> impl Fn(
-        Request<Body>,
-        D,
-    ) -> BoxFuture<
-        'a,
-        Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>,
-    >
-           + 'a
-           + Send
-           + Clone
+    ) -> impl Fn(Request<Incoming>, D) -> BoxFuture<'a, AnyStdResult<Response<Body>>> + 'a + Send + Clone
     where
-        D: Fn(Request<Body>) -> F + 'a + Send + Sync + Clone,
-        F: Future<Output = Result<Response<Body>, Box<dyn std::error::Error + Send + Sync + 'a>>>
-            + 'a
-            + Send,
+        D: Fn(Request<Incoming>) -> F + 'a + Send + Sync + Clone,
+        F: Future<Output = AnyStdResult<Response<Body>>> + 'a + Send,
     {
         let client = self.environment.client.clone();
         let listener_error_handler = self.environment.error_handler.clone();
         let user_state_storage = self.environment.user_state.clone();
 
-        move |req: Request<Body>, chain: D| {
+        move |req: Request<Incoming>, chain: D| {
             let cfg = config.clone();
             let sc = client.clone();
             let error_handler = listener_error_handler.clone();

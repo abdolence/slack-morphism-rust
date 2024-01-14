@@ -10,7 +10,7 @@ use futures::stream::BoxStream;
 use futures::TryStreamExt;
 
 async fn test_simple_api_calls() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
 
@@ -31,7 +31,7 @@ async fn test_simple_api_calls() -> Result<(), Box<dyn std::error::Error + Send 
 }
 
 async fn test_post_message() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
@@ -48,7 +48,7 @@ async fn test_post_message() -> Result<(), Box<dyn std::error::Error + Send + Sy
 }
 
 async fn test_scrolling_user_list() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
@@ -83,7 +83,7 @@ async fn test_scrolling_user_list() -> Result<(), Box<dyn std::error::Error + Se
 }
 
 async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);

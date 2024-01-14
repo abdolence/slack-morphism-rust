@@ -1,6 +1,6 @@
 use crate::hyper_tokio::SlackClientHyperConnector;
 use crate::listener::SlackClientEventsListenerEnvironment;
-use hyper::client::connect::Connect;
+use hyper_util::client::legacy::connect::Connect;
 use std::sync::Arc;
 
 mod slack_events_middleware;

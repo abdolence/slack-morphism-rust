@@ -17,7 +17,7 @@ pub trait SlackSocketModeClientListener {
         message_body: String,
     ) -> Option<String>;
 
-    async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>);
+    async fn on_error(&self, error: BoxError);
 
     async fn on_disconnect(&self, client_id: &SlackSocketModeWssClientId);
 }
@@ -217,7 +217,7 @@ where
         }
     }
 
-    async fn on_error(&self, error: Box<dyn std::error::Error + Send + Sync>) {
+    async fn on_error(&self, error: BoxError) {
         self.listener_environment.error_handler.clone()(
             error,
             self.listener_environment.client.clone(),

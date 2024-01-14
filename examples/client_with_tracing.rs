@@ -3,7 +3,7 @@ use tracing::*;
 
 async fn test_simple_api_calls_as_predicate() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 {
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
     let token: SlackApiToken =
         SlackApiToken::new(token_value).with_team_id(config_env_var("SLACK_TEST_TEAM_ID")?.into()); // While Team ID is optional but still useful for tracing and rate control purposes

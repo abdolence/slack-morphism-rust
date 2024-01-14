@@ -3,7 +3,7 @@ use tracing::*;
 
 async fn test_rate_control_client() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new(
-        SlackClientHyperConnector::new()
+        SlackClientHyperConnector::new()?
             .with_rate_control(SlackApiRateControlConfig::new().with_max_retries(5)),
     );
 

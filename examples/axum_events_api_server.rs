@@ -1,10 +1,15 @@
 use slack_morphism::prelude::*;
 
-use hyper::{Body, Response};
+use bytes::Bytes;
+use http_body_util::combinators::BoxBody;
+use http_body_util::{BodyExt, Empty, Full};
+use hyper::Response;
 use tracing::*;
 
 use axum::Extension;
+use std::convert::Infallible;
 use std::sync::Arc;
+use tokio::net::TcpListener;
 
 async fn test_oauth_install_function(
     resp: SlackOAuthV2AccessTokenResponse,
@@ -29,12 +34,14 @@ async fn test_error_install() -> String {
 async fn test_push_event(
     Extension(_environment): Extension<Arc<SlackHyperListenerEnvironment>>,
     Extension(event): Extension<SlackPushEvent>,
-) -> Response<Body> {
+) -> Response<BoxBody<Bytes, Infallible>> {
     println!("Received push event: {:?}", event);
 
     match event {
-        SlackPushEvent::UrlVerification(url_ver) => Response::new(Body::from(url_ver.challenge)),
-        _ => Response::new(Body::empty()),
+        SlackPushEvent::UrlVerification(url_ver) => {
+            Response::new(Full::new(url_ver.challenge.into()).boxed())
+        }
+        _ => Response::new(Empty::new().boxed()),
     }
 }
 
@@ -68,7 +75,7 @@ fn test_error_handler(
 
 async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client: Arc<SlackHyperClient> =
-        Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+        Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!("Loading server: {}", addr);
@@ -123,8 +130,7 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             ),
         );
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    axum::serve(TcpListener::bind(&addr).await.unwrap(), app)
         .await
         .unwrap();
 

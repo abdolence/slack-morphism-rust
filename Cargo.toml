@@ -22,7 +22,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-hyper = ["dep:tokio","dep:hyper", "dep:hyper-rustls", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
+hyper = ["dep:tokio", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
 axum = ["hyper", "dep:axum", "dep:tower"]
 
 [dependencies]
@@ -39,7 +39,7 @@ hex = "0.4"
 tracing = "0.1"
 ring = "0.17"
 lazy_static = "1.4"
-http = "0.2"
+http = "1.0"
 async-trait = "0.1"
 bytes = "1"
 rand = "0.8"
@@ -48,12 +48,14 @@ mime = "0.3"
 mime_guess = "2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 url = { version = "2.5", features = ["serde"]}
-hyper = { version ="0.14", features = ["http2","server", "client", "h2", "stream"], optional = true }
+http-body-util = { version = "0.1", optional = true }
+hyper = { version ="1.0", features = ["http2","server", "client"], optional = true }
+hyper-util = { version = "0.1", features = ["client", "client-legacy", "server"], optional = true }
 tokio = { version = "1", features = ["bytes","rt-multi-thread","signal","tracing"], optional = true }
 tokio-stream = { version = "0.1", optional = true }
-hyper-rustls = { version="0.24", features = ["rustls-native-certs", "http2"], optional = true }
+hyper-rustls = { version="0.26", features = ["rustls-native-certs", "http2"], optional = true }
 tokio-tungstenite = { version = "0.21.0", features = ["rustls-tls-native-roots"], optional = true }
-axum = { version = "0.6", optional = true }
+axum = { version = "0.7", optional = true }
 tower = { version = "0.4", optional = true }
 serde_urlencoded = "0.7.1"
 
@@ -68,8 +70,8 @@ ctrlc = { version = "3.4", features = ["termination"] }
 cargo-husky = { version = "1", default-features = false, features = ["run-for-all", "prepush-hook", "run-cargo-fmt"] }
 cargo-audit = "0.18"
 tracing-subscriber = { version ="0.3", features = ["env-filter"] }
-hyper-proxy = "0.9"
-hyper = { version ="0.14", features = ["full"] }
+hyper-proxy2 = "0.1"
+hyper = { version ="1.0", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 
 [package.metadata.release]

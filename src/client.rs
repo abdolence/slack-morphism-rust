@@ -189,11 +189,13 @@ pub trait SlackClientHttpConnector {
     }
 }
 
-pub type UserCallbackResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub(crate) type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+pub type UserCallbackResult<T> = std::result::Result<T, BoxError>;
 
 pub type ClientResult<T> = std::result::Result<T, SlackClientError>;
 
-pub type AnyStdResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub type AnyStdResult<T> = std::result::Result<T, BoxError>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct SlackEnvelopeMessage {
