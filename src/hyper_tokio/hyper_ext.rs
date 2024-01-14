@@ -2,7 +2,7 @@ use crate::hyper_tokio::Body;
 use crate::signature_verifier::*;
 use crate::{AnyStdResult, SlackApiToken};
 use base64::prelude::*;
-use bytes::Buf;
+use bytes::{Buf, BufMut, Bytes, BytesMut};
 use futures_util::TryFutureExt;
 use http::request::Parts;
 use http::{Request, Response, Uri};
@@ -10,6 +10,7 @@ use http_body_util::{BodyExt, Empty};
 use mime::Mime;
 use rvstruct::ValueStruct;
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::io::Read;
 use url::Url;
 
@@ -123,5 +124,58 @@ impl HyperExtensions {
             }
             _ => Err(Box::new(SlackEventAbsentSignatureError::new())),
         }
+    }
+
+    pub fn generate_multipart_boundary() -> String {
+        format!(
+            "----WebKitFormBoundarySlackMorphismRust{}",
+            chrono::Utc::now().timestamp()
+        )
+    }
+
+    pub fn create_multipart_file_content<'p, PT, TS>(
+        fields: &'p PT,
+        multipart_boundary: &str,
+        file_name: &str,
+        file_content_type: &str,
+        file_content: &[u8],
+    ) -> AnyStdResult<Bytes>
+    where
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
+        TS: std::string::ToString + 'p + Send,
+    {
+        let mut output = BytesMut::with_capacity(file_content.len() + 512);
+        output.write_str("\r\n")?;
+        output.write_str("\r\n")?;
+        output.write_str("--")?;
+        output.write_str(multipart_boundary)?;
+        output.write_str("\r\n")?;
+        output.write_str(&format!(
+            "Content-Disposition: form-data; name=\"file\"; filename=\"{}\"",
+            file_name
+        ))?;
+        output.write_str(&format!("Content-Type: {}", file_content_type))?;
+        output.write_str("\r\n")?;
+        output.write_str("\r\n")?;
+        output.put_slice(file_content);
+
+        for (k, mv) in fields.clone().into_iter() {
+            if let Some(v) = mv {
+                output.write_str("\r\n")?;
+                output.write_str("--")?;
+                output.write_str(multipart_boundary)?;
+                output.write_str("\r\n")?;
+                output.write_str(&format!("Content-Disposition: form-data; name=\"{}\"", k))?;
+                output.write_str("\r\n")?;
+                output.write_str("\r\n")?;
+                output.write_str(&v.to_string())?;
+            }
+        }
+
+        output.write_str("\r\n")?;
+        output.write_str("--")?;
+        output.write_str(multipart_boundary)?;
+
+        Ok(output.freeze())
     }
 }

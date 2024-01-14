@@ -78,7 +78,11 @@
 //! Examples available on: [github](https://github.com/abdolence/slack-morphism-rust/tree/master/examples).
 //!
 
-#![allow(clippy::new_without_default, clippy::needless_lifetimes)]
+#![allow(
+    clippy::new_without_default,
+    clippy::needless_lifetimes,
+    unused_imports
+)]
 
 pub use client::*;
 pub use scroller::*;
