@@ -146,7 +146,7 @@ pub trait SlackClientHttpConnector {
         self.http_post_uri_form_urlencoded(full_uri, request, context)
     }
 
-    fn http_post_uri_multipart<'a, 'p, RS, PT, TS>(
+    fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
         file_name: String,
@@ -160,7 +160,7 @@ pub trait SlackClientHttpConnector {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         TS: std::string::ToString + 'p + 'a + Send;
 
-    fn http_post_multipart<'a, 'p, RS, PT, TS>(
+    fn http_post_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         method_relative_uri: &str,
         file_name: String,
@@ -178,7 +178,7 @@ pub trait SlackClientHttpConnector {
             &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
         );
 
-        self.http_post_uri_multipart(
+        self.http_post_uri_multipart_form(
             full_uri,
             file_name,
             file_content_type,
@@ -417,7 +417,7 @@ where
             .await
     }
 
-    pub async fn http_post_multipart<'p, RS, PT, TS>(
+    pub async fn http_post_multipart_form<'p, RS, PT, TS>(
         &self,
         method_relative_uri: &str,
         file_name: String,
@@ -441,7 +441,7 @@ where
         self.client
             .http_api
             .connector
-            .http_post_multipart(
+            .http_post_multipart_form(
                 method_relative_uri,
                 file_name,
                 file_content_type,

@@ -30,7 +30,7 @@ where
                 file_mime.to_string()
             });
             self.http_session_api
-                .http_post_multipart(
+                .http_post_multipart_form(
                     "files.upload",
                     filename,
                     file_content_type,

@@ -431,7 +431,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         .boxed()
     }
 
-    fn http_post_uri_multipart<'a, 'p, RS, PT, TS>(
+    fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
         file_name: String,
