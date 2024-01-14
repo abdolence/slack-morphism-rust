@@ -82,6 +82,23 @@ async fn test_scrolling_user_list() -> Result<(), Box<dyn std::error::Error + Se
     Ok(())
 }
 
+async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+    let token: SlackApiToken = SlackApiToken::new(token_value);
+    let session = client.open_session(&token);
+
+    let file_upload_req = SlackApiFilesUploadRequest::new()
+        .with_channels(vec!["#general".into()])
+        .with_filename("test.txt".into())
+        .with_file("test".into());
+
+    let file_upload_resp = session.files_upload(&file_upload_req).await?;
+    println!("file upload resp: {:#?}", &file_upload_resp);
+
+    Ok(())
+}
+
 #[derive(Debug, Clone, Builder)]
 pub struct WelcomeMessageTemplateParams {
     pub user_id: SlackUserId,
@@ -177,6 +194,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     test_simple_api_calls().await?;
     test_post_message().await?;
     test_scrolling_user_list().await?;
+    test_file_upload().await?;
 
     Ok(())
 }

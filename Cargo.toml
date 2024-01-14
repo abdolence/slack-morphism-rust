@@ -45,6 +45,7 @@ bytes = "1"
 rand = "0.8"
 async-recursion="1.0"
 mime = "0.3"
+mime_guess = "2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 url = { version = "2.5", features = ["serde"]}
 hyper = { version ="0.14", features = ["http2","server", "client", "h2", "stream"], optional = true }
