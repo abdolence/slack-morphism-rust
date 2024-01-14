@@ -22,7 +22,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-hyper = ["dep:tokio", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:tokio-stream","dep:tokio-tungstenite", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
+hyper = ["dep:tokio", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:tokio-stream","dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio"]
 axum = ["hyper", "dep:axum", "dep:tower"]
 
 [dependencies]
