@@ -154,21 +154,27 @@ impl HyperExtensions {
             "Content-Disposition: form-data; name=\"file\"; filename=\"{}\"",
             file_name
         ))?;
+        output.write_str("\r\n")?;
         output.write_str(&format!("Content-Type: {}", file_content_type))?;
+        output.write_str("\r\n")?;
+        output.write_str(&format!("Content-Length: {}", file_content.len()))?;
         output.write_str("\r\n")?;
         output.write_str("\r\n")?;
         output.put_slice(file_content);
 
         for (k, mv) in fields.clone().into_iter() {
             if let Some(v) = mv {
+                let vs = v.to_string();
                 output.write_str("\r\n")?;
                 output.write_str("--")?;
                 output.write_str(multipart_boundary)?;
                 output.write_str("\r\n")?;
                 output.write_str(&format!("Content-Disposition: form-data; name=\"{}\"", k))?;
                 output.write_str("\r\n")?;
+                output.write_str(&format!("Content-Length: {}", vs.len()))?;
                 output.write_str("\r\n")?;
-                output.write_str(&v.to_string())?;
+                output.write_str("\r\n")?;
+                output.write_str(&vs)?;
             }
         }
 
