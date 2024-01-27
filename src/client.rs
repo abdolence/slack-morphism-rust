@@ -6,6 +6,7 @@ use crate::token::*;
 
 use crate::errors::SlackClientError;
 use crate::models::*;
+use crate::multipart_form::FileMultipartData;
 use crate::ratectl::SlackApiMethodRateControlConfig;
 use futures_util::future::BoxFuture;
 use lazy_static::*;
@@ -149,9 +150,7 @@ pub trait SlackClientHttpConnector {
     fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: FileMultipartData<'p>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>
@@ -163,9 +162,7 @@ pub trait SlackClientHttpConnector {
     fn http_post_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         method_relative_uri: &str,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: FileMultipartData<'p>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>
@@ -178,14 +175,7 @@ pub trait SlackClientHttpConnector {
             &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
         );
 
-        self.http_post_uri_multipart_form(
-            full_uri,
-            file_name,
-            file_content_type,
-            file_content,
-            params,
-            context,
-        )
+        self.http_post_uri_multipart_form(full_uri, file, params, context)
     }
 }
 
@@ -420,9 +410,7 @@ where
     pub async fn http_post_multipart_form<'p, RS, PT, TS>(
         &self,
         method_relative_uri: &str,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: FileMultipartData<'p>,
         params: &'p PT,
         rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> ClientResult<RS>
@@ -441,14 +429,7 @@ where
         self.client
             .http_api
             .connector
-            .http_post_multipart_form(
-                method_relative_uri,
-                file_name,
-                file_content_type,
-                file_content,
-                params,
-                context,
-            )
+            .http_post_multipart_form(method_relative_uri, file, params, context)
             .await
     }
 }

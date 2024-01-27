@@ -13,6 +13,10 @@ use hyper_util::client::legacy::*;
 use hyper_util::rt::TokioExecutor;
 use rvstruct::ValueStruct;
 
+use crate::hyper_tokio::multipart_form::{
+    create_multipart_file_content, generate_multipart_boundary,
+};
+use crate::multipart_form::FileMultipartData;
 use crate::prelude::hyper_ext::HyperExtensions;
 use crate::ratectl::SlackApiRateControlConfig;
 use std::hash::Hash;
@@ -434,9 +438,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
     fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: FileMultipartData<'p>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>
@@ -446,14 +448,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         TS: AsRef<str> + 'p + Send,
     {
         let context_token = context.token;
-        let boundary = HyperExtensions::generate_multipart_boundary();
-        match HyperExtensions::create_multipart_file_content(
-            params,
-            boundary.as_str(),
-            file_name.as_str(),
-            file_content_type.as_str(),
-            file_content,
-        ) {
+        let boundary = generate_multipart_boundary();
+        match create_multipart_file_content(params, boundary.as_str(), file) {
             Ok(file_bytes) => self
                 .send_rate_controlled_request(
                     move || {

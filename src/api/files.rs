@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize, Serializer};
 use serde_with::skip_serializing_none;
 
 use crate::models::*;
+use crate::multipart_form::FileMultipartData;
 use crate::ratectl::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
@@ -29,11 +30,14 @@ where
                 let file_mime = mime_guess::MimeGuess::from_path(&filename).first_or_octet_stream();
                 file_mime.to_string()
             });
+            let file = FileMultipartData {
+                name: filename.as_str(),
+                content_type: file_content_type.as_str(),
+                data: file.as_slice(),
+            };
             self.http_session_api
                 .http_post_multipart_form(
                     "files.upload",
-                    filename,
-                    file_content_type,
                     file,
                     &vec![
                         (
