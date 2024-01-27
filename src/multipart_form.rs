@@ -8,14 +8,14 @@ pub struct FileMultipartData<'a> {
     pub data: &'a [u8],
 }
 
-pub(crate) fn generate_multipart_boundary() -> String {
+pub fn generate_multipart_boundary() -> String {
     format!(
         "----WebKitFormBoundarySlackMorphismRust{}",
         chrono::Utc::now().timestamp()
     )
 }
 
-pub(crate) fn create_multipart_file_content<'p, PT, TS>(
+pub fn create_multipart_file_content<'p, PT, TS>(
     fields: &'p PT,
     multipart_boundary: &str,
     file: Option<FileMultipartData<'p>>,
