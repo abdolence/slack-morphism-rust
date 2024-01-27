@@ -183,7 +183,7 @@
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
 let client = SlackClient::new(
-    SlackClientHyperConnector::new()
+    SlackClientHyperConnector::new()?
         .with_rate_control(
             SlackApiRateControlConfig::new()
         )
@@ -210,7 +210,7 @@ let session = client.open_session(&amp;token);
 you need to specify <code>max_retries</code> in rate control params (default value is <code>0</code>):</p>
 <pre><code class="language-rust noplaypen">
     let client = SlackClient::new(
-        SlackClientHyperConnector::new()
+        SlackClientHyperConnector::new()?
             .with_rate_control(
                 SlackApiRateControlConfig::new().with_max_retries(5)
             ),

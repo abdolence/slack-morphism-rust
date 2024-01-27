@@ -180,7 +180,7 @@
 <h2 id="create-a-client-instance"><a class="header" href="#create-a-client-instance">Create a client instance</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
-let client = SlackClient::new( SlackClientHyperConnector::new() );
+let client = SlackClient::new( SlackClientHyperConnector::new()? );
 </code></pre>
 <h3 id="make-web-api-methods-calls"><a class="header" href="#make-web-api-methods-calls">Make Web API methods calls</a></h3>
 <p>For most of Slack Web API methods (except for OAuth methods, Incoming Webhooks and event replies)
@@ -194,7 +194,7 @@ use slack_morphism::prelude::*;
 
 async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
    
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     
     // Create our Slack API token
     let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();

@@ -244,7 +244,7 @@ fn test_error_handler(
 
 async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
     let client: Arc&lt;SlackHyperClient&gt; =
-        Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+        Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
     info!(&quot;Loading server: {}&quot;, addr);

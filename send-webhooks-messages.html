@@ -182,7 +182,7 @@
 use slack_morphism::prelude::*;
 use url::Url;
 
-let client = SlackClient::new(SlackClientHyperConnector::new());
+let client = SlackClient::new(SlackClientHyperConnector::new()?);
 
 // Your incoming webhook url from config or OAuth/events (ResponseURL)
 let webhook_url: Url = Url::parse(&quot;https://hooks.slack.com/services/...&quot;)?; 

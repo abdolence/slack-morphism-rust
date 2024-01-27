@@ -214,7 +214,7 @@ async fn test_push_events_sm_function(
     Ok(())
 }
 
-let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()));
+let client = Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
 let socket_mode_callbacks = SlackSocketModeListenerCallbacks::new()
     .with_command_events(test_command_events_function)
