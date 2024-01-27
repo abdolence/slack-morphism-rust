@@ -14,7 +14,7 @@ For example for proxy server config it might be used as:
 
     let proxy = {
         let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_native_roots()
+            .with_native_roots()?
             .https_only()
             .enable_http1()
             .build();

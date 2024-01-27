@@ -9,7 +9,7 @@ By default, throttler *isn't* enabled, so you should enable it explicitly:
 use slack_morphism::prelude::*;
 
 let client = SlackClient::new(
-    SlackClientHyperConnector::new()
+    SlackClientHyperConnector::new()?
         .with_rate_control(
             SlackApiRateControlConfig::new()
         )
@@ -44,7 +44,7 @@ you need to specify `max_retries` in rate control params (default value is `0`):
 ```rust,noplaypen
 
     let client = SlackClient::new(
-        SlackClientHyperConnector::new()
+        SlackClientHyperConnector::new()?
             .with_rate_control(
                 SlackApiRateControlConfig::new().with_max_retries(5)
             ),
