@@ -391,54 +391,10 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         .boxed()
     }
 
-    fn http_post_uri_form_urlencoded<'a, RQ, RS>(
-        &'a self,
-        full_uri: Url,
-        request_body: &'a RQ,
-        context: SlackClientApiCallContext<'a>,
-    ) -> BoxFuture<'a, ClientResult<RS>>
-    where
-        RQ: serde::ser::Serialize + Send + Sync,
-        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
-    {
-        let context_token = context.token;
-
-        async move {
-            let post_url_form = serde_urlencoded::to_string(request_body)
-                .map_err(|err| map_serde_urlencoded_error(err, None))?;
-
-            let response_body = self
-                .send_rate_controlled_request(
-                    || {
-                        let http_request = HyperExtensions::create_http_request(
-                            full_uri.clone(),
-                            hyper::http::Method::POST,
-                        )
-                        .header("content-type", "application/x-www-form-urlencoded");
-
-                        let toke_body_prefix = context_token.map_or_else(String::new, |token| {
-                            format!("token={}&", token.token_value.value())
-                        });
-                        let full_body = toke_body_prefix + &post_url_form;
-                        http_request
-                            .body(Full::new(full_body.into()).boxed())
-                            .map_err(|e| e.into())
-                    },
-                    context,
-                    None,
-                    0,
-                )
-                .await?;
-
-            Ok(response_body)
-        }
-        .boxed()
-    }
-
     fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
-        file: FileMultipartData<'p>,
+        file: Option<FileMultipartData<'p>>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>

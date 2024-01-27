@@ -90,8 +90,8 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
 
     let file_upload_req = SlackApiFilesUploadRequest::new()
         .with_channels(vec!["#random".into()])
-        .with_filename("test.txt".into())
-        .with_file("test-content".into());
+        .with_binary_content("test-content".into())
+        .with_filename("test.txt".into());
 
     let file_upload_resp = session.files_upload(&file_upload_req).await?;
     println!("file upload resp: {:#?}", &file_upload_resp);
