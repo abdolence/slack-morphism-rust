@@ -442,8 +442,8 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + 'a + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let context_token = context.token;
         let boundary = HyperExtensions::generate_multipart_boundary();

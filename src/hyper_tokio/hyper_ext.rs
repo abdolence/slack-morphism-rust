@@ -141,8 +141,8 @@ impl HyperExtensions {
         file_content: &[u8],
     ) -> AnyStdResult<Bytes>
     where
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let mut output = BytesMut::with_capacity(file_content.len() + 512);
         output.write_str("\r\n")?;
@@ -164,7 +164,7 @@ impl HyperExtensions {
 
         for (k, mv) in fields.clone().into_iter() {
             if let Some(v) = mv {
-                let vs = v.to_string();
+                let vs = v.as_ref();
                 output.write_str("\r\n")?;
                 output.write_str("--")?;
                 output.write_str(multipart_boundary)?;
@@ -174,7 +174,7 @@ impl HyperExtensions {
                 output.write_str(&format!("Content-Length: {}", vs.len()))?;
                 output.write_str("\r\n")?;
                 output.write_str("\r\n")?;
-                output.write_str(&vs)?;
+                output.write_str(vs)?;
             }
         }
 
