@@ -13,6 +13,10 @@ use hyper_util::client::legacy::*;
 use hyper_util::rt::TokioExecutor;
 use rvstruct::ValueStruct;
 
+use crate::hyper_tokio::multipart_form::{
+    create_multipart_file_content, generate_multipart_boundary,
+};
+use crate::multipart_form::FileMultipartData;
 use crate::prelude::hyper_ext::HyperExtensions;
 use crate::ratectl::SlackApiRateControlConfig;
 use std::hash::Hash;
@@ -387,73 +391,21 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
         .boxed()
     }
 
-    fn http_post_uri_form_urlencoded<'a, RQ, RS>(
-        &'a self,
-        full_uri: Url,
-        request_body: &'a RQ,
-        context: SlackClientApiCallContext<'a>,
-    ) -> BoxFuture<'a, ClientResult<RS>>
-    where
-        RQ: serde::ser::Serialize + Send + Sync,
-        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
-    {
-        let context_token = context.token;
-
-        async move {
-            let post_url_form = serde_urlencoded::to_string(request_body)
-                .map_err(|err| map_serde_urlencoded_error(err, None))?;
-
-            let response_body = self
-                .send_rate_controlled_request(
-                    || {
-                        let http_request = HyperExtensions::create_http_request(
-                            full_uri.clone(),
-                            hyper::http::Method::POST,
-                        )
-                        .header("content-type", "application/x-www-form-urlencoded");
-
-                        let toke_body_prefix = context_token.map_or_else(String::new, |token| {
-                            format!("token={}&", token.token_value.value())
-                        });
-                        let full_body = toke_body_prefix + &post_url_form;
-                        http_request
-                            .body(Full::new(full_body.into()).boxed())
-                            .map_err(|e| e.into())
-                    },
-                    context,
-                    None,
-                    0,
-                )
-                .await?;
-
-            Ok(response_body)
-        }
-        .boxed()
-    }
-
     fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: Option<FileMultipartData<'p>>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + 'a + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let context_token = context.token;
-        let boundary = HyperExtensions::generate_multipart_boundary();
-        match HyperExtensions::create_multipart_file_content(
-            params,
-            boundary.as_str(),
-            file_name.as_str(),
-            file_content_type.as_str(),
-            file_content,
-        ) {
+        let boundary = generate_multipart_boundary();
+        match create_multipart_file_content(params, boundary.as_str(), file) {
             Ok(file_bytes) => self
                 .send_rate_controlled_request(
                     move || {

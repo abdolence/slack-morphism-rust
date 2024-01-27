@@ -6,6 +6,7 @@ use crate::token::*;
 
 use crate::errors::SlackClientError;
 use crate::models::*;
+use crate::multipart_form::FileMultipartData;
 use crate::ratectl::SlackApiMethodRateControlConfig;
 use futures_util::future::BoxFuture;
 use lazy_static::*;
@@ -81,8 +82,8 @@ pub trait SlackClientHttpConnector {
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + 'a + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let full_uri = SlackClientHttpApiUri::create_url_with_params(
             &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
@@ -119,73 +120,35 @@ pub trait SlackClientHttpConnector {
         self.http_post_uri(full_uri, request, context)
     }
 
-    fn http_post_uri_form_urlencoded<'a, RQ, RS>(
-        &'a self,
-        full_uri: Url,
-        request_body: &'a RQ,
-        context: SlackClientApiCallContext<'a>,
-    ) -> BoxFuture<'a, ClientResult<RS>>
-    where
-        RQ: serde::ser::Serialize + Send + Sync,
-        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a;
-
-    fn http_post_form_urlencoded<'a, RQ, RS>(
-        &'a self,
-        method_relative_uri: &str,
-        request: &'a RQ,
-        context: SlackClientApiCallContext<'a>,
-    ) -> BoxFuture<'a, ClientResult<RS>>
-    where
-        RQ: serde::ser::Serialize + Send + Sync,
-        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
-    {
-        let full_uri = SlackClientHttpApiUri::create_url(
-            &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
-        );
-
-        self.http_post_uri_form_urlencoded(full_uri, request, context)
-    }
-
     fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         full_uri: Url,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: Option<FileMultipartData<'p>>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + 'a + Send;
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send;
 
     fn http_post_multipart_form<'a, 'p, RS, PT, TS>(
         &'a self,
         method_relative_uri: &str,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: Option<FileMultipartData<'p>>,
         params: &'p PT,
         context: SlackClientApiCallContext<'a>,
     ) -> BoxFuture<'a, ClientResult<RS>>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + 'a + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let full_uri = SlackClientHttpApiUri::create_url(
             &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
         );
 
-        self.http_post_uri_multipart_form(
-            full_uri,
-            file_name,
-            file_content_type,
-            file_content,
-            params,
-            context,
-        )
+        self.http_post_uri_multipart_form(full_uri, file, params, context)
     }
 }
 
@@ -237,13 +200,13 @@ impl SlackClientHttpApiUri {
 
     pub fn create_url_with_params<'p, PT, TS>(url_str: &str, params: &'p PT) -> Url
     where
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p,
     {
         let url_query_params: Vec<(String, String)> = params
             .clone()
             .into_iter()
-            .filter_map(|(k, vo)| vo.map(|v| (k.to_string(), v.to_string())))
+            .filter_map(|(k, vo)| vo.map(|v| (k.to_string(), v.as_ref().to_string())))
             .collect();
 
         Url::parse_with_params(url_str, url_query_params)
@@ -328,8 +291,8 @@ where
     ) -> ClientResult<RS>
     where
         RS: for<'de> serde::de::Deserialize<'de> + Send,
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
-        TS: std::string::ToString + 'p + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let context = SlackClientApiCallContext {
             rate_control_params,
@@ -393,43 +356,17 @@ where
             .await
     }
 
-    pub async fn http_post_form_urlencoded<RQ, RS>(
-        &self,
-        method_relative_uri: &str,
-        request: &RQ,
-        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
-    ) -> ClientResult<RS>
-    where
-        RQ: serde::ser::Serialize + Send + Sync,
-        RS: for<'de> serde::de::Deserialize<'de> + Send,
-    {
-        let context = SlackClientApiCallContext {
-            rate_control_params,
-            token: Some(self.token),
-            tracing_span: &self.span,
-            is_sensitive_url: false,
-        };
-
-        self.client
-            .http_api
-            .connector
-            .http_post_form_urlencoded(method_relative_uri, &request, context)
-            .await
-    }
-
     pub async fn http_post_multipart_form<'p, RS, PT, TS>(
         &self,
         method_relative_uri: &str,
-        file_name: String,
-        file_content_type: String,
-        file_content: &'p [u8],
+        file: Option<FileMultipartData<'p>>,
         params: &'p PT,
         rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
     ) -> ClientResult<RS>
     where
-        PT: std::iter::IntoIterator<Item = (&'p str, Option<&'p TS>)> + Clone,
         RS: for<'de> serde::de::Deserialize<'de> + Send,
-        TS: std::string::ToString + 'p + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
     {
         let context = SlackClientApiCallContext {
             rate_control_params,
@@ -441,14 +378,7 @@ where
         self.client
             .http_api
             .connector
-            .http_post_multipart_form(
-                method_relative_uri,
-                file_name,
-                file_content_type,
-                file_content,
-                params,
-                context,
-            )
+            .http_post_multipart_form(method_relative_uri, file, params, context)
             .await
     }
 }

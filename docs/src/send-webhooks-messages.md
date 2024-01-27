@@ -7,7 +7,7 @@ You can use `client..post_webhook_message` to post [Slack Incoming Webhook](http
 use slack_morphism::prelude::*;
 use url::Url;
 
-let client = SlackClient::new(SlackClientHyperConnector::new());
+let client = SlackClient::new(SlackClientHyperConnector::new()?);
 
 // Your incoming webhook url from config or OAuth/events (ResponseURL)
 let webhook_url: Url = Url::parse("https://hooks.slack.com/services/...")?; 

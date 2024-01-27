@@ -39,7 +39,7 @@ async fn test_post_message() -> Result<(), Box<dyn std::error::Error + Send + Sy
     let message = WelcomeMessageTemplateParams::new("".into());
 
     let post_chat_req =
-        SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
+        SlackApiChatPostMessageRequest::new("#random".into(), message.render_template());
 
     let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
     println!("post chat resp: {:#?}", &post_chat_resp);
@@ -89,9 +89,9 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let session = client.open_session(&token);
 
     let file_upload_req = SlackApiFilesUploadRequest::new()
-        .with_channels(vec!["#general".into()])
-        .with_filename("test.txt".into())
-        .with_file("test".into());
+        .with_channels(vec!["#random".into()])
+        .with_binary_content("test-content".into())
+        .with_filename("test.txt".into());
 
     let file_upload_resp = session.files_upload(&file_upload_req).await?;
     println!("file upload resp: {:#?}", &file_upload_resp);

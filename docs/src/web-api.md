@@ -5,7 +5,7 @@
 ```rust,noplaypen
 use slack_morphism::prelude::*;
 
-let client = SlackClient::new( SlackClientHyperConnector::new() );
+let client = SlackClient::new( SlackClientHyperConnector::new()? );
 
 ```
 
@@ -25,7 +25,7 @@ use slack_morphism::prelude::*;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    
-    let client = SlackClient::new(SlackClientHyperConnector::new());
+    let client = SlackClient::new(SlackClientHyperConnector::new()?);
     
     // Create our Slack API token
     let token_value: SlackApiTokenValue = "xoxb-89.....".into();

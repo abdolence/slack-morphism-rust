@@ -17,7 +17,7 @@ use std::time::Duration;
 
 async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    let hyper_connector = SlackClientHyperConnector::new();
+    let hyper_connector = SlackClientHyperConnector::new()?;
     let client = SlackClient::new(hyper_connector);
     
     let token_value: SlackApiTokenValue = "xoxb-89.....".into();

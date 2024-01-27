@@ -57,7 +57,6 @@ hyper-rustls = { version="0.26", features = ["rustls-native-certs", "http2"], op
 tokio-tungstenite = { version = "0.21.0", features = ["rustls-tls-native-roots"], optional = true }
 axum = { version = "0.7", optional = true }
 tower = { version = "0.4", optional = true }
-serde_urlencoded = "0.7.1"
 
 [target.'cfg(not(windows))'.dependencies]
 signal-hook = { version = "0.3", default-features = false, features = ["extended-siginfo"], optional = true}
