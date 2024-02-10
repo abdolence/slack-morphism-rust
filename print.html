@@ -184,7 +184,7 @@
 <h2 id="easy-to-use"><a class="header" href="#easy-to-use">Easy to use</a></h2>
 <p>The library depends only on familiar for Rust developers principles and libraries like Serde, futures, hyper.</p>
 <h2 id="async"><a class="header" href="#async">Async</a></h2>
-<p>Using the latest Rust async/await language features and libraries, the library provides access to all of the functions 
+<p>Using the latest Rust async/await language features and libraries, the library provides access to all of the functions
 in asynchronous manner.</p>
 <h2 id="modular-design"><a class="header" href="#modular-design">Modular design</a></h2>
 <p>Base crate to support frameworks-agnostic client and that doesn't have any dependency to any HTTP/async library itself, and you can implement binding to any library you want.
@@ -197,7 +197,7 @@ Includes also all type/models definitions that used for Slack Web/Events APIs.</
 <div style="break-before: page; page-break-before: always;"></div><h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>Cargo.toml dependencies example:</p>
 <pre><code class="language-toml">[dependencies]
-slack-morphism = { version = &quot;2.0&quot;, features = [&quot;hyper&quot;, &quot;axum&quot;] }
+slack-morphism = { version = "2.0", features = ["hyper", "axum"] }
 </code></pre>
 <p>All imports you need:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;</code></pre>
@@ -229,7 +229,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let client = SlackClient::new(SlackClientHyperConnector::new()?);
     
     // Create our Slack API token
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     
     // Create a Slack session with this token
@@ -239,13 +239,13 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     
     // Make your first API call (which is `api.test` here)
     let test: SlackApiTestResponse = session
-            .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+            .api_test(&amp;SlackApiTestRequest::new().with_foo("Test".into()))
             .await?;
 
     // Send a simple text message
     let post_chat_req =
-        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(),
-               SlackMessageContent::new().with_text(&quot;Hey there!&quot;.into())
+        SlackApiChatPostMessageRequest::new("#general".into(),
+               SlackMessageContent::new().with_text("Hey there!".into())
         );
 
     let post_chat_resp = session.chat_post_message(&amp;post_chat_req).await?;
@@ -260,13 +260,13 @@ It doesn't make any network calls. There is no need to store it.</p>
     client
         .run_in_session(&amp;token, |session| async move {
             let test: SlackApiTestResponse = session
-                .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+                .api_test(&amp;SlackApiTestRequest::new().with_foo("Test".into()))
                 .await?;
 
-            println!(&quot;{:#?}&quot;, test);
+            println!("{:#?}", test);
 
             let auth_test = session.auth_test().await?;
-            println!(&quot;{:#?}&quot;, auth_test);
+            println!("{:#?}", auth_test);
 
             Ok(())
         })
@@ -288,7 +288,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let hyper_connector = SlackClientHyperConnector::new()?;
     let client = SlackClient::new(hyper_connector);
     
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&amp;token);
     
@@ -304,7 +304,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     
     let mut items_stream = scroller.to_items_stream(&amp;session);
     while let Some(items) = items_stream.try_next().await? {
-        println!(&quot;users batch: {:#?}&quot;, items);
+        println!("users batch: {:#?}", items);
     }
     
     // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
@@ -317,7 +317,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let mut items_throttled_stream =
         scroller.to_items_throttled_stream(&amp;session, Duration::from_millis(500));
     while let Some(items) = items_throttled_stream.try_next().await? {
-        println!(&quot;res: {:#?}&quot;, items);
+        println!("res: {:#?}", items);
     }
 
     Ok(())
@@ -331,12 +331,12 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 </ul>
 <p>Let’s take some very simple block example:</p>
 <pre><code class="language-json">{
-  &quot;blocks&quot;: [
+  "blocks": [
       {
-        &quot;type&quot;: &quot;section&quot;,
-        &quot;text&quot;: {
-            &quot;type&quot;: &quot;mrkdwn&quot;,
-            &quot;text&quot;: &quot;A message *with some bold text* and _some italicized text_.&quot;
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "A message *with some bold text* and _some italicized text_."
         }
       }
   ]
@@ -348,7 +348,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
  some_into(
     SlackSectionBlock::new()
-        .with_text(md!(&quot;A message *with some bold text* and _some italicized text_.&quot;))
+        .with_text(md!("A message *with some bold text* and _some italicized text_."))
  )
 ];</code></pre>
 <p>Let’s look at another more complex example for welcoming message:</p>
@@ -363,7 +363,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let hyper_connector = SlackClientHyperConnector::new();
     let client = SlackClient::new(hyper_connector);
 
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&amp;token);
 
@@ -377,24 +377,24 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     impl SlackMessageTemplate for WelcomeMessageTemplateParams {
         fn render_template(&amp;self) -&gt; SlackMessageContent {
             SlackMessageContent::new()
-                .with_text(format!(&quot;Hey {}&quot;, self.user_id.to_slack_format()))
+                .with_text(format!("Hey {}", self.user_id.to_slack_format()))
                 .with_blocks(slack_blocks![
                     some_into(
                         SlackSectionBlock::new()
-                            .with_text(md!(&quot;Hey {}&quot;, self.user_id.to_slack_format()))
+                            .with_text(md!("Hey {}", self.user_id.to_slack_format()))
                     ),
                     some_into(SlackDividerBlock::new()),
                     some_into(SlackImageBlock::new(
-                        &quot;https://www.gstatic.com/webp/gallery3/2_webp_ll.png&quot;.into(),
-                        &quot;Test Image&quot;.into()
+                        "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
+                        "Test Image".into()
                     )),
                     some_into(SlackHeaderBlock::new(
-                        pt!(&quot;Simple header&quot;)
+                        pt!("Simple header")
                     )),
                     some_into(SlackActionsBlock::new(slack_blocks![some_into(
                         SlackBlockButtonElement::new(
-                            &quot;simple-message-button&quot;.into(),
-                            pt!(&quot;Simple button text&quot;)
+                            "simple-message-button".into(),
+                            pt!("Simple button text")
                         )
                     )]))
                 ])
@@ -402,10 +402,10 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     }
 
     // Use it
-    let message = WelcomeMessageTemplateParams::new(&quot;some-slack-uid&quot;.into());
+    let message = WelcomeMessageTemplateParams::new("some-slack-uid".into());
 
     let post_chat_req =
-        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(), message.render_template());
+        SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
 
     Ok(())
 }</code></pre>
@@ -419,20 +419,20 @@ use url::Url;
 let client = SlackClient::new(SlackClientHyperConnector::new()?);
 
 // Your incoming webhook url from config or OAuth/events (ResponseURL)
-let webhook_url: Url = Url::parse(&quot;https://hooks.slack.com/services/...&quot;)?; 
+let webhook_url: Url = Url::parse("https://hooks.slack.com/services/...")?; 
 
 client
     .post_webhook_message(
         &amp;webhook_url,
         &amp;SlackApiPostWebhookMessageRequest::new(
             SlackMessageContent::new()
-                .with_text(format!(&quot;Hey&quot;)),
+                .with_text(format!("Hey")),
         ),
     )
     .await?;
     </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="different-hyper-connection-types-and-proxy-support"><a class="header" href="#different-hyper-connection-types-and-proxy-support">Different hyper connection types and proxy support</a></h1>
-<p>In some cases you may need to configure hyper connection types. </p>
+<p>In some cases you may need to configure hyper connection types.</p>
 <p>Common examples:</p>
 <ul>
 <li>Need to use a proxy server</li>
@@ -448,7 +448,7 @@ client
             .enable_http1()
             .build();
 
-        let proxy_uri = &quot;http://proxy.unfortunate.world.example.net:3128&quot;
+        let proxy_uri = "http://proxy.unfortunate.world.example.net:3128"
             .parse()
             .unwrap();
         let proxy = Proxy::new(Intercept::Https, proxy_uri);
@@ -476,8 +476,8 @@ let client = SlackClient::new(
 <p>The example above creates a Slack API Client that follows the official rate limits from Slack.
 Because the Slack rate limits apply per workspaces (separately),
 to use throttling and limits properly you <em>have to specify</em> team id in tokens:</p>
-<pre><code>let token_value: SlackApiTokenValue = config_env_var(&quot;SLACK_TEST_TOKEN&quot;)?.into();
-let team_id: SlackTeamId = config_env_var(&quot;SLACK_TEST_TEAM_ID&quot;)?.into();
+<pre><code>let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+let team_id: SlackTeamId = config_env_var("SLACK_TEST_TEAM_ID")?.into();
 let token: SlackApiToken = SlackApiToken::new(token_value).with_team_id(team_id);
 
 let session = client.open_session(&amp;token);
@@ -507,22 +507,22 @@ use tracing::*;
 
 // While Team ID is optional but still useful for tracing and rate control purposes
 let token: SlackApiToken =
-    SlackApiToken::new(token_value).with_team_id(config_env_var(&quot;SLACK_TEST_TEAM_ID&quot;)?.into());
+    SlackApiToken::new(token_value).with_team_id(config_env_var("SLACK_TEST_TEAM_ID")?.into());
 
 // Let's create our own user specific span first
-let my_custom_span = span!(Level::DEBUG, &quot;My scope&quot;, my_scope_attr = &quot;my-scope-value&quot;);
-debug!(&quot;Testing tracing abilities&quot;);
+let my_custom_span = span!(Level::DEBUG, "My scope", my_scope_attr = "my-scope-value");
+debug!("Testing tracing abilities");
 
 // Sessions are lightweight and basically just a reference to client and token
 client
     .run_in_session(&amp;token, |session| async move {
         let test: SlackApiTestResponse = session
-            .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+            .api_test(&amp;SlackApiTestRequest::new().with_foo("Test".into()))
             .await?;
-        println!(&quot;{:#?}&quot;, test);
+        println!("{:#?}", test);
 
         let auth_test = session.auth_test().await?;
-        println!(&quot;{:#?}&quot;, auth_test);
+        println!("{:#?}", auth_test);
 
         Ok(())
     })
@@ -582,14 +582,14 @@ use log::*;
 async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
-    info!(&quot;Loading server: {}&quot;, addr);
+    info!("Loading server: {}", addr);
 
     // This is our default HTTP route when Slack routes didn't handle incoming request (different/other path).
     async fn your_others_routes(
         _req: Request&lt;Body&gt;,
     ) -&gt; Result&lt;Response&lt;Body&gt;, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         Response::builder()
-            .body(&quot;Hey, this is a default users route handler&quot;.into())
+            .body("Hey, this is a default users route handler".into())
             .map_err(|e| e.into())
     }
    
@@ -597,7 +597,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, 
        _client: Arc&lt;SlackHyperClient&gt;, 
        _states: SlackClientEventsUserState) -&gt; http::StatusCode {
-        error!(&quot;Slack Events error: {:#?}&quot;, err);
+        error!("Slack Events error: {:#?}", err);
         
         // Defines what we return Slack server
         http::StatusCode::BAD_REQUEST
@@ -618,7 +618,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
     ) {
-        println!(&quot;{:#?}&quot;, resp);
+        println!("{:#?}", resp);
         Ok(())
     }
 
@@ -627,7 +627,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
        _client: Arc&lt;SlackHyperClient&gt;, 
        _states: SlackClientEventsUserState
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-        println!(&quot;{:#?}&quot;, event);
+        println!("{:#?}", event);
 
         Ok(())
     }
@@ -637,7 +637,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-        println!(&quot;{:#?}&quot;, event);
+        println!("{:#?}", event);
 
         Ok(())
     }
@@ -648,9 +648,9 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
     ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-        println!(&quot;{:#?}&quot;, event);
+        println!("{:#?}", event);
         Ok(SlackCommandEventResponse::new(
-            SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+            SlackMessageContent::new().with_text("Working on it".into()),
         ))
     }
 
@@ -658,22 +658,22 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // You can additionally configure HTTP route paths using theses configs,
     // but for simplicity we will skip that part here and configure only required parameters.
     let oauth_listener_config = Arc::new(SlackOAuthListenerConfig::new(
-        config_env_var(&quot;SLACK_CLIENT_ID&quot;)?.into(),
-        config_env_var(&quot;SLACK_CLIENT_SECRET&quot;)?.into(),
-        config_env_var(&quot;SLACK_BOT_SCOPE&quot;)?,
-        config_env_var(&quot;SLACK_REDIRECT_HOST&quot;)?,
+        config_env_var("SLACK_CLIENT_ID")?.into(),
+        config_env_var("SLACK_CLIENT_SECRET")?.into(),
+        config_env_var("SLACK_BOT_SCOPE")?,
+        config_env_var("SLACK_REDIRECT_HOST")?,
     ));
 
     let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(
-        config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into(),
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
     let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
-        config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into(),
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
     let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(
-        config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into(),
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
     // Creating a shared listener environment with an ability to share client and user state
@@ -727,7 +727,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // Starting a server with listener routes
     let server = hyper::server::Server::bind(&amp;addr).serve(make_svc);
     server.await.map_err(|e| {
-        error!(&quot;Server error: {}&quot;, e);
+        error!("Server error: {}", e);
         e.into()
     })
 }</code></pre>
@@ -755,14 +755,14 @@ async fn test_oauth_install_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) {
-    println!(&quot;{:#?}&quot;, resp);
+    println!("{:#?}", resp);
 }
 
 async fn test_push_event(
     Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
     Extension(event): Extension&lt;SlackPushEvent&gt;,
 ) -&gt; Response&lt;Body&gt; {
-    println!(&quot;Received push event: {:?}&quot;, event);
+    println!("Received push event: {:?}", event);
 
     match event {
         SlackPushEvent::UrlVerification(url_ver) =&gt; Response::new(Body::from(url_ver.challenge)),
@@ -774,9 +774,9 @@ async fn test_command_event(
     Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
     Extension(event): Extension&lt;SlackCommandEvent&gt;,
 ) -&gt; axum::Json&lt;SlackCommandEventResponse&gt; {
-    println!(&quot;Received command event: {:?}&quot;, event);
+    println!("Received command event: {:?}", event);
     axum::Json(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+        SlackMessageContent::new().with_text("Working on it".into()),
     ))
 }
 
@@ -784,7 +784,7 @@ async fn test_interaction_event(
     Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
     Extension(event): Extension&lt;SlackInteractionEvent&gt;,
 ) {
-    println!(&quot;Received interaction event: {:?}&quot;, event);
+    println!("Received interaction event: {:?}", event);
 }
 
 fn test_error_handler(
@@ -792,7 +792,7 @@ fn test_error_handler(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; HttpStatusCode {
-    println!(&quot;{:#?}&quot;, err);
+    println!("{:#?}", err);
 
     // Defines what we return Slack server
     HttpStatusCode::BAD_REQUEST
@@ -803,20 +803,20 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
         Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
-    info!(&quot;Loading server: {}&quot;, addr);
+    info!("Loading server: {}", addr);
 
     let oauth_listener_config = SlackOAuthListenerConfig::new(
-        config_env_var(&quot;SLACK_CLIENT_ID&quot;)?.into(),
-        config_env_var(&quot;SLACK_CLIENT_SECRET&quot;)?.into(),
-        config_env_var(&quot;SLACK_BOT_SCOPE&quot;)?,
-        config_env_var(&quot;SLACK_REDIRECT_HOST&quot;)?,
+        config_env_var("SLACK_CLIENT_ID")?.into(),
+        config_env_var("SLACK_CLIENT_SECRET")?.into(),
+        config_env_var("SLACK_BOT_SCOPE")?,
+        config_env_var("SLACK_REDIRECT_HOST")?,
     );
 
     let listener_environment: Arc&lt;SlackHyperListenerEnvironment&gt; = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(test_error_handler),
     );
-    let signing_secret: SlackSigningSecret = config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into();
+    let signing_secret: SlackSigningSecret = config_env_var("SLACK_SIGNING_SECRET")?.into();
 
     let listener: SlackEventsAxumListener&lt;SlackHyperHttpsConnector&gt; =
         SlackEventsAxumListener::new(listener_environment.clone());
@@ -824,11 +824,11 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
     // build our application route with OAuth nested router and Push/Command/Interaction events
     let app = axum::routing::Router::new()
         .nest(
-            &quot;/auth&quot;,
-            listener.oauth_router(&quot;/auth&quot;, &amp;oauth_listener_config, test_oauth_install_function),
+            "/auth",
+            listener.oauth_router("/auth", &amp;oauth_listener_config, test_oauth_install_function),
         )
         .route(
-            &quot;/push&quot;,
+            "/push",
             axum::routing::post(test_push_event).layer(
                 listener
                     .events_layer(&amp;signing_secret)
@@ -836,7 +836,7 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
             ),
         )
         .route(
-            &quot;/command&quot;,
+            "/command",
             axum::routing::post(test_command_event).layer(
                 listener
                     .events_layer(&amp;signing_secret)
@@ -844,7 +844,7 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
             ),
         )
         .route(
-            &quot;/interaction&quot;,
+            "/interaction",
             axum::routing::post(test_interaction_event).layer(
                 listener
                     .events_layer(&amp;signing_secret)
@@ -863,10 +863,10 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
 <p>Complete example look at <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="slack-socket-mode-support"><a class="header" href="#slack-socket-mode-support">Slack Socket Mode support</a></h1>
 <p>Slack Morphism supports <a href="https://api.slack.com/apis/connections/socket">Slack Socket Mode</a> starting with 0.10.x.
-Socket Mode allows your app to use the Events API and interactive components 
+Socket Mode allows your app to use the Events API and interactive components
 without exposing a public HTTP endpoint.</p>
-<p>The mode is useful if you want to create an app that works with few workspaces 
-and don't want to work with HTTP endpoints yourself. </p>
+<p>The mode is useful if you want to create an app that works with few workspaces
+and don't want to work with HTTP endpoints yourself.</p>
 <h2 id="register-your-event-callback-functions"><a class="header" href="#register-your-event-callback-functions">Register your event callback functions</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
@@ -875,7 +875,7 @@ async fn test_interaction_events_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-    println!(&quot;{:#?}&quot;, event);
+    println!("{:#?}", event);
     Ok(())
 }
 
@@ -884,9 +884,9 @@ async fn test_command_events_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-    println!(&quot;{:#?}&quot;, event);
+    println!("{:#?}", event);
     Ok(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+        SlackMessageContent::new().with_text("Working on it".into()),
     ))
 }
 
@@ -895,7 +895,7 @@ async fn test_push_events_sm_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-    println!(&quot;{:#?}&quot;, event);
+    println!("{:#?}", event);
     Ok(())
 }
 
@@ -917,14 +917,14 @@ let socket_mode_listener = SlackClientSocketModeListener::new(
 );
 </code></pre>
 <h2 id="connect-using-socket-mode-to-slack"><a class="header" href="#connect-using-socket-mode-to-slack">Connect using socket mode to Slack</a></h2>
-<p>The following code initiates Web-sockets based connections to Slack endpoints using Slack Web methods 
+<p>The following code initiates Web-sockets based connections to Slack endpoints using Slack Web methods
 and provided user token.</p>
 <p>Slack Morphism supports multiple web-socket connections per one token to <a href="https://api.slack.com/apis/connections/socket-implement#disconnect">gracefully handle disconnects</a>.
 By default it uses 2 connections to one token. To configure it see <code>SlackClientSocketModeConfig</code>;</p>
 <pre><code class="language-rust noplaypen">
 // Need to specify App token for Socket Mode:
 let app_token_value: SlackApiTokenValue = 
-    config_env_var(&quot;SLACK_TEST_APP_TOKEN&quot;)?.into();
+    config_env_var("SLACK_TEST_APP_TOKEN")?.into();
 let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
 
 // Register an app token to listen for events, 
@@ -937,9 +937,9 @@ socket_mode_listener.serve().await;
 </code></pre>
 <h2 id="important-caveats"><a class="header" href="#important-caveats">Important caveats</a></h2>
 <h3 id="the-time-blocking-of-the-sm-listener-callbacks-is-important"><a class="header" href="#the-time-blocking-of-the-sm-listener-callbacks-is-important">The time blocking of the SM listener callbacks is important</a></h3>
-<p>If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again 
-and also to inform users with errors and timeouts. 
-So, if you have something complex and time-consuming in your callbacks 
+<p>If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again
+and also to inform users with errors and timeouts.
+So, if you have something complex and time-consuming in your callbacks
 you should spawn your own future, e.g:</p>
 <pre><code class="language-rust noplaypen">    async fn test_push_events_sm_function(
         event: SlackPushEventCallback,
@@ -957,7 +957,7 @@ fn test_error_handler(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; http::StatusCode {
-    println!(&quot;{:#?}&quot;, err);
+    println!("{:#?}", err);
 
     // This return value should be OK if we want to return successful ack
     // to the Slack server using Web-sockets

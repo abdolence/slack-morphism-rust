@@ -185,14 +185,14 @@ use url::Url;
 let client = SlackClient::new(SlackClientHyperConnector::new()?);
 
 // Your incoming webhook url from config or OAuth/events (ResponseURL)
-let webhook_url: Url = Url::parse(&quot;https://hooks.slack.com/services/...&quot;)?; 
+let webhook_url: Url = Url::parse("https://hooks.slack.com/services/...")?; 
 
 client
     .post_webhook_message(
         &amp;webhook_url,
         &amp;SlackApiPostWebhookMessageRequest::new(
             SlackMessageContent::new()
-                .with_text(format!(&quot;Hey&quot;)),
+                .with_text(format!("Hey")),
         ),
     )
     .await?;

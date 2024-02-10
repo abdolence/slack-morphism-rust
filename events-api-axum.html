@@ -199,14 +199,14 @@ async fn test_oauth_install_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) {
-    println!(&quot;{:#?}&quot;, resp);
+    println!("{:#?}", resp);
 }
 
 async fn test_push_event(
     Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
     Extension(event): Extension&lt;SlackPushEvent&gt;,
 ) -&gt; Response&lt;Body&gt; {
-    println!(&quot;Received push event: {:?}&quot;, event);
+    println!("Received push event: {:?}", event);
 
     match event {
         SlackPushEvent::UrlVerification(url_ver) =&gt; Response::new(Body::from(url_ver.challenge)),
@@ -218,9 +218,9 @@ async fn test_command_event(
     Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
     Extension(event): Extension&lt;SlackCommandEvent&gt;,
 ) -&gt; axum::Json&lt;SlackCommandEventResponse&gt; {
-    println!(&quot;Received command event: {:?}&quot;, event);
+    println!("Received command event: {:?}", event);
     axum::Json(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+        SlackMessageContent::new().with_text("Working on it".into()),
     ))
 }
 
@@ -228,7 +228,7 @@ async fn test_interaction_event(
     Extension(_environment): Extension&lt;Arc&lt;SlackHyperListenerEnvironment&gt;&gt;,
     Extension(event): Extension&lt;SlackInteractionEvent&gt;,
 ) {
-    println!(&quot;Received interaction event: {:?}&quot;, event);
+    println!("Received interaction event: {:?}", event);
 }
 
 fn test_error_handler(
@@ -236,7 +236,7 @@ fn test_error_handler(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; HttpStatusCode {
-    println!(&quot;{:#?}&quot;, err);
+    println!("{:#?}", err);
 
     // Defines what we return Slack server
     HttpStatusCode::BAD_REQUEST
@@ -247,20 +247,20 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
         Arc::new(SlackClient::new(SlackClientHyperConnector::new()?));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
-    info!(&quot;Loading server: {}&quot;, addr);
+    info!("Loading server: {}", addr);
 
     let oauth_listener_config = SlackOAuthListenerConfig::new(
-        config_env_var(&quot;SLACK_CLIENT_ID&quot;)?.into(),
-        config_env_var(&quot;SLACK_CLIENT_SECRET&quot;)?.into(),
-        config_env_var(&quot;SLACK_BOT_SCOPE&quot;)?,
-        config_env_var(&quot;SLACK_REDIRECT_HOST&quot;)?,
+        config_env_var("SLACK_CLIENT_ID")?.into(),
+        config_env_var("SLACK_CLIENT_SECRET")?.into(),
+        config_env_var("SLACK_BOT_SCOPE")?,
+        config_env_var("SLACK_REDIRECT_HOST")?,
     );
 
     let listener_environment: Arc&lt;SlackHyperListenerEnvironment&gt; = Arc::new(
         SlackClientEventsListenerEnvironment::new(client.clone())
             .with_error_handler(test_error_handler),
     );
-    let signing_secret: SlackSigningSecret = config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into();
+    let signing_secret: SlackSigningSecret = config_env_var("SLACK_SIGNING_SECRET")?.into();
 
     let listener: SlackEventsAxumListener&lt;SlackHyperHttpsConnector&gt; =
         SlackEventsAxumListener::new(listener_environment.clone());
@@ -268,11 +268,11 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
     // build our application route with OAuth nested router and Push/Command/Interaction events
     let app = axum::routing::Router::new()
         .nest(
-            &quot;/auth&quot;,
-            listener.oauth_router(&quot;/auth&quot;, &amp;oauth_listener_config, test_oauth_install_function),
+            "/auth",
+            listener.oauth_router("/auth", &amp;oauth_listener_config, test_oauth_install_function),
         )
         .route(
-            &quot;/push&quot;,
+            "/push",
             axum::routing::post(test_push_event).layer(
                 listener
                     .events_layer(&amp;signing_secret)
@@ -280,7 +280,7 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
             ),
         )
         .route(
-            &quot;/command&quot;,
+            "/command",
             axum::routing::post(test_command_event).layer(
                 listener
                     .events_layer(&amp;signing_secret)
@@ -288,7 +288,7 @@ async fn test_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send +
             ),
         )
         .route(
-            &quot;/interaction&quot;,
+            "/interaction",
             axum::routing::post(test_interaction_event).layer(
                 listener
                     .events_layer(&amp;signing_secret)

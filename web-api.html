@@ -197,7 +197,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let client = SlackClient::new(SlackClientHyperConnector::new()?);
     
     // Create our Slack API token
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     
     // Create a Slack session with this token
@@ -207,13 +207,13 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     
     // Make your first API call (which is `api.test` here)
     let test: SlackApiTestResponse = session
-            .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+            .api_test(&amp;SlackApiTestRequest::new().with_foo("Test".into()))
             .await?;
 
     // Send a simple text message
     let post_chat_req =
-        SlackApiChatPostMessageRequest::new(&quot;#general&quot;.into(),
-               SlackMessageContent::new().with_text(&quot;Hey there!&quot;.into())
+        SlackApiChatPostMessageRequest::new("#general".into(),
+               SlackMessageContent::new().with_text("Hey there!".into())
         );
 
     let post_chat_resp = session.chat_post_message(&amp;post_chat_req).await?;
@@ -228,13 +228,13 @@ It doesn't make any network calls. There is no need to store it.</p>
     client
         .run_in_session(&amp;token, |session| async move {
             let test: SlackApiTestResponse = session
-                .api_test(&amp;SlackApiTestRequest::new().with_foo(&quot;Test&quot;.into()))
+                .api_test(&amp;SlackApiTestRequest::new().with_foo("Test".into()))
                 .await?;
 
-            println!(&quot;{:#?}&quot;, test);
+            println!("{:#?}", test);
 
             let auth_test = session.auth_test().await?;
-            println!(&quot;{:#?}&quot;, auth_test);
+            println!("{:#?}", auth_test);
 
             Ok(())
         })

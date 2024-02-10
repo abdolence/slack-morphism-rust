@@ -177,7 +177,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="different-hyper-connection-types-and-proxy-support"><a class="header" href="#different-hyper-connection-types-and-proxy-support">Different hyper connection types and proxy support</a></h1>
-<p>In some cases you may need to configure hyper connection types. </p>
+<p>In some cases you may need to configure hyper connection types.</p>
 <p>Common examples:</p>
 <ul>
 <li>Need to use a proxy server</li>
@@ -193,7 +193,7 @@
             .enable_http1()
             .build();
 
-        let proxy_uri = &quot;http://proxy.unfortunate.world.example.net:3128&quot;
+        let proxy_uri = "http://proxy.unfortunate.world.example.net:3128"
             .parse()
             .unwrap();
         let proxy = Proxy::new(Intercept::Https, proxy_uri);

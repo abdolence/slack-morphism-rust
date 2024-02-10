@@ -205,14 +205,14 @@ use log::*;
 async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
-    info!(&quot;Loading server: {}&quot;, addr);
+    info!("Loading server: {}", addr);
 
     // This is our default HTTP route when Slack routes didn't handle incoming request (different/other path).
     async fn your_others_routes(
         _req: Request&lt;Body&gt;,
     ) -&gt; Result&lt;Response&lt;Body&gt;, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         Response::builder()
-            .body(&quot;Hey, this is a default users route handler&quot;.into())
+            .body("Hey, this is a default users route handler".into())
             .map_err(|e| e.into())
     }
    
@@ -220,7 +220,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     fn slack_listener_error_handler(err: Box&lt;dyn std::error::Error + Send + Sync&gt;, 
        _client: Arc&lt;SlackHyperClient&gt;, 
        _states: SlackClientEventsUserState) -&gt; http::StatusCode {
-        error!(&quot;Slack Events error: {:#?}&quot;, err);
+        error!("Slack Events error: {:#?}", err);
         
         // Defines what we return Slack server
         http::StatusCode::BAD_REQUEST
@@ -241,7 +241,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
     ) {
-        println!(&quot;{:#?}&quot;, resp);
+        println!("{:#?}", resp);
         Ok(())
     }
 
@@ -250,7 +250,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
        _client: Arc&lt;SlackHyperClient&gt;, 
        _states: SlackClientEventsUserState
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-        println!(&quot;{:#?}&quot;, event);
+        println!("{:#?}", event);
 
         Ok(())
     }
@@ -260,7 +260,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
     ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-        println!(&quot;{:#?}&quot;, event);
+        println!("{:#?}", event);
 
         Ok(())
     }
@@ -271,9 +271,9 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
     ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-        println!(&quot;{:#?}&quot;, event);
+        println!("{:#?}", event);
         Ok(SlackCommandEventResponse::new(
-            SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+            SlackMessageContent::new().with_text("Working on it".into()),
         ))
     }
 
@@ -281,22 +281,22 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // You can additionally configure HTTP route paths using theses configs,
     // but for simplicity we will skip that part here and configure only required parameters.
     let oauth_listener_config = Arc::new(SlackOAuthListenerConfig::new(
-        config_env_var(&quot;SLACK_CLIENT_ID&quot;)?.into(),
-        config_env_var(&quot;SLACK_CLIENT_SECRET&quot;)?.into(),
-        config_env_var(&quot;SLACK_BOT_SCOPE&quot;)?,
-        config_env_var(&quot;SLACK_REDIRECT_HOST&quot;)?,
+        config_env_var("SLACK_CLIENT_ID")?.into(),
+        config_env_var("SLACK_CLIENT_SECRET")?.into(),
+        config_env_var("SLACK_BOT_SCOPE")?,
+        config_env_var("SLACK_REDIRECT_HOST")?,
     ));
 
     let push_events_config = Arc::new(SlackPushEventsListenerConfig::new(
-        config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into(),
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
     let interactions_events_config = Arc::new(SlackInteractionEventsListenerConfig::new(
-        config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into(),
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
     let command_events_config = Arc::new(SlackCommandEventsListenerConfig::new(
-        config_env_var(&quot;SLACK_SIGNING_SECRET&quot;)?.into(),
+        config_env_var("SLACK_SIGNING_SECRET")?.into(),
     ));
 
     // Creating a shared listener environment with an ability to share client and user state
@@ -350,7 +350,7 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
     // Starting a server with listener routes
     let server = hyper::server::Server::bind(&amp;addr).serve(make_svc);
     server.await.map_err(|e| {
-        error!(&quot;Server error: {}&quot;, e);
+        error!("Server error: {}", e);
         e.into()
     })
 }</code></pre>

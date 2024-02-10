@@ -178,10 +178,10 @@
                     <main>
                         <h1 id="slack-socket-mode-support"><a class="header" href="#slack-socket-mode-support">Slack Socket Mode support</a></h1>
 <p>Slack Morphism supports <a href="https://api.slack.com/apis/connections/socket">Slack Socket Mode</a> starting with 0.10.x.
-Socket Mode allows your app to use the Events API and interactive components 
+Socket Mode allows your app to use the Events API and interactive components
 without exposing a public HTTP endpoint.</p>
-<p>The mode is useful if you want to create an app that works with few workspaces 
-and don't want to work with HTTP endpoints yourself. </p>
+<p>The mode is useful if you want to create an app that works with few workspaces
+and don't want to work with HTTP endpoints yourself.</p>
 <h2 id="register-your-event-callback-functions"><a class="header" href="#register-your-event-callback-functions">Register your event callback functions</a></h2>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
@@ -190,7 +190,7 @@ async fn test_interaction_events_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-    println!(&quot;{:#?}&quot;, event);
+    println!("{:#?}", event);
     Ok(())
 }
 
@@ -199,9 +199,9 @@ async fn test_command_events_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; Result&lt;SlackCommandEventResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-    println!(&quot;{:#?}&quot;, event);
+    println!("{:#?}", event);
     Ok(SlackCommandEventResponse::new(
-        SlackMessageContent::new().with_text(&quot;Working on it&quot;.into()),
+        SlackMessageContent::new().with_text("Working on it".into()),
     ))
 }
 
@@ -210,7 +210,7 @@ async fn test_push_events_sm_function(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
-    println!(&quot;{:#?}&quot;, event);
+    println!("{:#?}", event);
     Ok(())
 }
 
@@ -232,14 +232,14 @@ let socket_mode_listener = SlackClientSocketModeListener::new(
 );
 </code></pre>
 <h2 id="connect-using-socket-mode-to-slack"><a class="header" href="#connect-using-socket-mode-to-slack">Connect using socket mode to Slack</a></h2>
-<p>The following code initiates Web-sockets based connections to Slack endpoints using Slack Web methods 
+<p>The following code initiates Web-sockets based connections to Slack endpoints using Slack Web methods
 and provided user token.</p>
 <p>Slack Morphism supports multiple web-socket connections per one token to <a href="https://api.slack.com/apis/connections/socket-implement#disconnect">gracefully handle disconnects</a>.
 By default it uses 2 connections to one token. To configure it see <code>SlackClientSocketModeConfig</code>;</p>
 <pre><code class="language-rust noplaypen">
 // Need to specify App token for Socket Mode:
 let app_token_value: SlackApiTokenValue = 
-    config_env_var(&quot;SLACK_TEST_APP_TOKEN&quot;)?.into();
+    config_env_var("SLACK_TEST_APP_TOKEN")?.into();
 let app_token: SlackApiToken = SlackApiToken::new(app_token_value);
 
 // Register an app token to listen for events, 
@@ -252,9 +252,9 @@ socket_mode_listener.serve().await;
 </code></pre>
 <h2 id="important-caveats"><a class="header" href="#important-caveats">Important caveats</a></h2>
 <h3 id="the-time-blocking-of-the-sm-listener-callbacks-is-important"><a class="header" href="#the-time-blocking-of-the-sm-listener-callbacks-is-important">The time blocking of the SM listener callbacks is important</a></h3>
-<p>If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again 
-and also to inform users with errors and timeouts. 
-So, if you have something complex and time-consuming in your callbacks 
+<p>If your app blocks callbacks more than 2-3 seconds Slack server may decide to repeat requests again
+and also to inform users with errors and timeouts.
+So, if you have something complex and time-consuming in your callbacks
 you should spawn your own future, e.g:</p>
 <pre><code class="language-rust noplaypen">    async fn test_push_events_sm_function(
         event: SlackPushEventCallback,
@@ -272,7 +272,7 @@ fn test_error_handler(
     _client: Arc&lt;SlackHyperClient&gt;,
     _states: SlackClientEventsUserState,
 ) -&gt; http::StatusCode {
-    println!(&quot;{:#?}&quot;, err);
+    println!("{:#?}", err);
 
     // This return value should be OK if we want to return successful ack
     // to the Slack server using Web-sockets

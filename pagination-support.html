@@ -193,7 +193,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let hyper_connector = SlackClientHyperConnector::new()?;
     let client = SlackClient::new(hyper_connector);
     
-    let token_value: SlackApiTokenValue = &quot;xoxb-89.....&quot;.into();
+    let token_value: SlackApiTokenValue = "xoxb-89.....".into();
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&amp;token);
     
@@ -209,7 +209,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     
     let mut items_stream = scroller.to_items_stream(&amp;session);
     while let Some(items) = items_stream.try_next().await? {
-        println!(&quot;users batch: {:#?}&quot;, items);
+        println!("users batch: {:#?}", items);
     }
     
     // Option 2: Collect all of the data in a vector (which internally uses the same approach above)
@@ -222,7 +222,7 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
     let mut items_throttled_stream =
         scroller.to_items_throttled_stream(&amp;session, Duration::from_millis(500));
     while let Some(items) = items_throttled_stream.try_next().await? {
-        println!(&quot;res: {:#?}&quot;, items);
+        println!("res: {:#?}", items);
     }
 
     Ok(())

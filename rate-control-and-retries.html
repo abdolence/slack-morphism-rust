@@ -192,8 +192,8 @@ let client = SlackClient::new(
 <p>The example above creates a Slack API Client that follows the official rate limits from Slack.
 Because the Slack rate limits apply per workspaces (separately),
 to use throttling and limits properly you <em>have to specify</em> team id in tokens:</p>
-<pre><code>let token_value: SlackApiTokenValue = config_env_var(&quot;SLACK_TEST_TOKEN&quot;)?.into();
-let team_id: SlackTeamId = config_env_var(&quot;SLACK_TEST_TEAM_ID&quot;)?.into();
+<pre><code>let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
+let team_id: SlackTeamId = config_env_var("SLACK_TEST_TEAM_ID")?.into();
 let token: SlackApiToken = SlackApiToken::new(token_value).with_team_id(team_id);
 
 let session = client.open_session(&amp;token);
