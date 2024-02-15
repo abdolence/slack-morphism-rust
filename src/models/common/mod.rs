@@ -16,6 +16,8 @@ mod channel;
 pub use channel::*;
 mod reaction;
 pub use reaction::*;
+mod star;
+pub use star::*;
 
 mod bot;
 pub use bot::*;
