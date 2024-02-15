@@ -98,6 +98,7 @@ pub mod errors;
 pub mod listener;
 mod ratectl;
 mod scroller;
+#[cfg(feature = "signature-verifier")]
 pub mod signature_verifier;
 pub mod socket_mode;
 
