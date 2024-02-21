@@ -49,7 +49,7 @@ mime_guess = "2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 url = { version = "2.5", features = ["serde"]}
 http-body-util = { version = "0.1", optional = true }
-hyper = { version ="1.1", features = ["http2","server", "client"], optional = true }
+hyper = { version ="1.2", features = ["http2","server", "client"], optional = true }
 hyper-util = { version = "0.1", features = ["client", "client-legacy", "server"], optional = true }
 tokio = { version = "1", features = ["bytes","rt-multi-thread","signal","tracing"], optional = true }
 tokio-stream = { version = "0.1", optional = true }
@@ -70,7 +70,7 @@ cargo-husky = { version = "1", default-features = false, features = ["run-for-al
 cargo-audit = "0.20"
 tracing-subscriber = { version ="0.3", features = ["env-filter"] }
 hyper-proxy2 = "0.1"
-hyper = { version ="1.1", features = ["full"] }
+hyper = { version ="1.2", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 
 [package.metadata.release]
