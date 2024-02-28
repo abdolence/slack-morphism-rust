@@ -72,6 +72,8 @@ pub enum SlackEventCallbackBody {
     FilePublic(SlackFilePublicEvent),
     ReactionAdded(SlackReactionAddedEvent),
     ReactionRemoved(SlackReactionRemovedEvent),
+    StarAdded(SlackStarAddedEvent),
+    StarRemoved(SlackStarRemovedEvent),
     UserChange(SlackUserChangeEvent),
     UserStatusChanged(SlackUserStatusChangedEvent),
 }
@@ -353,6 +355,22 @@ pub struct SlackReactionRemovedEvent {
     pub reaction: SlackReactionName,
     pub item_user: Option<SlackUserId>,
     pub item: SlackReactionsItem,
+    pub event_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackStarAddedEvent {
+    pub user: SlackUserId,
+    pub item: SlackStarsItem,
+    pub event_ts: SlackTs,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackStarRemovedEvent {
+    pub user: SlackUserId,
+    pub item: SlackStarsItem,
     pub event_ts: SlackTs,
 }
 
