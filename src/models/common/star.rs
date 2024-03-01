@@ -22,45 +22,45 @@ pub enum SlackStarsItem {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemMessage {
-    message: SlackHistoryMessage,
-    channel: SlackChannelId,
-    date_create: SlackDateTime,
+    pub message: SlackHistoryMessage,
+    pub channel: SlackChannelId,
+    pub date_create: SlackDateTime,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemFile {
-    file: SlackFile,
-    channel: SlackChannelId,
-    date_create: SlackDateTime,
+    pub file: SlackFile,
+    pub channel: SlackChannelId,
+    pub date_create: SlackDateTime,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemFileComment {
-    file: SlackFile,
-    comment: String,
-    channel: SlackChannelId,
-    date_create: SlackDateTime,
+    pub file: SlackFile,
+    pub comment: String,
+    pub channel: SlackChannelId,
+    pub date_create: SlackDateTime,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemChannel {
-    channel: SlackChannelId,
-    date_create: SlackDateTime,
+    pub channel: SlackChannelId,
+    pub date_create: SlackDateTime,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemIm {
-    channel: SlackChannelId,
-    date_create: SlackDateTime,
+    pub channel: SlackChannelId,
+    pub date_create: SlackDateTime,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemGroup {
-    group: SlackChannelId,
-    date_create: SlackDateTime,
+    pub group: SlackChannelId,
+    pub date_create: SlackDateTime,
 }
