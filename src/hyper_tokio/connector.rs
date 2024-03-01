@@ -30,6 +30,7 @@ use url::Url;
 pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> {
     hyper_connector: Client<H, Body>,
     tokio_rate_controller: Option<Arc<SlackTokioRateController>>,
+    slack_api_url: String,
 }
 
 pub type SlackClientHyperHttpsConnector =
@@ -59,6 +60,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         Self {
             hyper_connector: Client::builder(TokioExecutor::new()).build::<_, Body>(connector),
             tokio_rate_controller: None,
+            slack_api_url: SlackClientHttpApiUri::SLACK_API_URI_STR.to_string(),
         }
     }
 
@@ -67,6 +69,13 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
             tokio_rate_controller: Some(Arc::new(SlackTokioRateController::new(
                 rate_control_config,
             ))),
+            ..self
+        }
+    }
+
+    pub fn with_slack_api_url(self, slack_api_url: &str) -> Self {
+        Self {
+            slack_api_url: slack_api_url.to_string(),
             ..self
         }
     }
@@ -267,6 +276,10 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
 impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnector
     for SlackClientHyperConnector<H>
 {
+    fn create_method_uri_path(&self, method_relative_uri: &str) -> ClientResult<Url> {
+        Ok(format!("{}/{}", self.slack_api_url, method_relative_uri).parse()?)
+    }
+
     fn http_get_uri<'a, RS>(
         &'a self,
         full_uri: Url,

@@ -19,9 +19,13 @@ where
     ///
     pub async fn api_test(&self, req: &SlackApiTestRequest) -> ClientResult<SlackApiTestResponse> {
         let full_uri = SlackClientHttpApiUri::create_url_with_params(
-            &SlackClientHttpApiUri::create_method_uri_path("api.test"),
+            self.http_session_api
+                .client
+                .http_api
+                .connector
+                .create_method_uri_path("api.test")?,
             &vec![("foo", req.foo.as_ref()), ("error", req.error.as_ref())],
-        );
+        )?;
         self.http_session_api
             .http_post_uri(full_uri, &req, Some(&SLACK_TIER4_METHOD_CONFIG))
             .await

@@ -25,7 +25,9 @@ where
         req: &SlackOAuthV2AccessTokenRequest,
     ) -> ClientResult<SlackOAuthV2AccessTokenResponse> {
         let full_uri: Url = SlackClientHttpApiUri::create_url_with_params(
-            &SlackClientHttpApiUri::create_method_uri_path("oauth.v2.access"),
+            self.http_api
+                .connector
+                .create_method_uri_path("oauth.v2.access")?,
             &vec![
                 ("code", Some(req.code.value())),
                 (
@@ -36,7 +38,7 @@ where
                         .as_ref(),
                 ),
             ],
-        );
+        )?;
 
         self.http_api
             .connector
