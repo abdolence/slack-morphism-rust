@@ -8,7 +8,8 @@ use crate::errors::SlackClientError;
 use crate::models::*;
 use crate::multipart_form::FileMultipartData;
 use crate::ratectl::SlackApiMethodRateControlConfig;
-use futures_util::future::BoxFuture;
+use futures::future::BoxFuture;
+use futures::FutureExt;
 use lazy_static::*;
 use rvstruct::ValueStruct;
 use tracing::*;
@@ -43,7 +44,7 @@ pub struct SlackClientHttpSessionApi<'a, SCHC>
 where
     SCHC: SlackClientHttpConnector + Send,
 {
-    client: &'a SlackClient<SCHC>,
+    pub client: &'a SlackClient<SCHC>,
     token: &'a SlackApiToken,
     pub span: Span,
 }
@@ -85,12 +86,14 @@ pub trait SlackClientHttpConnector {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
         TS: AsRef<str> + 'p + Send,
     {
-        let full_uri = SlackClientHttpApiUri::create_url_with_params(
-            &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
-            params,
-        );
+        let full_uri = self
+            .create_method_uri_path(method_relative_uri)
+            .and_then(|url| SlackClientHttpApiUri::create_url_with_params(url, params));
 
-        self.http_get_uri(full_uri, context)
+        match full_uri {
+            Ok(full_uri) => self.http_get_uri(full_uri, context),
+            Err(err) => std::future::ready(Err(err)).boxed(),
+        }
     }
 
     fn http_post_uri<'a, RQ, RS>(
@@ -113,11 +116,10 @@ pub trait SlackClientHttpConnector {
         RQ: serde::ser::Serialize + Send + Sync,
         RS: for<'de> serde::de::Deserialize<'de> + Send + 'a,
     {
-        let full_uri = SlackClientHttpApiUri::create_url(
-            &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
-        );
-
-        self.http_post_uri(full_uri, request, context)
+        match self.create_method_uri_path(method_relative_uri) {
+            Ok(full_uri) => self.http_post_uri(full_uri, request, context),
+            Err(err) => std::future::ready(Err(err)).boxed(),
+        }
     }
 
     fn http_post_uri_multipart_form<'a, 'p, RS, PT, TS>(
@@ -144,11 +146,14 @@ pub trait SlackClientHttpConnector {
         PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
         TS: AsRef<str> + 'p + Send,
     {
-        let full_uri = SlackClientHttpApiUri::create_url(
-            &SlackClientHttpApiUri::create_method_uri_path(method_relative_uri),
-        );
+        match self.create_method_uri_path(method_relative_uri) {
+            Ok(full_uri) => self.http_post_uri_multipart_form(full_uri, file, params, context),
+            Err(err) => std::future::ready(Err(err)).boxed(),
+        }
+    }
 
-        self.http_post_uri_multipart_form(full_uri, file, params, context)
+    fn create_method_uri_path(&self, method_relative_uri: &str) -> ClientResult<Url> {
+        Ok(SlackClientHttpApiUri::create_method_uri_path(method_relative_uri).parse()?)
     }
 }
 
@@ -188,17 +193,13 @@ where
 pub struct SlackClientHttpApiUri;
 
 impl SlackClientHttpApiUri {
-    const SLACK_API_URI_STR: &'static str = "https://slack.com/api";
+    pub const SLACK_API_URI_STR: &'static str = "https://slack.com/api";
 
     pub fn create_method_uri_path(method_relative_uri: &str) -> String {
         format!("{}/{}", Self::SLACK_API_URI_STR, method_relative_uri)
     }
 
-    pub(crate) fn create_url(url_str: &str) -> Url {
-        url_str.parse().unwrap()
-    }
-
-    pub fn create_url_with_params<'p, PT, TS>(url_str: &str, params: &'p PT) -> Url
+    pub fn create_url_with_params<'p, PT, TS>(base_url: Url, params: &'p PT) -> ClientResult<Url>
     where
         PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
         TS: AsRef<str> + 'p,
@@ -209,11 +210,7 @@ impl SlackClientHttpApiUri {
             .filter_map(|(k, vo)| vo.map(|v| (k.to_string(), v.as_ref().to_string())))
             .collect();
 
-        Url::parse_with_params(url_str, url_query_params)
-            .unwrap()
-            .as_str()
-            .parse()
-            .unwrap()
+        Ok(Url::parse_with_params(base_url.as_str(), url_query_params)?)
     }
 }
 

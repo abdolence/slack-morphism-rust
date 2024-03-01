@@ -30,7 +30,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
             let environment = environment.clone();
             async move {
                 let full_uri = SlackClientHttpApiUri::create_url_with_params(
-                    SlackOAuthListenerConfig::OAUTH_AUTHORIZE_URL_VALUE,
+                    SlackOAuthListenerConfig::OAUTH_AUTHORIZE_URL_VALUE.parse()?,
                     &vec![
                         ("client_id", Some(config.client_id.value())),
                         ("scope", Some(&config.bot_scope)),
@@ -39,7 +39,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                             Some(config.to_redirect_url()?.as_str().to_string()).as_ref(),
                         ),
                     ],
-                );
+                )?;
                 debug!("Redirecting to Slack OAuth authorize: {}", &full_uri);
                 HyperExtensions::hyper_redirect_to(full_uri.as_ref()).map(|r| r.into_response())
             }
