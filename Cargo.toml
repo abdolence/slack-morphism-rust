@@ -40,7 +40,7 @@ hex = "0.4"
 tracing = "0.1"
 ring = { version = "0.17", optional = true }
 lazy_static = "1.4"
-http = "1.0"
+http = "1.1"
 async-trait = "0.1"
 bytes = "1"
 rand = "0.8"
