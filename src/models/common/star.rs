@@ -39,7 +39,7 @@ pub struct SlackStarsItemFile {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackStarsItemFileComment {
     pub file: SlackFile,
-    pub comment: String,
+    pub comment: SlackFileCommentId,
     pub channel: SlackChannelId,
     pub date_create: SlackDateTime,
 }
