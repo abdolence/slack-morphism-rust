@@ -11,7 +11,7 @@ pub struct SlackBotInfo {
     pub name: String,
     pub updated: Option<SlackDateTime>,
     pub app_id: String,
-    pub user_id: String,
+    pub user_id: Option<String>,
     #[serde(flatten)]
     pub icons: Option<SlackIconImages>,
 }
