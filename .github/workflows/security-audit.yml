@@ -18,4 +18,4 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo install cargo-audit && cargo audit || true && cargo audit
+      - run: cargo audit || true && cargo audit
