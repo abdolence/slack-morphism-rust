@@ -43,19 +43,19 @@ impl SlackEventSignatureVerifier {
             ))
         } else {
             let hash_to_check = self.sign(body, ts);
-            if hash_to_check != hash {
-                Err(SlackEventSignatureVerifierError::WrongSignatureError(
-                    SlackEventWrongSignatureErrorInit {
-                        body_len: body.len(),
-                        ts: ts.into(),
-                        received_hash: hash.into(),
-                        generated_hash: hash_to_check,
-                    }
-                    .into(),
-                ))
-            } else {
-                Ok(())
-            }
+            ring::constant_time::verify_slices_are_equal(hash_to_check.as_bytes(), hash.as_bytes())
+                .map_err(|_| {
+                    SlackEventSignatureVerifierError::WrongSignatureError(
+                        SlackEventWrongSignatureErrorInit {
+                            body_len: body.len(),
+                            ts: ts.into(),
+                            received_hash: hash.into(),
+                            generated_hash: hash_to_check,
+                        }
+                        .into(),
+                    )
+                })?;
+            Ok(())
         }
     }
 }
@@ -151,13 +151,9 @@ fn check_signature_success() {
     const TEST_TS: &str = "test-ts";
 
     let hash = verifier.sign(TEST_BODY, TEST_TS);
-
-    match verifier.verify(&hash, TEST_BODY, TEST_TS) {
-        Ok(_) => {}
-        Err(e) => {
-            panic!("{}", e);
-        }
-    }
+    verifier
+        .verify(&hash, TEST_BODY, TEST_TS)
+        .expect("signature verification failed");
 }
 
 #[test]
@@ -169,12 +165,9 @@ fn test_precoded_data() {
 
     let verifier = SlackEventSignatureVerifier::new(&TEST_SECRET.to_string().into());
 
-    match verifier.verify(TEST_HASH, TEST_BODY, TEST_TS) {
-        Ok(_) => {}
-        Err(e) => {
-            panic!("{}", e);
-        }
-    }
+    verifier
+        .verify(TEST_HASH, TEST_BODY, TEST_TS)
+        .expect("signature verification failed");
 }
 
 #[test]
@@ -188,5 +181,31 @@ fn check_empty_secret_error_test() {
             assert!(!err.message.is_empty())
         }
         _ => unreachable!(),
+    }
+}
+
+#[test]
+fn check_signature_error() {
+    let rng = ring::rand::SystemRandom::new();
+    let key_value_correct: [u8; ring::digest::SHA256_OUTPUT_LEN] =
+        ring::rand::generate(&rng).unwrap().expose();
+    let key_value_malicious: [u8; ring::digest::SHA256_OUTPUT_LEN] =
+        ring::rand::generate(&rng).unwrap().expose();
+    let key_str_correct: String = hex::encode(key_value_correct);
+    let key_str_malicious: String = hex::encode(key_value_malicious);
+
+    let verifier_correct = SlackEventSignatureVerifier::new(&key_str_correct.into());
+    let verifier_malicious = SlackEventSignatureVerifier::new(&key_str_malicious.into());
+
+    const TEST_BODY: &str = "test-body";
+    const TEST_TS: &str = "test-ts";
+
+    let hash = verifier_malicious.sign(TEST_BODY, TEST_TS);
+    let err = verifier_correct
+        .verify(&hash, TEST_BODY, TEST_TS)
+        .unwrap_err();
+    match err {
+        SlackEventSignatureVerifierError::WrongSignatureError(_) => {}
+        _ => panic!("unexpected error, {}", err),
     }
 }
