@@ -13,6 +13,7 @@ pub enum SlackDateTimeFormats {
     TimeSecs,
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for SlackDateTimeFormats {
     fn to_string(&self) -> String {
         match self {
