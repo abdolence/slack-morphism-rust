@@ -56,7 +56,7 @@ impl From<SlackSectionBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackHeaderBlock {
     pub block_id: Option<SlackBlockId>,
-    pub text: SlackBlockText,
+    pub text: SlackBlockPlainTextOnly,
 }
 
 impl From<SlackHeaderBlock> for SlackBlock {
@@ -874,8 +874,8 @@ impl From<SlackBlockCheckboxesElement> for SlackActionBlockElement {
 }
 
 /**
-* 'plain_text' type of https://api.slack.com/reference/block-kit/composition-objects#text
-*/
+ * 'plain_text' type of https://api.slack.com/reference/block-kit/composition-objects#text
+ */
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockPlainText {
