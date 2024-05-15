@@ -9,23 +9,35 @@ use std::*;
 use url::Url;
 
 mod user;
+
 pub use user::*;
+
 mod team;
+
 pub use team::*;
+
 mod channel;
+
 pub use channel::*;
+
 mod reaction;
+
 pub use reaction::*;
+
 mod star;
+
 pub use star::*;
 
 mod bot;
+
 pub use bot::*;
 
 mod icon;
+
 pub use icon::*;
 
 mod formatters;
+
 pub use formatters::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
@@ -178,6 +190,7 @@ pub enum SlackConversationType {
     Public,
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for SlackConversationType {
     fn to_string(&self) -> String {
         match self {

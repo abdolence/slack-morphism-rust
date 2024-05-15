@@ -87,10 +87,7 @@ pub struct SlackApiFilesUploadResponse {
     pub file: SlackFile,
 }
 
-fn to_csv<S: Serializer>(x: &Option<Vec<SlackChannelId>>, s: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
+fn to_csv<S: Serializer>(x: &Option<Vec<SlackChannelId>>, s: S) -> Result<S::Ok, S::Error> {
     match x {
         None => s.serialize_none(),
         Some(ids) => {

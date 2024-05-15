@@ -24,6 +24,7 @@ pub enum SlackApiTokenType {
     App,
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for SlackApiTokenType {
     fn to_string(&self) -> String {
         match self {
