@@ -55,7 +55,7 @@ hyper-util = { version = "0.1", features = ["client", "client-legacy", "server"]
 tokio = { version = "1", features = ["bytes", "rt-multi-thread", "signal", "tracing"], optional = true }
 tokio-stream = { version = "0.1", optional = true }
 hyper-rustls = { version = "0.26", features = ["rustls-native-certs", "http2"], optional = true }
-tokio-tungstenite = { version = "0.21.0", features = ["rustls-tls-native-roots"], optional = true }
+tokio-tungstenite = { version = "0.23.0", features = ["rustls-tls-native-roots"], optional = true }
 axum = { version = "0.7", optional = true }
 tower = { version = "0.4", optional = true }
 
