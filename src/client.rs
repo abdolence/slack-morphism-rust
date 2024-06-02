@@ -152,6 +152,16 @@ pub trait SlackClientHttpConnector {
         }
     }
 
+    fn http_post_uri_binary<'a, 'p, RS>(
+        &'a self,
+        full_uri: Url,
+        content_type: String,
+        data: &'a [u8],
+        context: SlackClientApiCallContext<'a>,
+    ) -> BoxFuture<'a, ClientResult<RS>>
+    where
+        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a;
+
     fn create_method_uri_path(&self, method_relative_uri: &str) -> ClientResult<Url> {
         Ok(SlackClientHttpApiUri::create_method_uri_path(method_relative_uri).parse()?)
     }
@@ -402,6 +412,30 @@ where
             .http_api
             .connector
             .http_post_uri_multipart_form(full_uri, file, params, context)
+            .await
+    }
+
+    pub async fn http_post_uri_binary<'p, RS>(
+        &self,
+        full_uri: Url,
+        content_type: String,
+        data: &'a [u8],
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
+    where
+        RS: for<'de> serde::de::Deserialize<'de> + Send,
+    {
+        let context = SlackClientApiCallContext {
+            rate_control_params,
+            token: Some(self.token),
+            tracing_span: &self.span,
+            is_sensitive_url: true,
+        };
+
+        self.client
+            .http_api
+            .connector
+            .http_post_uri_binary(full_uri, content_type, data, context)
             .await
     }
 }

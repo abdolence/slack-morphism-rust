@@ -88,22 +88,34 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let token: SlackApiToken = SlackApiToken::new(token_value);
     let session = client.open_session(&token);
 
-    let file_upload_req = SlackApiFilesUploadRequest::new()
-        //.with_channels(vec!["#random".into()])
-        .with_binary_content("test-content".into());
-    //.with_filename("test.txt".into());
+    let test_content: String = "test-content".into();
 
-    //let file_upload_resp = session.files_upload(&file_upload_req).await?;
-    //println!("file upload resp: {:#?}", &file_upload_resp);
-
-    let get_upload_url_req = SlackApiFilesGetUploadUrlExternalRequest::new("test.txt".into(), 1000);
+    let get_upload_url_req =
+        SlackApiFilesGetUploadUrlExternalRequest::new("test.txt".into(), test_content.len());
     let upload_url_resp = session.get_upload_url_external(&get_upload_url_req).await?;
     println!("get url resp: {:#?}", &upload_url_resp);
 
-    let file_upload_resp = session
-        .files_upload_via_url(&upload_url_resp.upload_url, &file_upload_req)
-        .await?;
+    let file_upload_req = SlackApiFilesUploadViaUrlRequest::new(
+        upload_url_resp.upload_url,
+        test_content.into(),
+        "text/plain".into(),
+    );
+
+    let file_upload_resp = session.files_upload_via_url(&file_upload_req).await?;
     println!("file_upload_resp: {:#?}", &file_upload_resp);
+
+    let complete_file_upload_req =
+        SlackApiFilesCompleteUploadExternalRequest::new(vec![SlackApiFilesComplete::new(
+            upload_url_resp.file_id,
+        )]); // .with_channel_id("C.....".into());
+
+    let complete_file_upload_resp = session
+        .files_complete_upload_external(&complete_file_upload_req)
+        .await?;
+    println!(
+        "complete_file_upload_resp: {:#?}",
+        &complete_file_upload_resp
+    );
 
     Ok(())
 }
