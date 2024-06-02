@@ -25,7 +25,7 @@ where
     /// https://api.slack.com/methods/files.upload
     ///
     #[deprecated(
-        note = "Deprecated by Slack. Use `getUploadURLExternal/completeUploadExternal` instead"
+        note = "Deprecated by Slack. Use `getUploadURLExternal/files_upload_via_url/completeUploadExternal` instead."
     )]
     pub async fn files_upload(
         &self,
