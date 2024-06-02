@@ -7,6 +7,7 @@ use serde_with::skip_serializing_none;
 use url::Url;
 
 pub mod comments;
+
 pub use comments::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
@@ -20,6 +21,12 @@ pub struct SlackFilePrettyType(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackFileExternalType(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackFileSnippetType(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackFileUploadUrl(pub Url);
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]

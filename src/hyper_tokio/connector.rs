@@ -19,10 +19,12 @@ use crate::hyper_tokio::multipart_form::{
 use crate::multipart_form::FileMultipartData;
 use crate::prelude::hyper_ext::HyperExtensions;
 use crate::ratectl::SlackApiRateControlConfig;
+use bytes::BytesMut;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::sync::Arc;
 use std::time::Duration;
+
 use tracing::*;
 use url::Url;
 
@@ -447,5 +449,47 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                 .boxed(),
             Err(err) => futures::future::err(err.into()).boxed(),
         }
+    }
+
+    fn http_post_uri_binary<'a, 'p, RS>(
+        &'a self,
+        full_uri: Url,
+        content_type: String,
+        data: &'a [u8],
+        context: SlackClientApiCallContext<'a>,
+    ) -> BoxFuture<'a, ClientResult<RS>>
+    where
+        RS: for<'de> serde::de::Deserialize<'de> + Send + 'a + Send + 'a,
+    {
+        let context_token = context.token;
+        let body_bytes = BytesMut::from(data).freeze();
+
+        async move {
+            let response_body = self
+                .send_rate_controlled_request(
+                    move || {
+                        let http_body = Full::new(body_bytes.clone()).boxed();
+                        let http_base_request = HyperExtensions::create_http_request(
+                            full_uri.clone(),
+                            hyper::http::Method::POST,
+                        )
+                        .header("content-type", content_type.as_str());
+
+                        let http_request = HyperExtensions::setup_token_auth_header(
+                            http_base_request,
+                            context_token,
+                        );
+
+                        http_request.body(http_body).map_err(|e| e.into())
+                    },
+                    context,
+                    None,
+                    0,
+                )
+                .await?;
+
+            Ok(response_body)
+        }
+        .boxed()
     }
 }

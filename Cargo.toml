@@ -1,6 +1,6 @@
 [package]
 name = "slack-morphism"
-version = "2.2.0"
+version = "2.3.0-alpha.1"
 authors = ["Abdulla Abdurakhmanov <me@abdolence.dev>"]
 edition = "2021"
 license = "Apache-2.0"

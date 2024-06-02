@@ -7,6 +7,10 @@ use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_with::skip_serializing_none;
 
+use crate::api::{
+    SlackApiUsersConversationsRequest, SlackApiUsersConversationsResponse,
+    SlackApiUsersProfileSetRequest, SlackApiUsersProfileSetResponse,
+};
 use crate::models::*;
 use crate::multipart_form::FileMultipartData;
 use crate::ratectl::*;
@@ -20,6 +24,9 @@ where
     ///
     /// https://api.slack.com/methods/files.upload
     ///
+    #[deprecated(
+        note = "Deprecated by Slack. Use `getUploadURLExternal/files_upload_via_url/completeUploadExternal` instead."
+    )]
     pub async fn files_upload(
         &self,
         req: &SlackApiFilesUploadRequest,
@@ -64,6 +71,57 @@ where
             )
             .await
     }
+
+    ///
+    /// https://api.slack.com/methods/files.getUploadURLExternal
+    ///
+    pub async fn get_upload_url_external(
+        &self,
+        req: &SlackApiFilesGetUploadUrlExternalRequest,
+    ) -> ClientResult<SlackApiFilesGetUploadUrlExternalResponse> {
+        self.http_session_api
+            .http_get(
+                "files.getUploadURLExternal",
+                &vec![
+                    ("filename", Some(&req.filename)),
+                    ("length", Some(&req.length.to_string())),
+                    ("alt_txt", req.alt_txt.as_ref()),
+                    ("snippet_type", req.snippet_type.as_ref().map(|v| v.value())),
+                ],
+                Some(&SLACK_TIER4_METHOD_CONFIG),
+            )
+            .await
+    }
+
+    pub async fn files_upload_via_url(
+        &self,
+        req: &SlackApiFilesUploadViaUrlRequest,
+    ) -> ClientResult<SlackApiFilesUploadViaUrlResponse> {
+        self.http_session_api
+            .http_post_uri_binary(
+                req.upload_url.value().clone(),
+                req.content_type.clone(),
+                &req.content,
+                Some(&SLACK_TIER4_METHOD_CONFIG),
+            )
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/files.completeUploadExternal
+    ///
+    pub async fn files_complete_upload_external(
+        &self,
+        req: &SlackApiFilesCompleteUploadExternalRequest,
+    ) -> ClientResult<SlackApiFilesCompleteUploadExternalResponse> {
+        self.http_session_api
+            .http_post(
+                "files.completeUploadExternal",
+                req,
+                Some(&SLACK_TIER4_METHOD_CONFIG),
+            )
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -85,6 +143,56 @@ pub struct SlackApiFilesUploadRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiFilesUploadResponse {
     pub file: SlackFile,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesGetUploadUrlExternalRequest {
+    pub filename: String,
+    pub length: usize,
+    pub alt_txt: Option<String>,
+    pub snippet_type: Option<SlackFileSnippetType>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesGetUploadUrlExternalResponse {
+    pub upload_url: SlackFileUploadUrl,
+    pub file_id: SlackFileId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesUploadViaUrlRequest {
+    pub upload_url: SlackFileUploadUrl,
+    pub content: Vec<u8>,
+    pub content_type: String,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesUploadViaUrlResponse {}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesCompleteUploadExternalRequest {
+    pub files: Vec<SlackApiFilesComplete>,
+    pub channel_id: Option<SlackChannelId>,
+    pub initial_comment: Option<String>,
+    pub thread_ts: Option<SlackTs>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesCompleteUploadExternalResponse {
+    pub files: Vec<SlackApiFilesComplete>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesComplete {
+    pub id: SlackFileId,
+    pub title: Option<String>,
 }
 
 fn to_csv<S: Serializer>(x: &Option<Vec<SlackChannelId>>, s: S) -> Result<S::Ok, S::Error> {
