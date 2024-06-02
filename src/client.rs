@@ -378,4 +378,30 @@ where
             .http_post_multipart_form(method_relative_uri, file, params, context)
             .await
     }
+
+    pub async fn http_post_uri_multipart_form<'p, RS, PT, TS>(
+        &self,
+        full_uri: Url,
+        file: Option<FileMultipartData<'p>>,
+        params: &'p PT,
+        rate_control_params: Option<&'a SlackApiMethodRateControlConfig>,
+    ) -> ClientResult<RS>
+    where
+        RS: for<'de> serde::de::Deserialize<'de> + Send,
+        PT: std::iter::IntoIterator<Item = (&'p str, Option<TS>)> + Clone,
+        TS: AsRef<str> + 'p + Send,
+    {
+        let context = SlackClientApiCallContext {
+            rate_control_params,
+            token: Some(self.token),
+            tracing_span: &self.span,
+            is_sensitive_url: false,
+        };
+
+        self.client
+            .http_api
+            .connector
+            .http_post_uri_multipart_form(full_uri, file, params, context)
+            .await
+    }
 }

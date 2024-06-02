@@ -89,12 +89,21 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let session = client.open_session(&token);
 
     let file_upload_req = SlackApiFilesUploadRequest::new()
-        .with_channels(vec!["#random".into()])
-        .with_binary_content("test-content".into())
-        .with_filename("test.txt".into());
+        //.with_channels(vec!["#random".into()])
+        .with_binary_content("test-content".into());
+    //.with_filename("test.txt".into());
 
-    let file_upload_resp = session.files_upload(&file_upload_req).await?;
-    println!("file upload resp: {:#?}", &file_upload_resp);
+    //let file_upload_resp = session.files_upload(&file_upload_req).await?;
+    //println!("file upload resp: {:#?}", &file_upload_resp);
+
+    let get_upload_url_req = SlackApiFilesGetUploadUrlExternalRequest::new("test.txt".into(), 1000);
+    let upload_url_resp = session.get_upload_url_external(&get_upload_url_req).await?;
+    println!("get url resp: {:#?}", &upload_url_resp);
+
+    let file_upload_resp = session
+        .files_upload_via_url(&upload_url_resp.upload_url, &file_upload_req)
+        .await?;
+    println!("file_upload_resp: {:#?}", &file_upload_resp);
 
     Ok(())
 }
