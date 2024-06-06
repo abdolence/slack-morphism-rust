@@ -190,7 +190,7 @@ pub struct SlackMessageEventEdited {
     #[serde(flatten)]
     pub sender: SlackMessageSender,
     pub ts: SlackTs,
-    pub edited: SlackMessageEdited,
+    pub edited: Option<SlackMessageEdited>,
 }
 
 #[skip_serializing_none]
