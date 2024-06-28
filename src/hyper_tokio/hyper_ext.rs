@@ -43,7 +43,12 @@ impl HyperExtensions {
             request_builder
         } else {
             let token_header_value = format!("Bearer {}", token.unwrap().token_value.value());
-            request_builder.header(hyper::header::AUTHORIZATION, token_header_value)
+            let mut builder =
+                request_builder.header(hyper::header::AUTHORIZATION, token_header_value);
+            if let Some(cookie) = token.unwrap().cookie.clone() {
+                builder = builder.header(hyper::header::COOKIE, cookie.value())
+            }
+            builder
         }
     }
 

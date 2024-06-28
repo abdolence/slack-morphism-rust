@@ -14,6 +14,15 @@ impl std::fmt::Debug for SlackApiTokenValue {
     }
 }
 
+#[derive(Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackApiCookieValue(pub String);
+
+impl std::fmt::Debug for SlackApiCookieValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SlackApiCookieValue(len:{})", self.value().len())
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
 pub enum SlackApiTokenType {
     #[serde(rename = "bot")]
@@ -39,6 +48,7 @@ impl ToString for SlackApiTokenType {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiToken {
     pub token_value: SlackApiTokenValue,
+    pub cookie: Option<SlackApiCookieValue>,
     pub team_id: Option<SlackTeamId>,
     pub scope: Option<SlackApiTokenScope>,
     pub token_type: Option<SlackApiTokenType>,
