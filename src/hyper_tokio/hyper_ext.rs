@@ -39,16 +39,16 @@ impl HyperExtensions {
         request_builder: hyper::http::request::Builder,
         token: Option<&SlackApiToken>,
     ) -> hyper::http::request::Builder {
-        if token.is_none() {
-            request_builder
-        } else {
-            let token_header_value = format!("Bearer {}", token.unwrap().token_value.value());
+        if let Some(existing_token) = token {
+            let token_header_value = format!("Bearer {}", existing_token.token_value.value());
             let mut builder =
                 request_builder.header(hyper::header::AUTHORIZATION, token_header_value);
-            if let Some(cookie) = token.unwrap().cookie.clone() {
+            if let Some(cookie) = existing_token.cookie.clone() {
                 builder = builder.header(hyper::header::COOKIE, cookie.value())
             }
             builder
+        } else {
+            request_builder
         }
     }
 
