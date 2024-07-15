@@ -115,6 +115,7 @@ pub struct SlackMessageAttachment {
     pub fields: Option<Vec<SlackMessageAttachmentFieldObject>>,
     pub mrkdwn_in: Option<Vec<String>>,
     pub text: Option<String>,
+    pub blocks: Option<Vec<SlackBlock>>,
 }
 
 // This model is not well typed since Slack message attachments are deprecated
