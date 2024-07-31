@@ -159,6 +159,8 @@ pub enum SlackMessageEventType {
     FileUnshared,
     #[serde(rename = "file_public")]
     FilePublic,
+    #[serde(rename = "huddle_thread")]
+    HuddleThread,
 }
 
 #[skip_serializing_none]
