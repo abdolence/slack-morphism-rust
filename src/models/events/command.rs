@@ -8,7 +8,9 @@ use crate::*;
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackCommandEvent {
     pub team_id: SlackTeamId,
+    pub team_domain: Option<String>,
     pub channel_id: SlackChannelId,
+    pub channel_name: Option<String>,
     pub user_id: SlackUserId,
     pub command: SlackCommandId,
     pub text: Option<String>,
