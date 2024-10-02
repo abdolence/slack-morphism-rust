@@ -53,6 +53,7 @@ pub struct SlackInteractionBlockSuggestionEvent {
     pub container: SlackInteractionActionContainer,
     pub view: Option<SlackView>,
     pub value: String,
+    pub message: Option<SlackHistoryMessage>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
