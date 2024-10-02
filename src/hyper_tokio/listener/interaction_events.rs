@@ -86,6 +86,21 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         }
 
                                     }
+                                    Ok(block_suggestion_event@SlackInteractionEvent::BlockSuggestion(_)) => {
+                                        match interaction_service_fn(block_suggestion_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
+                                            Ok(response) => {
+                                                response.to_http_response(&block_suggestion_event)
+                                            }
+                                            Err(err) => {
+                                                let status_code = thread_error_handler(err, sc, thread_user_state_storage);
+                                                Response::builder()
+                                                    .status(status_code)
+                                                    .body(Empty::new().boxed())
+                                                    .map_err(|e| e.into())
+                                            }
+                                        }
+
+                                    }
                                     Ok(interaction_event) => {
                                         match interaction_service_fn(interaction_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
                                             Ok(response) => response.to_http_response(&interaction_event),
@@ -137,6 +152,16 @@ impl SlackInteractionEventResponse for () {
 }
 
 impl SlackInteractionEventResponse for SlackViewSubmissionResponse {
+    fn to_http_response(&self, _event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
+        let json_str = serde_json::to_string(&self)?;
+        Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "application/json; charset=utf-8")
+            .body(Full::new(json_str.into()).boxed())?)
+    }
+}
+
+impl SlackInteractionEventResponse for SlackBlockSuggestionResponse {
     fn to_http_response(&self, _event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
         let json_str = serde_json::to_string(&self)?;
         Ok(Response::builder()

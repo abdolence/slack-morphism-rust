@@ -12,6 +12,8 @@ use std::collections::HashMap;
 pub enum SlackInteractionEvent {
     #[serde(rename = "block_actions")]
     BlockActions(SlackInteractionBlockActionsEvent),
+    #[serde(rename = "block_suggestion")]
+    BlockSuggestion(SlackInteractionBlockSuggestionEvent),
     #[serde(rename = "dialog_submission")]
     DialogSubmission(SlackInteractionDialogueSubmissionEvent),
     #[serde(rename = "message_action")]
@@ -38,6 +40,20 @@ pub struct SlackInteractionBlockActionsEvent {
     pub response_url: Option<SlackResponseUrl>,
     pub actions: Option<Vec<SlackInteractionActionInfo>>,
     pub state: Option<SlackActionState>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackInteractionBlockSuggestionEvent {
+    pub team: SlackBasicTeamInfo,
+    pub user: SlackBasicUserInfo,
+    pub api_app_id: SlackAppId,
+    pub block_id: SlackBlockId,
+    pub action_id: SlackActionId,
+    pub container: SlackInteractionActionContainer,
+    pub view: Option<SlackView>,
+    pub value: String,
+    pub message: Option<SlackHistoryMessage>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -130,4 +146,23 @@ pub struct SlackInteractionViewClosedEvent {
     pub user: SlackBasicUserInfo,
     pub view: SlackStatefulView,
     pub trigger_id: Option<SlackTriggerId>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SlackBlockSuggestionResponse {
+    Options(SlackBlockSuggestionOptions),
+    OptionGroups(SlackBlockSuggestionOptionGroups),
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockSuggestionOptions {
+    pub options: Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockSuggestionOptionGroups {
+    pub option_groups: Vec<SlackBlockOptionGroup<SlackBlockPlainTextOnly>>,
 }
