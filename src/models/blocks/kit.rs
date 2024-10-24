@@ -29,12 +29,80 @@ pub enum SlackBlock {
     Input(SlackInputBlock),
     #[serde(rename = "file")]
     File(SlackFileBlock),
+    #[serde(rename = "rich_text")]
+    RichText(SlackRichTextBlock),
 
     // This block is still undocumented, so we don't define any structure yet we can return it back,
-    #[serde(rename = "rich_text")]
-    RichText(serde_json::Value),
     #[serde(rename = "event")]
     Event(serde_json::Value),
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub elements: Vec<SlackRichTextBlockElement>,
+}
+impl From<SlackRichTextBlock> for SlackBlock {
+    fn from(block: SlackRichTextBlock) -> Self {
+        SlackBlock::RichText(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackRichTextBlockElement {
+    #[serde(rename = "rich_text_section")]
+    RichTextSection(SlackRichTextSectionElement),
+    #[serde(rename = "rich_text_list")]
+    RichTextList(SlackRichTextListElement),
+    #[serde(rename = "rich_text_preformatted")]
+    RichTextPreformatted(SlackRichTextPreformattedElement),
+    #[serde(rename = "rich_text_quote")]
+    RichTextQuote(SlackRichTextQuoteElement),
+}
+
+// TODO: Implement each elements
+/// https://api.slack.com/reference/block-kit/blocks#element-types
+/// https://api.slack.com/reference/block-kit/blocks#rich_text_preformatted
+pub type SlackRichTextElementTypes = serde_json::Value;
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextSectionElement {
+    pub elements: Vec<SlackRichTextElementTypes>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextListElement {
+    pub style: SlackRichTextListStyle,
+    pub elements: Vec<SlackRichTextBlockElement>,
+    pub indent: Option<u32>,
+    pub offset: Option<u32>,
+    pub border: Option<u32>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum SlackRichTextListStyle {
+    // #[serde(rename = "bullet")]
+    Bullet,
+    // #[serde(rename = "ordered")]
+    Ordered,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextPreformattedElement {
+    pub elements: Vec<SlackRichTextElementTypes>,
+    pub border: Option<u32>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextQuoteElement {
+    pub elements: Vec<SlackRichTextElementTypes>,
+    pub border: Option<u32>,
 }
 
 #[skip_serializing_none]
