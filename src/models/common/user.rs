@@ -91,7 +91,6 @@ pub struct SlackUserGroup {
     pub deleted_by: Option<SlackUserId>,
     pub prefs: SlackUserGroupPrefs,
     pub users: Option<Vec<SlackUserId>>,
-    #[serde_as(as = "DisplayFromStr")]
     pub user_count: usize,
     pub channel_count: Option<u64>,
 }
