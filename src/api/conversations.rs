@@ -76,6 +76,10 @@ where
                     ("cursor", req.cursor.as_ref().map(|x| x.value())),
                     ("limit", req.limit.map(|v| v.to_string()).as_ref()),
                     ("inclusive", req.inclusive.map(|v| v.to_string()).as_ref()),
+                    (
+                        "include_all_metadata",
+                        req.include_all_metadata.map(|v| v.to_string()).as_ref(),
+                    ),
                     ("latest", req.latest.as_ref().map(|x| x.value())),
                     ("oldest", req.oldest.as_ref().map(|x| x.value())),
                 ],
@@ -386,6 +390,7 @@ pub struct SlackApiConversationsHistoryRequest {
     pub limit: Option<u16>,
     pub oldest: Option<SlackTs>,
     pub inclusive: Option<bool>,
+    pub include_all_metadata: Option<bool>,
 }
 
 #[skip_serializing_none]
