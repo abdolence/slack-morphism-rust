@@ -22,6 +22,13 @@ pub struct SlackMessageOrigin {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageMetadata {
+    pub event_type: String,
+    pub event_payload: Option<std::collections::HashMap<String, String>>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageContent {
     pub text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
@@ -29,6 +36,7 @@ pub struct SlackMessageContent {
     pub upload: Option<bool>,
     pub files: Option<Vec<SlackFile>>,
     pub reactions: Option<Vec<SlackReaction>>,
+    pub metadata: Option<SlackMessageMetadata>,
 }
 
 #[skip_serializing_none]
