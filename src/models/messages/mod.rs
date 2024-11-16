@@ -55,6 +55,8 @@ pub struct SlackParentMessageParams {
     pub reply_users_count: Option<usize>,
     pub latest_reply: Option<SlackTs>,
     pub reply_users: Option<Vec<SlackUserId>>,
+    pub subscribed: Option<bool>,
+    pub last_read: Option<SlackTs>,
 }
 
 #[skip_serializing_none]
