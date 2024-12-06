@@ -161,6 +161,10 @@ pub enum SlackMessageEventType {
     FilePublic,
     #[serde(rename = "huddle_thread")]
     HuddleThread,
+    #[serde(rename = "share_shortcut")]
+    ShareShortcut,
+    #[serde(rename = "canvas_updated")]
+    CanvasUpdated,
 }
 
 #[skip_serializing_none]
