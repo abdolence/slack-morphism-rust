@@ -46,6 +46,8 @@ pub struct SlackMessageSender {
     pub bot_id: Option<SlackBotId>,
     pub username: Option<String>,
     pub display_as_bot: Option<bool>,
+    pub user_profile: Option<SlackUserProfile>,
+    pub bot_profile: Option<SlackBotInfo>,
 }
 
 #[skip_serializing_none]
