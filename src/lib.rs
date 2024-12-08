@@ -102,7 +102,7 @@ mod scroller;
 pub mod signature_verifier;
 pub mod socket_mode;
 
-mod multipart_form;
+pub mod multipart_form;
 mod token;
 
 #[cfg(feature = "hyper")]
