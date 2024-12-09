@@ -347,6 +347,7 @@ pub struct SlackApiChatUpdateRequest {
     pub as_user: Option<bool>,
     pub link_names: Option<bool>,
     pub parse: Option<String>,
+    pub reply_broadcast: Option<bool>,
 }
 
 #[skip_serializing_none]
