@@ -163,8 +163,8 @@ pub enum SlackMessageEventType {
     HuddleThread,
     #[serde(rename = "share_shortcut")]
     ShareShortcut,
-    #[serde(rename = "canvas_updated")]
-    CanvasUpdated,
+    #[serde(rename = "channel_canvas_updated")]
+    ChannelCanvasUpdated,
 }
 
 #[skip_serializing_none]
