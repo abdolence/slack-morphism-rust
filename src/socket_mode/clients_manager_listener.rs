@@ -65,7 +65,7 @@ where
         if let Some(clients_manager) = self.clients_manager.upgrade() {
             match serde_json::from_str::<SlackSocketModeEvent>(message_body.as_str()).map_err(|e| {
                 SlackClientProtocolError::new(e)
-                    .with_json_body(message_body.to_string())
+                    .with_json_body(message_body)
                     .into()
             }) {
                 Ok(sm_event) => match sm_event {
