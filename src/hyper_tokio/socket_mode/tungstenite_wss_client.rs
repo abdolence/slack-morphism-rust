@@ -10,6 +10,7 @@ use std::time::SystemTime;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::RwLock;
+use tokio_tungstenite::tungstenite::Utf8Bytes;
 use tokio_tungstenite::*;
 use tracing::*;
 
@@ -231,7 +232,7 @@ where
                     match message {
                         SlackTungsteniteWssClientCommand::Message(body) => {
                             if writer
-                                .send(tokio_tungstenite::tungstenite::Message::Text(body))
+                                .send(tokio_tungstenite::tungstenite::Message::Text(body.into()))
                                 .await
                                 .is_err()
                             {
@@ -246,7 +247,7 @@ where
                                 body
                             );
                             if writer
-                                .send(tokio_tungstenite::tungstenite::Message::Pong(body))
+                                .send(tokio_tungstenite::tungstenite::Message::Pong(body.into()))
                                 .await
                                 .is_err()
                             {
@@ -259,7 +260,7 @@ where
                                 slack_wss_client_id = thread_identity.id.to_string().as_str(),
                                 "[{}] Ping to Slack: {:?}",
                                 thread_identity.id.to_string(),
-                                body
+                                &body
                             );
 
                             let seen_pong_time_in_secs = {
@@ -283,7 +284,9 @@ where
                                 );
                                 rx.close()
                             } else if let Err(err) = writer
-                                .send(tokio_tungstenite::tungstenite::Message::Ping(body.to_vec()))
+                                .send(tokio_tungstenite::tungstenite::Message::Ping(
+                                    body.to_vec().into(),
+                                ))
                                 .await
                             {
                                 warn!(
@@ -362,7 +365,7 @@ where
                             );
                             if let Some(reply) = thread_identity
                                 .client_listener
-                                .on_message(&thread_identity.id, body)
+                                .on_message(&thread_identity.id, body.as_str().into())
                                 .await
                             {
                                 trace!(
@@ -382,7 +385,7 @@ where
                                 thread_identity.id.to_string(),
                                 body
                             );
-                            tx.send(SlackTungsteniteWssClientCommand::Pong(body))
+                            tx.send(SlackTungsteniteWssClientCommand::Pong(body.into()))
                                 .unwrap_or(());
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
