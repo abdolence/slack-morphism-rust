@@ -40,6 +40,10 @@ mod formatters;
 
 pub use formatters::*;
 
+mod emoji;
+
+pub use emoji::*;
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTs(pub String);
 

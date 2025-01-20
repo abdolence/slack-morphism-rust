@@ -34,5 +34,5 @@ where
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiEmojiListResponse {
-    pub emoji: HashMap<String, String>,
+    pub emoji: HashMap<SlackEmojiName, SlackEmojiRef>,
 }
