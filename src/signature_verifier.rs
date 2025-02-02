@@ -1,14 +1,15 @@
 use crate::models::SlackSigningSecret;
-use ring::hmac;
+use hmac::{Hmac, Mac};
 use rsb_derive::Builder;
 use rvstruct::*;
+use sha2::Sha256;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use subtle::ConstantTimeEq;
 
 #[derive(Clone)]
 pub struct SlackEventSignatureVerifier {
-    secret_len: usize,
-    key: hmac::Key,
+    secret_bytes: Vec<u8>,
 }
 
 impl SlackEventSignatureVerifier {
@@ -16,19 +17,19 @@ impl SlackEventSignatureVerifier {
     pub const SLACK_SIGNED_TIMESTAMP: &'static str = "x-slack-request-timestamp";
 
     pub fn new(secret: &SlackSigningSecret) -> Self {
-        let secret_bytes = secret.value().as_bytes();
-        SlackEventSignatureVerifier {
-            secret_len: secret_bytes.len(),
-            key: hmac::Key::new(hmac::HMAC_SHA256, secret_bytes),
-        }
+        let secret_bytes = secret.value().as_bytes().to_vec();
+        SlackEventSignatureVerifier { secret_bytes }
     }
 
     fn sign<'a, 'b>(&'a self, body: &'b str, ts: &'b str) -> String {
-        let data_to_sign = format!("v0:{ts}:{body}");
-        format!(
-            "v0={}",
-            hex::encode(hmac::sign(&self.key, data_to_sign.as_bytes()))
-        )
+        let mut mac = Hmac::<Sha256>::new_from_slice(&self.secret_bytes)
+            .expect("HMAC can take key of any size");
+        mac.update(b"v0:");
+        mac.update(ts.as_bytes());
+        mac.update(b":");
+        mac.update(body.as_bytes());
+        let result = mac.finalize().into_bytes();
+        format!("v0={}", hex::encode(result))
     }
 
     pub fn verify<'b>(
@@ -37,25 +38,25 @@ impl SlackEventSignatureVerifier {
         body: &'b str,
         ts: &'b str,
     ) -> Result<(), SlackEventSignatureVerifierError> {
-        if self.secret_len == 0 {
+        if self.secret_bytes.is_empty() {
             Err(SlackEventSignatureVerifierError::CryptoInitError(
                 SlackEventSignatureCryptoInitError::new("secret key is empty".into()),
             ))
         } else {
             let hash_to_check = self.sign(body, ts);
-            ring::constant_time::verify_slices_are_equal(hash_to_check.as_bytes(), hash.as_bytes())
-                .map_err(|_| {
-                    SlackEventSignatureVerifierError::WrongSignatureError(
-                        SlackEventWrongSignatureErrorInit {
-                            body_len: body.len(),
-                            ts: ts.into(),
-                            received_hash: hash.into(),
-                            generated_hash: hash_to_check,
-                        }
-                        .into(),
-                    )
-                })?;
-            Ok(())
+            if hash_to_check.as_bytes().ct_eq(hash.as_bytes()).unwrap_u8() == 1 {
+                Ok(())
+            } else {
+                Err(SlackEventSignatureVerifierError::WrongSignatureError(
+                    SlackEventWrongSignatureErrorInit {
+                        body_len: body.len(),
+                        ts: ts.into(),
+                        received_hash: hash.into(),
+                        generated_hash: hash_to_check,
+                    }
+                    .into(),
+                ))
+            }
         }
     }
 }
@@ -140,10 +141,9 @@ impl Error for SlackEventWrongSignatureError {}
 
 #[test]
 fn check_signature_success() {
-    let rng = ring::rand::SystemRandom::new();
-    let key_value: [u8; ring::digest::SHA256_OUTPUT_LEN] =
-        ring::rand::generate(&rng).unwrap().expose();
-    let key_str: String = hex::encode(key_value);
+    use sha2::Digest;
+
+    let key_str: String = hex::encode(Sha256::digest("test-key"));
 
     let verifier = SlackEventSignatureVerifier::new(&key_str.into());
 
@@ -186,13 +186,10 @@ fn check_empty_secret_error_test() {
 
 #[test]
 fn check_signature_error() {
-    let rng = ring::rand::SystemRandom::new();
-    let key_value_correct: [u8; ring::digest::SHA256_OUTPUT_LEN] =
-        ring::rand::generate(&rng).unwrap().expose();
-    let key_value_malicious: [u8; ring::digest::SHA256_OUTPUT_LEN] =
-        ring::rand::generate(&rng).unwrap().expose();
-    let key_str_correct: String = hex::encode(key_value_correct);
-    let key_str_malicious: String = hex::encode(key_value_malicious);
+    use sha2::Digest;
+
+    let key_str_correct: String = hex::encode(Sha256::digest("correct-key"));
+    let key_str_malicious: String = hex::encode(Sha256::digest("malicious-key"));
 
     let verifier_correct = SlackEventSignatureVerifier::new(&key_str_correct.into());
     let verifier_malicious = SlackEventSignatureVerifier::new(&key_str_malicious.into());
