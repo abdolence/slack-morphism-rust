@@ -293,4 +293,23 @@ mod test {
             _ => panic!("unexpected error, {}", err),
         }
     }
+
+    #[test]
+    fn check_if_ts_validated() {
+        use sha2::Digest;
+
+        let key_str: String = hex::encode(Sha256::digest("test-key"));
+
+        let verifier = SlackEventSignatureVerifier::new(&key_str.into());
+
+        const TEST_BODY: &str = "test-body";
+
+        let test_ts = (chrono::Utc::now().timestamp() - 10 * 60 * 1000).to_string();
+        let hash = verifier.sign(TEST_BODY, &test_ts).unwrap();
+
+        match verifier.verify(&hash, TEST_BODY, &test_ts).unwrap_err() {
+            SlackEventSignatureVerifierError::IncorrectOrExpiredTimestampError(_) => {}
+            e => panic!("unexpected error, {}", e),
+        }
+    }
 }
