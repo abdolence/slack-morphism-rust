@@ -117,11 +117,7 @@ impl HyperExtensions {
                 Self::http_body_to_string(req_body)
                     .and_then(|body| async {
                         signature_verifier
-                            .verify(
-                                received_hash.to_str().unwrap(),
-                                &body,
-                                received_ts.to_str().unwrap(),
-                            )
+                            .verify(received_hash.to_str()?, &body, received_ts.to_str()?)
                             .map(|_| (body, parts))
                             .map_err(|e| e.into())
                     })
