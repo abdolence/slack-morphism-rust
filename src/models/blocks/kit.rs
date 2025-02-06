@@ -31,6 +31,8 @@ pub enum SlackBlock {
     File(SlackFileBlock),
     #[serde(rename = "video")]
     Video(SlackVideoBlock),
+    #[serde(rename = "markdown")]
+    Markdown(SlackMarkdownBlock),
 
     // This block is still undocumented, so we don't define any structure yet we can return it back,
     #[serde(rename = "rich_text")]
@@ -1023,5 +1025,21 @@ pub struct SlackVideoBlock {
 impl From<SlackVideoBlock> for SlackBlock {
     fn from(block: SlackVideoBlock) -> Self {
         SlackBlock::Video(block)
+    }
+}
+
+/**
+ * https://api.slack.com/reference/block-kit/blocks#markdown
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMarkdownBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub text: String,
+}
+
+impl From<SlackMarkdownBlock> for SlackBlock {
+    fn from(block: SlackMarkdownBlock) -> Self {
+        SlackBlock::Markdown(block)
     }
 }
