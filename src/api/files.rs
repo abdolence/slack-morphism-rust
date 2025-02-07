@@ -122,6 +122,15 @@ where
             )
             .await
     }
+
+    pub async fn files_delete(
+        &self,
+        req: &SlackApiFilesDeleteRequest,
+    ) -> ClientResult<SlackApiFilesDeleteResponse> {
+        self.http_session_api
+            .http_post("files.delete", req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -194,6 +203,16 @@ pub struct SlackApiFilesComplete {
     pub id: SlackFileId,
     pub title: Option<String>,
 }
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesDeleteRequest {
+    pub file: SlackFileId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesDeleteResponse {}
 
 fn to_csv<S: Serializer>(x: &Option<Vec<SlackChannelId>>, s: S) -> Result<S::Ok, S::Error> {
     match x {
