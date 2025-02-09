@@ -123,12 +123,15 @@ where
             .await
     }
 
+    ///
+    /// https://api.slack.com/methods/files.delete
+    ///
     pub async fn files_delete(
         &self,
         req: &SlackApiFilesDeleteRequest,
     ) -> ClientResult<SlackApiFilesDeleteResponse> {
         self.http_session_api
-            .http_post("files.delete", req, Some(&SLACK_TIER4_METHOD_CONFIG))
+            .http_post("files.delete", req, Some(&SLACK_TIER3_METHOD_CONFIG))
             .await
     }
 }
