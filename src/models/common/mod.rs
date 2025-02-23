@@ -110,6 +110,12 @@ impl SlackTextFormat for SlackUserId {
     }
 }
 
+impl SlackTextFormat for SlackUserGroupId {
+    fn to_slack_format(&self) -> String {
+        format!("<!subteam^{}>", self.value())
+    }
+}
+
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackBotId(pub String);
 
