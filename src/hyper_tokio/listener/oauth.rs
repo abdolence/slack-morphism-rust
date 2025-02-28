@@ -26,6 +26,7 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
             &vec![
                 ("client_id", Some(config.client_id.value())),
                 ("scope", Some(&config.bot_scope)),
+                ("user_scope", Some(&config.user_scope)),
                 (
                     "redirect_uri",
                     Some(config.to_redirect_url()?.as_str().to_string()).as_ref(),

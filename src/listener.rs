@@ -137,6 +137,7 @@ pub struct SlackOAuthListenerConfig {
     pub client_id: SlackClientId,
     pub client_secret: SlackClientSecret,
     pub bot_scope: String,
+    pub user_scope: String,
     pub redirect_callback_host: String,
     #[default = "SlackOAuthListenerConfig::DEFAULT_INSTALL_PATH_VALUE.into()"]
     pub install_path: String,
