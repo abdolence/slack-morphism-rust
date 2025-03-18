@@ -36,3 +36,29 @@ where
 pub struct SlackApiEmojiListResponse {
     pub emoji: HashMap<SlackEmojiName, SlackEmojiRef>,
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_api_emoji_list_response() {
+        let payload = include_str!("./fixtures/slack_api_emoji_list_response.json");
+        let model: SlackApiEmojiListResponse = serde_json::from_str(payload).unwrap();
+
+        assert_eq!(model.emoji.len(), 1);
+        assert!(model
+            .emoji
+            .contains_key(&SlackEmojiName::new("test".to_string())));
+        let test_emoji = model
+            .emoji
+            .get(&SlackEmojiName::new("test".to_string()))
+            .unwrap();
+        match test_emoji {
+            SlackEmojiRef::Url(url) => {
+                assert_eq!(url.as_str(), "https://emoji.slack-edge.com/test_emoji.png")
+            }
+            _ => panic!("unexpected emoji type"),
+        }
+    }
+}
