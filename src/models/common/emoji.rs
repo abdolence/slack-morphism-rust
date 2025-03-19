@@ -48,7 +48,7 @@ impl<'de> Visitor<'de> for SlackEmojiRefVisitor {
         formatter.write_str("a Slack custom emoji URL or alias in the form of 'alias:<name>'")
     }
 
-    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
@@ -61,8 +61,10 @@ impl<'de> Visitor<'de> for SlackEmojiRefVisitor {
             }
         }
 
-        let emoji_url: Url = v.parse().unwrap();
-        Ok(SlackEmojiRef::Url(emoji_url))
+        match Url::parse(v) {
+            Ok(url) => Ok(SlackEmojiRef::Url(url)),
+            Err(err) => Err(E::custom(format!("Failed to parse URL '{}': {}", v, err))),
+        }
     }
 }
 
@@ -113,7 +115,20 @@ mod test {
         }
 
         #[test]
-        fn test_serialize_emoji_alias() {
+        fn test_deserialize_emoji_url_with_escaped_slashes() {
+            let emoji_url = r#""https:\/\/emoji.slack-edge.com\/test_emoji.png""#;
+
+            let r = serde_json::from_str::<SlackEmojiRef>(&emoji_url).unwrap();
+            assert_eq!(
+                r,
+                SlackEmojiRef::Url(
+                    Url::parse("https://emoji.slack-edge.com/test_emoji.png").unwrap()
+                )
+            );
+        }
+
+        #[test]
+        fn test_deserialize_emoji_alias() {
             assert_eq!(
                 serde_json::from_str::<SlackEmojiRef>("\"alias:smile\"").unwrap(),
                 SlackEmojiRef::Alias(SlackEmojiName::new("smile".to_string()))
