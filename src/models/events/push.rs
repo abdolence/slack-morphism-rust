@@ -76,6 +76,8 @@ pub enum SlackEventCallbackBody {
     StarRemoved(SlackStarRemovedEvent),
     UserChange(SlackUserChangeEvent),
     UserStatusChanged(SlackUserStatusChangedEvent),
+    AssistantThreadStarted(SlackAssistantThreadStartedEvent),
+    AssistantThreadContextChanged(SlackAssistantThreadContextChangedEvent),
 }
 
 #[skip_serializing_none]
@@ -394,6 +396,20 @@ pub struct SlackUserStatusChangedEvent {
     pub user: SlackUser,
     pub event_ts: SlackTs,
     pub cache_ts: SlackDateTime,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAssistantThreadStartedEvent {
+    pub event_ts: SlackTs,
+    pub assistant_thread: SlackAssistantThread,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAssistantThreadContextChangedEvent {
+    pub event_ts: SlackTs,
+    pub assistant_thread: SlackAssistantThread,
 }
 
 #[cfg(test)]
