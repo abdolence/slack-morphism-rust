@@ -16,6 +16,7 @@ mod usergroups;
 mod users;
 mod views;
 mod webhook;
+mod assistant;
 
 pub use apps::*;
 pub use auth::*;
@@ -33,3 +34,4 @@ pub use usergroups::*;
 pub use users::*;
 pub use views::*;
 pub use webhook::*;
+pub use assistant::*;
