@@ -33,7 +33,7 @@ where
     pub async fn assistant_threads_set_suggested_prompts(
         &self,
         req: &SlackApiAssistantThreadsSetSuggestedPromptsRequest,
-    ) -> ClientResult<SlackApiAssistantThreadsSetStatusResponse> {
+    ) -> ClientResult<SlackApiAssistantThreadsSetSuggestedPromptsResponse> {
         self.http_session_api
             .http_post(
                 "assistant.threads.setSuggestedPrompts",
