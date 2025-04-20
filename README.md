@@ -59,4 +59,5 @@ Abdulla Abdurakhmanov
 with the great help of contributors, particularly:
 - Naoki Ikeguchi (siketyan)
 - David Rousselie (dax)
+
 and many [others](https://github.com/abdolence/slack-morphism-rust/graphs/contributors)
