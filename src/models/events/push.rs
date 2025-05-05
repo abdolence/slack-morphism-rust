@@ -92,6 +92,7 @@ pub struct SlackMessageEvent {
     pub subtype: Option<SlackMessageEventType>,
     pub hidden: Option<bool>,
     pub message: Option<SlackMessageEventEdited>,
+    pub previous_message: Option<SlackMessageEventEdited>,
     pub deleted_ts: Option<SlackTs>,
 }
 
@@ -422,7 +423,10 @@ mod test {
         let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();
         match event.event {
             SlackEventCallbackBody::Message(SlackMessageEvent {
-                subtype, message, ..
+                subtype,
+                message,
+                previous_message,
+                ..
             }) => {
                 assert_eq!(subtype, Some(SlackMessageEventType::MessageChanged));
                 if let Some(message) = message {
@@ -440,6 +444,21 @@ mod test {
                 } else {
                     panic!("Message is None");
                 }
+                if let Some(previous_message) = previous_message {
+                    assert_eq!(previous_message.sender.user, Some("UXXXXXXXXXX".into()));
+                    assert_eq!(previous_message.sender.bot_id, None);
+                    assert_eq!(previous_message.ts, "1701735043.989889".into());
+                    assert_eq!(
+                        previous_message.edited.map(|edited| edited.ts),
+                        Some("1701742890.000000".into())
+                    );
+                    assert_eq!(
+                        previous_message.content.unwrap().text,
+                        Some("hey!".to_string())
+                    );
+                } else {
+                    panic!("PreviousMessage is None");
+                }
             }
             _ => panic!("Unexpected event type"),
         }
@@ -451,7 +470,10 @@ mod test {
         let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();
         match event.event {
             SlackEventCallbackBody::Message(SlackMessageEvent {
-                subtype, message, ..
+                subtype,
+                message,
+                previous_message,
+                ..
             }) => {
                 assert_eq!(subtype, Some(SlackMessageEventType::MessageChanged));
                 if let Some(message) = message {
@@ -468,6 +490,21 @@ mod test {
                     );
                 } else {
                     panic!("Message is None");
+                }
+                if let Some(previous_message) = previous_message {
+                    assert_eq!(previous_message.sender.user, None);
+                    assert_eq!(previous_message.sender.bot_id, Some("BXXXXXXXXXX".into()));
+                    assert_eq!(previous_message.ts, "1701735043.989889".into());
+                    assert_eq!(
+                        previous_message.edited.map(|edited| edited.ts),
+                        Some("1701742890.000000".into())
+                    );
+                    assert_eq!(
+                        previous_message.content.unwrap().text,
+                        Some("hey!".to_string())
+                    );
+                } else {
+                    panic!("PreviousMessage is None");
                 }
             }
             _ => panic!("Unexpected event type"),
