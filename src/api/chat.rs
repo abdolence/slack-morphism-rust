@@ -140,6 +140,20 @@ where
     }
 
     ///
+    /// The version for unfurl that accepts both channel/ts and source/unfurl_id
+    /// and can use slack blocks.
+    /// https://api.slack.com/methods/chat.unfurl
+    ///
+    pub async fn chat_unfurl_v3(
+        &self,
+        req: &SlackApiChatUnfurlRequestV3,
+    ) -> ClientResult<SlackApiChatUnfurlResponse> {
+        self.http_session_api
+            .http_post("chat.unfurl", req, Some(&SLACK_TIER3_METHOD_CONFIG))
+            .await
+    }
+
+    ///
     /// https://api.slack.com/methods/chat.update
     ///
     pub async fn chat_update(
@@ -298,6 +312,36 @@ pub struct SlackApiChatUnfurlRequest {
 pub struct SlackApiChatUnfurlRequestV2 {
     pub source: SlackApiChatUnfurlSource,
     pub unfurl_id: SlackUnfurlId,
+    pub unfurls: HashMap<String, SlackApiChatUnfurlMapItemV2>,
+    pub user_auth_message: Option<String>,
+    pub user_auth_required: Option<bool>,
+    pub user_auth_url: Option<Url>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChannelTs {
+    pub channel: SlackChannelId,
+    pub ts: SlackTs,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUnfurlIdSource {
+    pub source: String,
+    pub unfurl_id: SlackUnfurlId,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SlackUnfurlRequestId {
+    ChannelTs(SlackChannelTs),
+    UnfurlIdSource(SlackUnfurlIdSource),
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiChatUnfurlRequestV3 {
+    #[serde(flatten)]
+    pub id: SlackUnfurlRequestId,
     pub unfurls: HashMap<String, SlackApiChatUnfurlMapItemV2>,
     pub user_auth_message: Option<String>,
     pub user_auth_required: Option<bool>,
