@@ -62,11 +62,9 @@ impl ThrottlingCounter {
             let delay_penalty = (self.rate_limit_in_millis as f64 * self.capacity.abs() as f64
                 / self.max_capacity as f64) as u64;
 
-            let delay_in_millis = if base_delay_in_millis < self.rate_limit_in_millis {
-                self.rate_limit_in_millis - base_delay_in_millis
-            } else {
-                0
-            };
+            let delay_in_millis = self
+                .rate_limit_in_millis
+                .saturating_sub(base_delay_in_millis);
             let delay_with_penalty = Duration::from_millis(delay_in_millis + delay_penalty);
 
             Self {
