@@ -1,10 +1,11 @@
 use crate::*;
+use std::collections::HashMap;
 
 use crate::SlackUserId;
 use rsb_derive::Builder;
 use rvstruct::*;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, skip_serializing_none, DisplayFromStr};
+use serde_with::{serde_as, skip_serializing_none, DisplayFromStr, NoneAsEmptyString};
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
@@ -26,6 +27,7 @@ pub struct SlackUser {
     pub enterprise_user: Option<SlackEnterpriseUser>,
 }
 
+#[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackUserProfile {
@@ -42,6 +44,15 @@ pub struct SlackUserProfile {
     #[serde(flatten)]
     pub icon: Option<SlackIcon>,
     pub team: Option<SlackTeamId>,
+    pub start_date: Option<SlackDate>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    #[serde_as(as = "NoneAsEmptyString")]
+    pub phone: Option<PhoneNumber>,
+    pub pronouns: Option<String>,
+    pub title: Option<String>,
+
+    pub fields: Option<HashMap<SlackUserProfileFieldId, SlackUserProfileFieldValue>>,
 }
 
 #[skip_serializing_none]
@@ -122,4 +133,15 @@ pub struct SlackEnterpriseUser {
     #[serde(flatten)]
     pub flags: SlackUserFlags,
     pub teams: Option<Vec<SlackTeamId>>,
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackUserProfileFieldId(pub String);
+
+#[serde_as]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
+pub struct SlackUserProfileFieldValue {
+    pub value: String,
+    #[serde_as(as = "NoneAsEmptyString")]
+    pub alt: Option<String>,
 }

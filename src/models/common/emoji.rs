@@ -118,7 +118,7 @@ mod test {
         fn test_deserialize_emoji_url_with_escaped_slashes() {
             let emoji_url = r#""https:\/\/emoji.slack-edge.com\/test_emoji.png""#;
 
-            let r = serde_json::from_str::<SlackEmojiRef>(&emoji_url).unwrap();
+            let r = serde_json::from_str::<SlackEmojiRef>(emoji_url).unwrap();
             assert_eq!(
                 r,
                 SlackEmojiRef::Url(
