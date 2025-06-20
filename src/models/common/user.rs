@@ -47,6 +47,7 @@ pub struct SlackUserProfile {
     pub start_date: Option<SlackDate>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
+    #[serde(default)]
     #[serde_as(as = "NoneAsEmptyString")]
     pub phone: Option<PhoneNumber>,
     pub pronouns: Option<String>,
@@ -142,6 +143,7 @@ pub struct SlackUserProfileFieldId(pub String);
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct SlackUserProfileFieldValue {
     pub value: String,
+    #[serde(default)]
     #[serde_as(as = "NoneAsEmptyString")]
     pub alt: Option<String>,
 }
