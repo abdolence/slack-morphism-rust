@@ -151,7 +151,9 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                 some_into(SlackDividerBlock::new()),
                 some_into(
                     SlackImageBlock::new(
-                        Url::parse("https://www.gstatic.com/webp/gallery3/2_webp_ll.png").unwrap(),
+                        Url::parse("https://www.gstatic.com/webp/gallery3/2_webp_ll.png")
+                            .expect("A proper URL")
+                            .into(),
                         "Test Image".into(),
                     )
                     .with_title("Test Image".into())

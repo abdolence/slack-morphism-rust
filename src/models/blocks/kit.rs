@@ -85,7 +85,8 @@ impl From<SlackDividerBlock> for SlackBlock {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackImageBlock {
     pub block_id: Option<SlackBlockId>,
-    pub image_url: Url,
+    #[serde(flatten)]
+    pub image_url_or_file: SlackImageUrlOrFile,
     pub alt_text: String,
     pub title: Option<SlackBlockPlainTextOnly>,
 }
@@ -293,7 +294,8 @@ pub enum SlackInputBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockImageElement {
-    pub image_url: String,
+    #[serde(flatten)]
+    pub image_url_or_file: SlackImageUrlOrFile,
     pub alt_text: String,
 }
 
@@ -1041,5 +1043,74 @@ pub struct SlackMarkdownBlock {
 impl From<SlackMarkdownBlock> for SlackBlock {
     fn from(block: SlackMarkdownBlock) -> Self {
         SlackBlock::Markdown(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SlackImageUrlOrFile {
+    ImageUrl { image_url: Url },
+    SlackFile { slack_file: SlackFileIdOrUrl },
+}
+
+impl SlackImageUrlOrFile {
+    pub fn image_url(&self) -> Option<&Url> {
+        match self {
+            SlackImageUrlOrFile::ImageUrl { image_url } => Some(image_url),
+            SlackImageUrlOrFile::SlackFile { slack_file } => match slack_file {
+                SlackFileIdOrUrl::Url { url } => Some(url),
+                _ => None,
+            },
+        }
+    }
+}
+
+impl From<Url> for SlackImageUrlOrFile {
+    fn from(value: Url) -> Self {
+        SlackImageUrlOrFile::ImageUrl { image_url: value }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SlackFileIdOrUrl {
+    Id { id: SlackFileId },
+    Url { url: Url },
+}
+
+impl From<SlackFileId> for SlackFileIdOrUrl {
+    fn from(value: SlackFileId) -> Self {
+        SlackFileIdOrUrl::Id { id: value }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::blocks::SlackHomeView;
+
+    #[test]
+    fn test_slack_image_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_image_blocks.json");
+        let content: SlackMessageContent = serde_json::from_str(payload)?;
+        let blocks = content.blocks.expect("Blocks should not be empty");
+        match blocks.get(0) {
+            Some(SlackBlock::Section(section)) => match &section.accessory {
+                Some(SlackSectionBlockElement::Image(image)) => {
+                    assert_eq!(image.alt_text, "alt text for image");
+                    match &image.image_url_or_file {
+                        SlackImageUrlOrFile::ImageUrl { image_url } => {
+                            assert_eq!(image_url.as_str(), "https://s3-media3.fl.yelpcdn.com/bphoto/c7ed05m9lC2EmA3Aruue7A/o.jpg");
+                        }
+                        SlackImageUrlOrFile::SlackFile { slack_file } => {
+                            panic!("Expected an image URL, not a Slack file: {:?}", slack_file);
+                        }
+                    }
+                }
+                _ => panic!("Expected a section block with an image accessory"),
+            },
+            _ => panic!("Expected a section block"),
+        }
+        Ok(())
     }
 }
