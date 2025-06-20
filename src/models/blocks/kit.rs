@@ -1094,7 +1094,7 @@ mod test {
         let payload = include_str!("./fixtures/slack_image_blocks.json");
         let content: SlackMessageContent = serde_json::from_str(payload)?;
         let blocks = content.blocks.expect("Blocks should not be empty");
-        match blocks.get(0) {
+        match blocks.first() {
             Some(SlackBlock::Section(section)) => match &section.accessory {
                 Some(SlackSectionBlockElement::Image(image)) => {
                     assert_eq!(image.alt_text, "alt text for image");
