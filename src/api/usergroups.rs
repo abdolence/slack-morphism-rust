@@ -68,6 +68,18 @@ where
             )
             .await
     }
+
+    ///
+    /// https://api.slack.com/methods/usergroups.update
+    ///
+    pub async fn usergroups_update(
+        &self,
+        req: &SlackApiUserGroupsUpdateRequest,
+    ) -> ClientResult<SlackApiUserGroupsUpdateResponse> {
+        self.http_session_api
+            .http_post("usergroups.update", req, Some(&SLACK_TIER2_METHOD_CONFIG))
+            .await
+    }
 }
 
 #[skip_serializing_none]
@@ -95,4 +107,22 @@ pub struct SlackApiUserGroupsUsersListRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiUserGroupsUsersListResponse {
     pub users: Vec<SlackUserId>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiUserGroupsUpdateRequest {
+    pub usergroup: SlackUserGroupId,
+    pub additional_channels: Option<SlackChannelId>,
+    pub channels: Option<SlackChannelId>,
+    pub description: Option<String>,
+    pub enable_section: Option<bool>,
+    pub handle: Option<String>,
+    pub include_count: Option<bool>,
+    pub name: Option<String>,
+    pub team_id: Option<SlackTeamId>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiUserGroupsUpdateResponse {
+    pub usergroup: SlackUserGroup,
 }
