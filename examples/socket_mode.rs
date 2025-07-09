@@ -2,6 +2,7 @@ use chrono::prelude::*;
 use rsb_derive::Builder;
 use slack_morphism::prelude::*;
 use std::sync::Arc;
+use url::Url;
 
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
@@ -144,9 +145,9 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                         .with_text(md!("Home tab for {}", self.user_id.to_slack_format()))
                 ),
                 some_into(SlackImageBlock::new(
-                    "https://www.gstatic.com/webp/gallery/4.png"
-                        .try_into()
-                        .unwrap(),
+                    Url::parse("https://www.gstatic.com/webp/gallery/4.png")
+                        .expect("A proper url")
+                        .into(),
                     "Test image".into()
                 )),
                 some_into(SlackSectionBlock::new().with_text(md!("Latest news:")))

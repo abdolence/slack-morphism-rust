@@ -1,5 +1,5 @@
 use chrono::serde::ts_seconds;
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
@@ -125,6 +125,15 @@ pub struct SlackBotId(pub String);
 pub struct SlackDateTime(#[serde(with = "ts_seconds")] pub DateTime<Utc>);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackDate(pub String);
+
+impl SlackDate {
+    pub fn to_naive_date(&self) -> Option<NaiveDate> {
+        NaiveDate::parse_from_str(self.value(), "%Y-%m-%d").ok()
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackLocale(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
@@ -180,6 +189,9 @@ impl fmt::Debug for SlackSigningSecret {
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct EmailAddress(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct PhoneNumber(pub String);
 
 #[serde_as]
 #[skip_serializing_none]
