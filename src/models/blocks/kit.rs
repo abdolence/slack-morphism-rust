@@ -37,6 +37,8 @@ pub enum SlackBlock {
     // This block is still undocumented, so we don't define any structure yet we can return it back,
     #[serde(rename = "rich_text")]
     RichText(serde_json::Value),
+    #[serde(rename = "share_shortcut")]
+    ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
     Event(serde_json::Value),
 }
