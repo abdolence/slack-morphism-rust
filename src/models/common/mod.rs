@@ -20,6 +20,10 @@ mod channel;
 
 pub use channel::*;
 
+mod pin;
+
+pub use pin::*;
+
 mod reaction;
 
 pub use reaction::*;
