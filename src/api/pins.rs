@@ -73,7 +73,7 @@ pub struct SlackApiPinsListRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiPinsListResponse {
-    items: Vec<SlackPin>,
+    pub items: Vec<SlackPin>,
 }
 
 #[skip_serializing_none]
