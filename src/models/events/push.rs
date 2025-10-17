@@ -175,7 +175,7 @@ pub enum SlackMessageEventType {
 pub struct SlackAppHomeOpenedEvent {
     pub user: SlackUserId,
     pub channel: SlackChannelId,
-    pub tab: String,
+    pub tab: Option<String>,
     pub view: Option<SlackView>,
 }
 
