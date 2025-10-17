@@ -69,7 +69,9 @@ async fn test_push_events_sm_function(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Push event: {:#?}", event);
     match event.event {
-        SlackEventCallbackBody::AppHomeOpened(home_event) if home_event.tab == "home" => {
+        SlackEventCallbackBody::AppHomeOpened(home_event)
+            if home_event.tab == Some("home".to_string()) =>
+        {
             let token_value: SlackApiTokenValue = config_env_var("SLACK_TEST_TOKEN")?.into();
             let token: SlackApiToken = SlackApiToken::new(token_value);
 
