@@ -63,7 +63,7 @@ hmac = { version = "0.12", optional = true }
 
 [target.'cfg(not(windows))'.dependencies]
 signal-hook = { version = "0.4", default-features = false, features = ["extended-siginfo"], optional = true }
-signal-hook-tokio = { version = "0.3", default-features = false, features = ["futures-v0_3"], optional = true }
+signal-hook-tokio = { version = "0.4", default-features = false, features = ["futures-v0_3"], optional = true }
 
 [target.'cfg(windows)'.dependencies]
 ctrlc = { version = "3.4", features = ["termination"] }
