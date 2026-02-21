@@ -7,7 +7,7 @@ async fn test_proxy_client() -> Result<(), Box<dyn std::error::Error + Send + Sy
         let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
             .with_native_roots()?
             .https_only()
-            .enable_http1()
+            .enable_http2()
             .build();
 
         let proxy_uri = "http://proxy.domain.unfortunate.world.example.net:3128"
