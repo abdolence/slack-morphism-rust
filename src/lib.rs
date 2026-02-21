@@ -105,10 +105,10 @@ pub mod socket_mode;
 pub mod multipart_form;
 mod token;
 
-#[cfg(feature = "hyper")]
+#[cfg(feature = "hyper-base")]
 pub mod hyper_tokio;
 
-#[cfg(feature = "axum")]
+#[cfg(feature = "axum-base")]
 pub mod axum_support;
 
 pub mod prelude;
