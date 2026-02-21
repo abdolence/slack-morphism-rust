@@ -61,6 +61,8 @@ pub struct SlackInteractionBlockSuggestionEvent {
 pub enum SlackInteractionActionContainer {
     #[serde(rename = "message")]
     Message(SlackInteractionActionMessageContainer),
+    #[serde(rename = "message_attachment")]
+    MessageAttachment(SlackInteractionActionMessageAttachmentContainer),
     #[serde(rename = "view")]
     View(SlackInteractionActionViewContainer),
 }
@@ -69,6 +71,16 @@ pub enum SlackInteractionActionContainer {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackInteractionActionMessageContainer {
     pub message_ts: SlackTs,
+    pub channel_id: Option<SlackChannelId>,
+    pub is_ephemeral: Option<bool>,
+    pub is_app_unfurl: Option<bool>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackInteractionActionMessageAttachmentContainer {
+    pub message_ts: SlackTs,
+    pub attachment_id: i64,
     pub channel_id: Option<SlackChannelId>,
     pub is_ephemeral: Option<bool>,
     pub is_app_unfurl: Option<bool>,
