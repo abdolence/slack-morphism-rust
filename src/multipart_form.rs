@@ -8,7 +8,7 @@ pub struct FileMultipartData<'a> {
     pub data: &'a [u8],
 }
 
-#[cfg(feature = "hyper")]
+#[cfg(feature = "hyper-base")]
 pub fn generate_multipart_boundary() -> String {
     format!(
         "----WebKitFormBoundarySlackMorphismRust{}",
@@ -16,7 +16,7 @@ pub fn generate_multipart_boundary() -> String {
     )
 }
 
-#[cfg(feature = "hyper")]
+#[cfg(feature = "hyper-base")]
 pub fn create_multipart_file_content<'p, PT, TS>(
     fields: &'p PT,
     multipart_boundary: &str,
