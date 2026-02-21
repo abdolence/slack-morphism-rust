@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6f639229.js";
+            window.path_to_searchindex_js = "searchindex-eee6a9e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b950a5a0.js"></script>
@@ -194,6 +194,9 @@ Includes also all type/models definitions that used for Slack Web/Events APIs.</
 <li><code>hyper</code>: Slack client support/binding for Hyper/Tokio/Tungstenite.</li>
 <li><code>axum</code>:  Slack client support/binding for <a href="https://github.com/tokio-rs/axum">axum framework</a> support.</li>
 </ul>
+<h3 id="tls-related-configuration-features"><a class="header" href="#tls-related-configuration-features">TLS-related configuration features</a></h3>
+<p>By default, <code>hyper</code> and <code>axum</code> features use <code>rustls-native-certs</code> and <code>hyper-rustls/ring</code> setup for TLS configuration,
+but you can switch off default-features and use <code>hyper-base</code> and <code>axum-base</code> features and have your own TLS configuration.</p>
 
                     </main>
 
