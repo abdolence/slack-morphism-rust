@@ -80,7 +80,7 @@ pub struct SlackInteractionActionMessageContainer {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackInteractionActionMessageAttachmentContainer {
     pub message_ts: SlackTs,
-    pub attachment_id: i64,
+    pub attachment_id: SlackMessageAttachmentId,
     pub channel_id: Option<SlackChannelId>,
     pub is_ephemeral: Option<bool>,
     pub is_app_unfurl: Option<bool>,

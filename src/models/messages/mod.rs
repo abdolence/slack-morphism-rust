@@ -2,6 +2,7 @@ use crate::blocks::*;
 use crate::events::SlackMessageEventType;
 use crate::*;
 use rsb_derive::Builder;
+use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -115,12 +116,15 @@ pub enum SlackMessageResponseType {
     Ephemeral,
 }
 
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackMessageAttachmentId(i64);
+
 // This model is not well typed since Slack message attachments are deprecated
 // Please avoid using this if you can
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageAttachment {
-    pub id: Option<i64>,
+    pub id: Option<SlackMessageAttachmentId>,
     pub color: Option<String>,
     pub fallback: Option<String>,
     pub title: Option<String>,
