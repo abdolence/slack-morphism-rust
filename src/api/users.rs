@@ -233,10 +233,11 @@ impl SlackApiScrollableResponse for SlackApiUsersConversationsResponse {
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackChannelInfo;
 
-    fn next_cursor(&self) -> Option<&Self::CursorType> {
+    fn next_cursor(&self) -> Option<Self::CursorType> {
         self.response_metadata
             .as_ref()
             .and_then(|rm| rm.next_cursor.as_ref())
+            .cloned()
     }
 
     fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {
@@ -284,10 +285,11 @@ impl SlackApiScrollableResponse for SlackApiUsersListResponse {
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackUser;
 
-    fn next_cursor(&self) -> Option<&Self::CursorType> {
+    fn next_cursor(&self) -> Option<Self::CursorType> {
         self.response_metadata
             .as_ref()
             .and_then(|rm| rm.next_cursor.as_ref())
+            .cloned()
     }
 
     fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {

@@ -80,7 +80,7 @@ pub trait SlackApiScrollableResponse {
     type CursorType;
     type ResponseItemType;
 
-    fn next_cursor(&self) -> Option<&Self::CursorType>;
+    fn next_cursor(&self) -> Option<Self::CursorType>;
     fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a>;
 }
 
@@ -164,7 +164,7 @@ where
                     .scroll(session)
                     .map_ok(|res| {
                         self.last_response = Some(res.clone());
-                        self.last_cursor = res.next_cursor().cloned();
+                        self.last_cursor = res.next_cursor();
                         res
                     })
                     .await
