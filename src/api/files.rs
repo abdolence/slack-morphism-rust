@@ -17,7 +17,6 @@ use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_with::skip_serializing_none;
-use tokio_stream::StreamExt;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
 where
