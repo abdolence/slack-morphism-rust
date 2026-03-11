@@ -117,6 +117,26 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
         &complete_file_upload_resp
     );
 
+    let all_channels_scroller = SlackApiConversationsListRequest::new().scroller();
+    let channels: Vec<SlackChannelInfo> = all_channels_scroller
+        .collect_items_stream(&session, Duration::from_millis(1000))
+        .await?;
+    println!("Number of channels: {:#?}", channels.len());
+
+    if let Some(general_channel_info) = channels
+        .into_iter()
+        .find(|c| c.flags.is_general.unwrap_or(false))
+    {
+        println!("General channel info: {:#?}", general_channel_info);
+        let files_list_scroller = SlackApiFilesListRequest::new()
+            .with_channel(general_channel_info.id)
+            .scroller();
+        let files: Vec<SlackFile> = files_list_scroller
+            .collect_items_stream(&session, Duration::from_millis(1000))
+            .await?;
+        println!("Number of files in general: {:#?}", files.len());
+    }
+
     Ok(())
 }
 

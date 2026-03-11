@@ -453,10 +453,11 @@ impl SlackApiScrollableResponse for SlackApiChatScheduledMessagesListResponse {
     type CursorType = SlackCursorId;
     type ResponseItemType = SlackApiChatScheduledMessageInfo;
 
-    fn next_cursor(&self) -> Option<&Self::CursorType> {
+    fn next_cursor(&self) -> Option<Self::CursorType> {
         self.response_metadata
             .as_ref()
             .and_then(|rm| rm.next_cursor.as_ref())
+            .cloned()
     }
 
     fn scrollable_items<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::ResponseItemType> + 'a> {
