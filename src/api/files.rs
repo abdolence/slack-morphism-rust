@@ -22,6 +22,52 @@ where
     SCHC: SlackClientHttpConnector + Send,
 {
     ///
+    /// https://api.slack.com/methods/files.info
+    ///
+    pub async fn files_info(
+        &self,
+        req: &SlackApiFilesInfoRequest,
+    ) -> ClientResult<SlackApiFilesInfoResponse> {
+        self.http_session_api
+            .http_get(
+                "files.info",
+                &vec![("file", Some(req.file.value()))],
+                Some(&SLACK_TIER4_METHOD_CONFIG),
+            )
+            .await
+    }
+
+    ///
+    /// https://api.slack.com/methods/files.list
+    ///
+    pub async fn files_list(
+        &self,
+        req: &SlackApiFilesListRequest,
+    ) -> ClientResult<SlackApiFilesListResponse> {
+        self.http_session_api
+            .http_get(
+                "files.list",
+                &vec![
+                    ("channel", req.channel.as_ref().map(|x| x.value())),
+                    ("user", req.user.as_ref().map(|x| x.value())),
+                    ("types", req.types.as_ref()),
+                    ("count", req.count.map(|x| x.to_string()).as_ref()),
+                    ("page", req.page.map(|x| x.to_string()).as_ref()),
+                    ("ts_from", req.ts_from.map(|x| x.to_string()).as_ref()),
+                    ("ts_to", req.ts_to.map(|x| x.to_string()).as_ref()),
+                    (
+                        "show_files_hidden_by_limit",
+                        req.show_files_hidden_by_limit
+                            .map(|x| x.to_string())
+                            .as_ref(),
+                    ),
+                ],
+                Some(&SLACK_TIER3_METHOD_CONFIG),
+            )
+            .await
+    }
+
+    ///
     /// https://api.slack.com/methods/files.upload
     ///
     #[deprecated(
@@ -134,6 +180,47 @@ where
             .http_post("files.delete", req, Some(&SLACK_TIER3_METHOD_CONFIG))
             .await
     }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesInfoRequest {
+    pub file: SlackFileId,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesInfoResponse {
+    pub file: SlackFile,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesListRequest {
+    pub channel: Option<SlackChannelId>,
+    pub user: Option<SlackUserId>,
+    pub types: Option<String>,
+    pub count: Option<u32>,
+    pub page: Option<u32>,
+    pub ts_from: Option<i64>,
+    pub ts_to: Option<i64>,
+    pub show_files_hidden_by_limit: Option<bool>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesListResponse {
+    pub files: Vec<SlackFile>,
+    pub paging: Option<SlackApiFilesListPaging>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackApiFilesListPaging {
+    pub count: Option<u32>,
+    pub total: Option<u32>,
+    pub page: Option<u32>,
+    pub pages: Option<u32>,
 }
 
 #[skip_serializing_none]
