@@ -2,13 +2,6 @@
 //! Support for Slack Files API methods
 //!
 
-use futures_util::future::BoxFuture;
-use futures_util::FutureExt;
-use rsb_derive::Builder;
-use rvstruct::ValueStruct;
-use serde::{Deserialize, Serialize, Serializer};
-use serde_with::skip_serializing_none;
-use tokio_stream::StreamExt;
 use crate::api::{
     SlackApiUsersConversationsRequest, SlackApiUsersConversationsResponse,
     SlackApiUsersProfileSetRequest, SlackApiUsersProfileSetResponse,
@@ -16,8 +9,15 @@ use crate::api::{
 use crate::models::*;
 use crate::multipart_form::FileMultipartData;
 use crate::ratectl::*;
-use crate::{SlackApiScrollableRequest, SlackApiScrollableResponse, SlackClientSession};
 use crate::{ClientResult, SlackClientHttpConnector};
+use crate::{SlackApiScrollableRequest, SlackApiScrollableResponse, SlackClientSession};
+use futures_util::future::BoxFuture;
+use futures_util::FutureExt;
+use rsb_derive::Builder;
+use rvstruct::ValueStruct;
+use serde::{Deserialize, Serialize, Serializer};
+use serde_with::skip_serializing_none;
+use tokio_stream::StreamExt;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
 where
@@ -250,14 +250,13 @@ impl SlackApiScrollableResponse for SlackApiFilesListResponse {
     type ResponseItemType = SlackFile;
 
     fn next_cursor(&self) -> Option<Self::CursorType> {
-        self.paging.as_ref()
+        self.paging
+            .as_ref()
             .into_iter()
-            .filter_map(|paging|
-                match (paging.page, paging.pages) {
-                    (Some(page), Some(pages)) if page < pages => Some(page + 1),
-                    _ => None,
-                }
-            )
+            .filter_map(|paging| match (paging.page, paging.pages) {
+                (Some(page), Some(pages)) if page < pages => Some(page + 1),
+                _ => None,
+            })
             .next()
     }
 
