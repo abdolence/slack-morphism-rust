@@ -520,6 +520,26 @@ impl From<SlackBlockMultiUsersSelectElement> for SlackInputBlockElement {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum SlackConversationFilterInclude {
+    #[serde(rename = "im")]
+    Im,
+    #[serde(rename = "mpim")]
+    Mpim,
+    #[serde(rename = "public")]
+    Public,
+    #[serde(rename = "private")]
+    Private,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockConversationFilter {
+    pub include: Option<Vec<SlackConversationFilterInclude>>,
+    pub exclude_external_shared_channels: Option<bool>,
+    pub exclude_bot_users: Option<bool>,
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockConversationsSelectElement {
@@ -530,6 +550,7 @@ pub struct SlackBlockConversationsSelectElement {
     pub confirm: Option<SlackBlockConfirmItem>,
     pub response_url_enabled: Option<bool>,
     pub focus_on_load: Option<bool>,
+    pub filter: Option<SlackBlockConversationFilter>,
 }
 
 impl From<SlackBlockConversationsSelectElement> for SlackSectionBlockElement {
@@ -560,6 +581,7 @@ pub struct SlackBlockMultiConversationsSelectElement {
     pub confirm: Option<SlackBlockConfirmItem>,
     pub max_selected_items: Option<u64>,
     pub focus_on_load: Option<bool>,
+    pub filter: Option<SlackBlockConversationFilter>,
 }
 
 impl From<SlackBlockMultiConversationsSelectElement> for SlackSectionBlockElement {
@@ -1090,6 +1112,91 @@ impl From<SlackFileId> for SlackFileIdOrUrl {
 mod test {
     use super::*;
     use crate::blocks::SlackHomeView;
+
+    #[test]
+    fn test_conversation_filter_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_conversations_select_with_filter.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        match block {
+            SlackBlock::Section(section) => match section.accessory {
+                Some(SlackSectionBlockElement::ConversationsSelect(elem)) => {
+                    let filter = elem.filter.expect("filter should be present");
+                    let include = filter.include.expect("include should be present");
+                    assert_eq!(include.len(), 2);
+                    assert_eq!(include[0], SlackConversationFilterInclude::Public);
+                    assert_eq!(include[1], SlackConversationFilterInclude::Private);
+                    assert_eq!(filter.exclude_external_shared_channels, Some(true));
+                    assert_eq!(filter.exclude_bot_users, Some(true));
+                }
+                _ => panic!("Expected ConversationsSelect accessory"),
+            },
+            _ => panic!("Expected Section block"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_conversation_filter_serialize() -> Result<(), Box<dyn std::error::Error>> {
+        let filter = SlackBlockConversationFilter::new()
+            .with_include(vec![
+                SlackConversationFilterInclude::Im,
+                SlackConversationFilterInclude::Mpim,
+            ])
+            .with_exclude_bot_users(true);
+
+        let json = serde_json::to_value(&filter)?;
+        assert_eq!(
+            json,
+            serde_json::json!({
+                "include": ["im", "mpim"],
+                "exclude_bot_users": true
+            })
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_conversation_filter_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let elem = SlackBlockConversationsSelectElement::new(SlackActionId("test_action".into()))
+            .with_filter(
+                SlackBlockConversationFilter::new()
+                    .with_include(vec![SlackConversationFilterInclude::Public])
+                    .with_exclude_external_shared_channels(true),
+            );
+
+        let json = serde_json::to_string(&elem)?;
+        let parsed: SlackBlockConversationsSelectElement = serde_json::from_str(&json)?;
+        assert_eq!(elem, parsed);
+        Ok(())
+    }
+
+    #[test]
+    fn test_multi_conversations_select_filter() -> Result<(), Box<dyn std::error::Error>> {
+        let elem =
+            SlackBlockMultiConversationsSelectElement::new(SlackActionId("multi_action".into()))
+                .with_filter(
+                    SlackBlockConversationFilter::new()
+                        .with_include(vec![
+                            SlackConversationFilterInclude::Public,
+                            SlackConversationFilterInclude::Private,
+                        ])
+                        .with_exclude_bot_users(true),
+                );
+
+        let json = serde_json::to_string(&elem)?;
+        let parsed: SlackBlockMultiConversationsSelectElement = serde_json::from_str(&json)?;
+        assert_eq!(elem, parsed);
+        Ok(())
+    }
+
+    #[test]
+    fn test_conversation_filter_none_omitted() -> Result<(), Box<dyn std::error::Error>> {
+        let elem = SlackBlockConversationsSelectElement::new(SlackActionId("no_filter".into()));
+
+        let json = serde_json::to_value(&elem)?;
+        assert!(json.get("filter").is_none());
+        Ok(())
+    }
 
     #[test]
     fn test_slack_image_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {

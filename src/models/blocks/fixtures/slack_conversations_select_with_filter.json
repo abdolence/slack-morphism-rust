@@ -1,0 +1,20 @@
+{
+  "type": "section",
+  "text": {
+    "type": "plain_text",
+    "text": "Pick a channel"
+  },
+  "accessory": {
+    "type": "conversations_select",
+    "action_id": "channel_select",
+    "placeholder": {
+      "type": "plain_text",
+      "text": "Select a channel"
+    },
+    "filter": {
+      "include": ["public", "private"],
+      "exclude_external_shared_channels": true,
+      "exclude_bot_users": true
+    }
+  }
+}
