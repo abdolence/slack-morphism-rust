@@ -39,6 +39,8 @@ pub struct SlackUserProfile {
     pub status_text: Option<String>,
     pub status_expiration: Option<SlackDateTime>,
     pub status_emoji: Option<SlackEmoji>,
+    pub huddle_state: Option<String>,
+    pub huddle_state_expiration_ts: Option<SlackDateTime>,
     pub display_name_normalized: Option<String>,
     pub email: Option<EmailAddress>,
     #[serde(flatten)]
