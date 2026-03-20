@@ -25,7 +25,7 @@ default = []
 signature-verifier = ["dep:sha2", "dep:subtle", "dep:hmac"]
 hyper-base = ["dep:tokio", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:tokio-stream", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio", "signature-verifier"]
 axum-base = ["hyper-base", "dep:axum", "dep:tower"]
-rustls-native-certs = ["tokio-tungstenite/rustls-native-certs", "hyper-rustls/rustls-native-certs", "hyper-rustls/ring"]
+rustls-native-certs = ["tokio-tungstenite/rustls-native-certs", "tokio-tungstenite/rustls-tls-native-roots", "hyper-rustls/rustls-native-certs", "hyper-rustls/ring"]
 hyper = ["hyper-base", "rustls-native-certs"]
 axum = ["axum-base", "hyper-base", "rustls-native-certs"]
 
