@@ -39,7 +39,7 @@ pub struct SlackUserProfile {
     pub status_text: Option<String>,
     pub status_expiration: Option<SlackDateTime>,
     pub status_emoji: Option<SlackEmoji>,
-    pub huddle_state: Option<String>,
+    pub huddle_state: Option<SlackHuddleState>,
     pub huddle_state_expiration_ts: Option<SlackDateTime>,
     pub display_name_normalized: Option<String>,
     pub email: Option<EmailAddress>,
@@ -122,6 +122,15 @@ pub enum SlackAutoType {
 pub struct SlackUserGroupPrefs {
     pub channels: Vec<SlackChannelId>,
     pub groups: Vec<SlackUserGroupId>,
+}
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackHuddleState {
+    InAHuddle,
+    DefaultUnset,
+    #[serde(untagged)]
+    Other(String),
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
