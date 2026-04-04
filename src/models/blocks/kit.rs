@@ -34,9 +34,8 @@ pub enum SlackBlock {
     #[serde(rename = "markdown")]
     Markdown(SlackMarkdownBlock),
 
-    // This block is still undocumented, so we don't define any structure yet we can return it back,
     #[serde(rename = "rich_text")]
-    RichText(serde_json::Value),
+    RichText(SlackRichTextBlock),
     #[serde(rename = "share_shortcut")]
     ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
@@ -291,6 +290,8 @@ pub enum SlackInputBlockElement {
     Checkboxes(SlackBlockCheckboxesElement),
     #[serde(rename = "email_text_input")]
     EmailInput(SlackBlockEmailInputElement),
+    #[serde(rename = "rich_text_input")]
+    RichTextInput(SlackBlockRichTextInputElement),
 }
 
 #[skip_serializing_none]
@@ -1067,6 +1068,202 @@ pub struct SlackMarkdownBlock {
 impl From<SlackMarkdownBlock> for SlackBlock {
     fn from(block: SlackMarkdownBlock) -> Self {
         SlackBlock::Markdown(block)
+    }
+}
+
+/**
+ * https://api.slack.com/reference/block-kit/blocks#rich_text
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub elements: Vec<SlackRichTextElement>,
+}
+
+impl From<SlackRichTextBlock> for SlackBlock {
+    fn from(block: SlackRichTextBlock) -> Self {
+        SlackBlock::RichText(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackRichTextElement {
+    #[serde(rename = "rich_text_section")]
+    Section(SlackRichTextSection),
+    #[serde(rename = "rich_text_list")]
+    List(SlackRichTextList),
+    #[serde(rename = "rich_text_preformatted")]
+    Preformatted(SlackRichTextPreformatted),
+    #[serde(rename = "rich_text_quote")]
+    Quote(SlackRichTextQuote),
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextSection {
+    pub elements: Vec<SlackRichTextInlineElement>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextList {
+    pub style: SlackRichTextListStyle,
+    pub elements: Vec<SlackRichTextSection>,
+    pub indent: Option<u64>,
+    pub offset: Option<u64>,
+    pub border: Option<u64>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackRichTextListStyle {
+    Bullet,
+    Ordered,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextPreformatted {
+    pub elements: Vec<SlackRichTextInlineElement>,
+    pub border: Option<u64>,
+    pub language: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextQuote {
+    pub elements: Vec<SlackRichTextInlineElement>,
+    pub border: Option<u64>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackRichTextInlineElement {
+    #[serde(rename = "text")]
+    Text(SlackRichTextText),
+    #[serde(rename = "link")]
+    Link(SlackRichTextLink),
+    #[serde(rename = "user")]
+    User(SlackRichTextUser),
+    #[serde(rename = "channel")]
+    Channel(SlackRichTextChannel),
+    #[serde(rename = "usergroup")]
+    UserGroup(SlackRichTextUserGroup),
+    #[serde(rename = "emoji")]
+    Emoji(SlackRichTextEmoji),
+    #[serde(rename = "date")]
+    Date(SlackRichTextDate),
+    #[serde(rename = "broadcast")]
+    Broadcast(SlackRichTextBroadcast),
+    #[serde(rename = "color")]
+    Color(SlackRichTextColor),
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextStyle {
+    pub bold: Option<bool>,
+    pub italic: Option<bool>,
+    pub strike: Option<bool>,
+    pub code: Option<bool>,
+    pub underline: Option<bool>,
+    pub highlight: Option<bool>,
+    pub client_highlight: Option<bool>,
+    pub unlink: Option<bool>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextText {
+    pub text: String,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextLink {
+    pub url: String,
+    pub text: Option<String>,
+    #[serde(rename = "unsafe")]
+    pub unsafe_: Option<bool>,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextUser {
+    pub user_id: SlackUserId,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextChannel {
+    pub channel_id: SlackChannelId,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextUserGroup {
+    pub usergroup_id: SlackUserGroupId,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextEmoji {
+    pub name: String,
+    pub unicode: Option<String>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextDate {
+    pub timestamp: u64,
+    pub format: String,
+    pub fallback: Option<String>,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackRichTextBroadcastRange {
+    Here,
+    Channel,
+    Everyone,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextBroadcast {
+    pub range: SlackRichTextBroadcastRange,
+    pub style: Option<SlackRichTextStyle>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextColor {
+    pub value: String,
+}
+
+/**
+ * https://api.slack.com/reference/block-kit/block-elements#rich_text_input
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockRichTextInputElement {
+    pub action_id: SlackActionId,
+    pub initial_value: Option<SlackRichTextBlock>,
+    pub focus_on_load: Option<bool>,
+    pub placeholder: Option<SlackBlockPlainTextOnly>,
+}
+
+impl From<SlackBlockRichTextInputElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockRichTextInputElement) -> Self {
+        SlackInputBlockElement::RichTextInput(element)
     }
 }
 
