@@ -1,0 +1,70 @@
+{
+  "type": "rich_text",
+  "block_id": "test_block",
+  "elements": [
+    {
+      "type": "rich_text_section",
+      "elements": [
+        {
+          "type": "text",
+          "text": "Hello ",
+          "style": { "bold": true }
+        },
+        {
+          "type": "user",
+          "user_id": "U123ABC456"
+        },
+        {
+          "type": "text",
+          "text": "! Check out "
+        },
+        {
+          "type": "link",
+          "url": "https://example.com",
+          "text": "this link",
+          "style": { "italic": true }
+        },
+        {
+          "type": "emoji",
+          "name": "wave"
+        },
+        {
+          "type": "channel",
+          "channel_id": "C123ABC456"
+        },
+        {
+          "type": "broadcast",
+          "range": "here"
+        }
+      ]
+    },
+    {
+      "type": "rich_text_list",
+      "style": "bullet",
+      "indent": 0,
+      "elements": [
+        {
+          "type": "rich_text_section",
+          "elements": [{ "type": "text", "text": "Item one" }]
+        },
+        {
+          "type": "rich_text_section",
+          "elements": [{ "type": "text", "text": "Item two" }]
+        }
+      ]
+    },
+    {
+      "type": "rich_text_preformatted",
+      "elements": [
+        { "type": "text", "text": "fn main() {}\n" }
+      ],
+      "border": 1
+    },
+    {
+      "type": "rich_text_quote",
+      "elements": [
+        { "type": "text", "text": "A wise quote", "style": { "italic": true } }
+      ]
+    }
+  ]
+}

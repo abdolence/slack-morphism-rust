@@ -1215,14 +1215,14 @@ pub struct SlackRichTextUserGroup {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextEmoji {
-    pub name: String,
+    pub name: SlackEmojiName,
     pub unicode: Option<String>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextDate {
-    pub timestamp: u64,
+    pub timestamp: i64,
     pub format: String,
     pub fallback: Option<String>,
     pub style: Option<SlackRichTextStyle>,
@@ -1417,6 +1417,71 @@ mod test {
             },
             _ => panic!("Expected a section block"),
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_rich_text_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_rich_text_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+
+        let rich = match block {
+            SlackBlock::RichText(r) => r,
+            _ => panic!("Expected a RichText block"),
+        };
+
+        assert_eq!(rich.block_id, Some(SlackBlockId("test_block".into())));
+        assert_eq!(rich.elements.len(), 4);
+
+        // section
+        let section = match &rich.elements[0] {
+            SlackRichTextElement::Section(s) => s,
+            _ => panic!("Expected a Section element"),
+        };
+        assert_eq!(section.elements.len(), 7);
+
+        // bold text
+        let text = match &section.elements[0] {
+            SlackRichTextInlineElement::Text(t) => t,
+            _ => panic!("Expected a Text element"),
+        };
+        assert_eq!(text.text, "Hello ");
+        assert_eq!(text.style.as_ref().and_then(|s| s.bold), Some(true));
+
+        // user
+        assert!(matches!(&section.elements[1], SlackRichTextInlineElement::User(_)));
+
+        // emoji — name should deserialize as SlackEmojiName
+        let emoji = match &section.elements[4] {
+            SlackRichTextInlineElement::Emoji(e) => e,
+            _ => panic!("Expected an Emoji element"),
+        };
+        assert_eq!(emoji.name, SlackEmojiName::new("wave".into()));
+
+        // list
+        let list = match &rich.elements[1] {
+            SlackRichTextElement::List(l) => l,
+            _ => panic!("Expected a List element"),
+        };
+        assert_eq!(list.style, SlackRichTextListStyle::Bullet);
+        assert_eq!(list.elements.len(), 2);
+
+        // preformatted
+        assert!(matches!(&rich.elements[2], SlackRichTextElement::Preformatted(_)));
+
+        // quote
+        assert!(matches!(&rich.elements[3], SlackRichTextElement::Quote(_)));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_rich_text_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_rich_text_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
         Ok(())
     }
 }
