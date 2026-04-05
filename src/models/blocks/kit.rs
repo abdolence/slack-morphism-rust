@@ -1449,7 +1449,10 @@ mod test {
         assert_eq!(text.style.as_ref().and_then(|s| s.bold), Some(true));
 
         // user
-        assert!(matches!(&section.elements[1], SlackRichTextInlineElement::User(_)));
+        assert!(matches!(
+            &section.elements[1],
+            SlackRichTextInlineElement::User(_)
+        ));
 
         // emoji — name should deserialize as SlackEmojiName
         let emoji = match &section.elements[4] {
@@ -1467,7 +1470,10 @@ mod test {
         assert_eq!(list.elements.len(), 2);
 
         // preformatted
-        assert!(matches!(&rich.elements[2], SlackRichTextElement::Preformatted(_)));
+        assert!(matches!(
+            &rich.elements[2],
+            SlackRichTextElement::Preformatted(_)
+        ));
 
         // quote
         assert!(matches!(&rich.elements[3], SlackRichTextElement::Quote(_)));
