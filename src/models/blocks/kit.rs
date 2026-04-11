@@ -33,7 +33,6 @@ pub enum SlackBlock {
     Video(SlackVideoBlock),
     #[serde(rename = "markdown")]
     Markdown(SlackMarkdownBlock),
-
     #[serde(rename = "rich_text")]
     RichText(SlackRichTextBlock),
     #[serde(rename = "share_shortcut")]
@@ -1100,6 +1099,30 @@ pub enum SlackRichTextElement {
     Quote(SlackRichTextQuote),
 }
 
+impl From<SlackRichTextSection> for SlackRichTextElement {
+    fn from(element: SlackRichTextSection) -> Self {
+        SlackRichTextElement::Section(element)
+    }
+}
+
+impl From<SlackRichTextList> for SlackRichTextElement {
+    fn from(list: SlackRichTextList) -> Self {
+        SlackRichTextElement::List(list)
+    }
+}
+
+impl From<SlackRichTextPreformatted> for SlackRichTextElement {
+    fn from(element: SlackRichTextPreformatted) -> Self {
+        SlackRichTextElement::Preformatted(element)
+    }
+}
+
+impl From<SlackRichTextQuote> for SlackRichTextElement {
+    fn from(element: SlackRichTextQuote) -> Self {
+        SlackRichTextElement::Quote(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextSection {
@@ -1184,7 +1207,7 @@ pub struct SlackRichTextText {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextLink {
-    pub url: String,
+    pub url: Url,
     pub text: Option<String>,
     #[serde(rename = "unsafe")]
     pub unsafe_: Option<bool>,
@@ -1222,7 +1245,7 @@ pub struct SlackRichTextEmoji {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextDate {
-    pub timestamp: i64,
+    pub timestamp: SlackDateTime,
     pub format: String,
     pub fallback: Option<String>,
     pub style: Option<SlackRichTextStyle>,

@@ -128,6 +128,12 @@ pub struct SlackBotId(pub String);
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackDateTime(#[serde(with = "ts_seconds")] pub DateTime<Utc>);
 
+impl SlackDateTime {
+    pub fn now() -> Self {
+        Self(Utc::now())
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackDate(pub String);
 

@@ -155,6 +155,49 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                 some_into(SlackSectionBlock::new().with_text(md!("Latest news:")))
             ],
             new_blocks,
+            slack_blocks![
+                some_into(SlackDividerBlock::new()),
+                some_into(SlackRichTextBlock::new(
+                    vec![
+                        SlackRichTextSection::new(
+                            vec![
+                                SlackRichTextInlineElement::Text(
+                                    SlackRichTextText::new("Let's use some rich text: ".into())
+                                        .with_style(SlackRichTextStyle::new().with_bold(true))
+                                ),
+                                SlackRichTextInlineElement::Emoji(
+                                    SlackRichTextEmoji::new("slightly_smiling_face".into()).into()
+                                ),
+                            ]
+                            .into()
+                        )
+                        .into(),
+                        SlackRichTextSection::new(
+                            vec![SlackRichTextInlineElement::Date(SlackRichTextDate::new(
+                                SlackDateTime::now(),
+                                SlackDateTimeFormats::DateLong.to_string()
+                            ))]
+                            .into()
+                        )
+                        .into(),
+                        SlackRichTextQuote::new(
+                            vec![
+                                SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                                    "While there is life, there is a hope. ".into()
+                                )),
+                                SlackRichTextInlineElement::Link(SlackRichTextLink::new(
+                                    Url::parse("https://slack-rust.abdolence.dev")
+                                        .expect("A proper url")
+                                        .into()
+                                ))
+                            ]
+                            .into()
+                        )
+                        .into(),
+                    ]
+                    .into()
+                ))
+            ],
         ]
         .concat()
     }

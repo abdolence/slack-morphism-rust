@@ -175,7 +175,7 @@ pub enum SlackMessageEventType {
     /// Catch-all for unknown subtypes Slack may add in the future.
     /// Preserves the original subtype string.
     #[serde(untagged)]
-    Unknown(String),
+    Other(String),
 }
 
 #[skip_serializing_none]
