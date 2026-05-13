@@ -1133,7 +1133,7 @@ pub struct SlackRichTextSection {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextList {
     pub style: SlackRichTextListStyle,
-    pub elements: Vec<SlackRichTextSection>,
+    pub elements: Vec<SlackRichTextElement>,
     pub indent: Option<u64>,
     pub offset: Option<u64>,
     pub border: Option<u64>,
@@ -1491,6 +1491,16 @@ mod test {
         };
         assert_eq!(list.style, SlackRichTextListStyle::Bullet);
         assert_eq!(list.elements.len(), 2);
+
+        // list items are SlackRichTextElement::Section
+        assert!(matches!(
+            &list.elements[0],
+            SlackRichTextElement::Section(_)
+        ));
+        assert!(matches!(
+            &list.elements[1],
+            SlackRichTextElement::Section(_)
+        ));
 
         // preformatted
         assert!(matches!(
