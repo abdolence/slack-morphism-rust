@@ -1133,10 +1133,23 @@ pub struct SlackRichTextSection {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextList {
     pub style: SlackRichTextListStyle,
-    pub elements: Vec<SlackRichTextElement>,
+    pub elements: Vec<SlackRichTextListElement>,
     pub indent: Option<u64>,
     pub offset: Option<u64>,
     pub border: Option<u64>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackRichTextListElement {
+    #[serde(rename = "rich_text_section")]
+    Section(SlackRichTextSection),
+}
+
+impl From<SlackRichTextSection> for SlackRichTextListElement {
+    fn from(element: SlackRichTextSection) -> Self {
+        SlackRichTextListElement::Section(element)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -1495,11 +1508,11 @@ mod test {
         // list items are SlackRichTextElement::Section
         assert!(matches!(
             &list.elements[0],
-            SlackRichTextElement::Section(_)
+            SlackRichTextListElement::Section(_)
         ));
         assert!(matches!(
             &list.elements[1],
-            SlackRichTextElement::Section(_)
+            SlackRichTextListElement::Section(_)
         ));
 
         // preformatted

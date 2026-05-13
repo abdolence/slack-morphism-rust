@@ -194,6 +194,34 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                             .into()
                         )
                         .into(),
+                        SlackRichTextList::new(
+                            SlackRichTextListStyle::Bullet,
+                            vec![
+                                SlackRichTextSection::new(
+                                    vec![SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                                        "Item 1".into()
+                                    ))]
+                                    .into(),
+                                )
+                                .into(),
+                                SlackRichTextSection::new(
+                                    vec![SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                                        "Item 2".into()
+                                    ))]
+                                    .into(),
+                                )
+                                .into()
+                            ]
+                            .into()
+                        )
+                        .into(),
+                        SlackRichTextPreformatted::new(
+                            vec![SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                                "Let's use some preformatted text: ".into()
+                            ))]
+                            .into(),
+                        )
+                        .into(),
                     ]
                     .into()
                 ))
