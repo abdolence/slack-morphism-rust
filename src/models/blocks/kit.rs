@@ -39,6 +39,8 @@ pub enum SlackBlock {
     ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
     Event(serde_json::Value),
+    #[serde(rename = "table")]
+    Table(serde_json::Value),
 }
 
 #[skip_serializing_none]
