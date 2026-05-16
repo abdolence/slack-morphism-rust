@@ -1,0 +1,33 @@
+{
+  "type": "task_card",
+  "task_id": "task_1",
+  "title": "Fetching weather data",
+  "block_id": "task_card_block_1",
+  "status": "in_progress",
+  "output": {
+    "type": "rich_text",
+    "elements": [
+      {
+        "type": "rich_text_section",
+        "elements": [
+          {
+            "type": "text",
+            "text": "Found weather data for Chicago from 2 sources"
+          }
+        ]
+      }
+    ]
+  },
+  "sources": [
+    {
+      "type": "url",
+      "url": "https://weather.com/",
+      "text": "weather.com"
+    },
+    {
+      "type": "url",
+      "url": "https://www.accuweather.com/",
+      "text": "accuweather.com"
+    }
+  ]
+}
