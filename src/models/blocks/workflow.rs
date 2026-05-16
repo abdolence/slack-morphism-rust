@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
-use crate::SlackActionId;
 use super::kit::{SlackAccessibilityLabel, SlackBlockButtonStyle, SlackBlockPlainTextOnly};
+use crate::SlackActionId;
 
 /**
  * https://docs.slack.dev/reference/block-kit/composition-objects/workflow-object

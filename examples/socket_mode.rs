@@ -54,25 +54,24 @@ async fn test_command_events_function(
                 ))
             ),
             some_into(
-                SlackBlockStaticSelectElement::new("my-simple-static-menu".into())
-                    .with_options(vec![SlackBlockChoiceItem::new(
+                SlackBlockStaticSelectElement::new("my-simple-static-menu".into()).with_options(
+                    vec![SlackBlockChoiceItem::new(
                         pt!("my-option1"),
                         "my-option1-value".to_string()
-                    )])
+                    )]
+                )
             )
         ])),
-                some_into(SlackCardBlock::new().with_title(md!("Library status")).with_body(md!(
-                    "slack-morphism is up and running."
-                ))),
+        some_into(
+            SlackCardBlock::new()
+                .with_title(md!("Library status"))
+                .with_body(md!("slack-morphism is up and running."))
+        ),
         some_into(SlackContextActionsBlock::new(vec![
-            SlackBlockIconButtonElement::new(
-                "delete_card".into(),
-                "trash".into(),
-                pt!("Delete")
-            )
-            .with_value("delete_item".into())
-            .with_accessibility_label(SlackAccessibilityLabel("Delete this item".into()))
-            .into()
+            SlackBlockIconButtonElement::new("delete_card".into(), "trash".into(), pt!("Delete"))
+                .with_value("delete_item".into())
+                .with_accessibility_label(SlackAccessibilityLabel("Delete this item".into()))
+                .into()
         ])),
         some_into(
             SlackTableBlock::new(vec![
@@ -81,9 +80,7 @@ async fn test_command_events_function(
                     SlackTableCell::RawText(SlackTableRawTextCell::new("Status".into())),
                 ],
                 vec![
-                    SlackTableCell::RawText(SlackTableRawTextCell::new(
-                        "Slack Morphism".into()
-                    )),
+                    SlackTableCell::RawText(SlackTableRawTextCell::new("Slack Morphism".into())),
                     SlackTableCell::RichText(SlackTableRichTextCell::new(vec![
                         SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
                             SlackRichTextText::new("Active".into())

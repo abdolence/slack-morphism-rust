@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
-use crate::*;
 use super::workflow::SlackBlockWorkflowButtonElement;
+use crate::*;
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
@@ -783,10 +783,17 @@ impl From<SlackBlockDateTimePickerElement> for SlackActionBlockElement {
 /**
  * https://docs.slack.dev/reference/block-kit/composition-objects/dispatch-action-configuration-object
  */
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackDispatchActionTrigger {
+    OnEnterPressed,
+    OnCharacterEntered,
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackDispatchActionConfig {
-    pub trigger_actions_on: Option<Vec<String>>,
+    pub trigger_actions_on: Option<Vec<SlackDispatchActionTrigger>>,
 }
 
 #[skip_serializing_none]
