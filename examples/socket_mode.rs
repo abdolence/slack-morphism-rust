@@ -57,7 +57,49 @@ async fn test_command_events_function(
                                 "my-option1-value".to_string()
                             )])
                     )
-                ]))
+                ])),
+                some_into(
+                    SlackTableBlock::new(vec![
+                        vec![
+                            SlackTableCell::RawText(SlackTableRawTextCell::new("Name".into())),
+                            SlackTableCell::RawText(SlackTableRawTextCell::new("Status".into())),
+                        ],
+                        vec![
+                            SlackTableCell::RawText(SlackTableRawTextCell::new(
+                                "Slack Morphism".into()
+                            )),
+                            SlackTableCell::RichText(SlackTableRichTextCell::new(vec![
+                                SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
+                                    SlackRichTextText::new("Active".into())
+                                        .with_style(SlackRichTextStyle::new().with_bold(true))
+                                )])
+                                .into()
+                            ])),
+                        ],
+                    ])
+                    .with_column_settings(vec![
+                        SlackTableColumnSetting::new(),
+                        SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
+                    ])
+                ),
+                some_into(
+                    SlackTaskCardBlock::new("task_demo".into(), "Checking library status".into())
+                        .with_status(SlackTaskCardStatus::Complete)
+                        .with_output(
+                            SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
+                                SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                                    "All systems operational".into()
+                                ))
+                            ])
+                            .into()])
+                            .into()
+                        )
+                        .with_sources(vec![SlackUrlSourceElement::new(
+                            Url::parse("https://slack-rust.abdolence.dev").expect("A proper url"),
+                            "slack-morphism docs".into()
+                        )
+                        .into()])
+                )
             ]),
     ))
 }

@@ -10,6 +10,9 @@ use crate::*;
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
 pub struct SlackBlockId(pub String);
 
+#[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
+pub struct SlackTaskId(pub String);
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackBlock {
@@ -35,12 +38,14 @@ pub enum SlackBlock {
     Markdown(SlackMarkdownBlock),
     #[serde(rename = "rich_text")]
     RichText(SlackRichTextBlock),
+    #[serde(rename = "table")]
+    Table(SlackTableBlock),
+    #[serde(rename = "task_card")]
+    TaskCard(SlackTaskCardBlock),
     #[serde(rename = "share_shortcut")]
     ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
     Event(serde_json::Value),
-    #[serde(rename = "table")]
-    Table(serde_json::Value),
 }
 
 #[skip_serializing_none]
@@ -1089,6 +1094,19 @@ impl From<SlackRichTextBlock> for SlackBlock {
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SlackRichTextInlineContent {
+    #[serde(rename = "rich_text")]
+    RichText(SlackRichTextBlock),
+}
+
+impl From<SlackRichTextBlock> for SlackRichTextInlineContent {
+    fn from(block: SlackRichTextBlock) -> Self {
+        SlackRichTextInlineContent::RichText(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackRichTextElement {
     #[serde(rename = "rich_text_section")]
@@ -1343,6 +1361,113 @@ impl From<SlackFileId> for SlackFileIdOrUrl {
     }
 }
 
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/table-block
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTableBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub rows: Vec<Vec<SlackTableCell>>,
+    pub column_settings: Option<Vec<SlackTableColumnSetting>>,
+}
+
+impl From<SlackTableBlock> for SlackBlock {
+    fn from(block: SlackTableBlock) -> Self {
+        SlackBlock::Table(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackTableCell {
+    #[serde(rename = "raw_text")]
+    RawText(SlackTableRawTextCell),
+    #[serde(rename = "rich_text")]
+    RichText(SlackTableRichTextCell),
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTableRawTextCell {
+    pub text: String,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTableRichTextCell {
+    pub elements: Vec<SlackRichTextElement>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTableColumnSetting {
+    pub align: Option<SlackTableColumnAlign>,
+    pub is_wrapped: Option<bool>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackTableColumnAlign {
+    Left,
+    Center,
+    Right,
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/task-card-block
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackTaskCardBlock {
+    pub task_id: SlackTaskId,
+    pub title: String,
+    pub block_id: Option<SlackBlockId>,
+    pub status: Option<SlackTaskCardStatus>,
+    #[serde(rename = "details")]
+    pub details: Option<SlackRichTextInlineContent>,
+    #[serde(rename = "output")]
+    pub output: Option<SlackRichTextInlineContent>,
+    pub sources: Option<Vec<SlackTaskCardSource>>,
+}
+
+impl From<SlackTaskCardBlock> for SlackBlock {
+    fn from(block: SlackTaskCardBlock) -> Self {
+        SlackBlock::TaskCard(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackTaskCardStatus {
+    Pending,
+    InProgress,
+    Complete,
+    Error,
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/block-elements/url-source-element
+ */
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackUrlSourceElement {
+    pub url: Url,
+    pub text: String,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackTaskCardSource {
+    #[serde(rename = "url")]
+    Url(SlackUrlSourceElement),
+}
+
+impl From<SlackUrlSourceElement> for SlackTaskCardSource {
+    fn from(element: SlackUrlSourceElement) -> Self {
+        SlackTaskCardSource::Url(element)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -1532,6 +1657,95 @@ mod test {
     #[test]
     fn test_rich_text_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
         let payload = include_str!("./fixtures/slack_rich_text_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_table_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_table_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+
+        let table = match block {
+            SlackBlock::Table(t) => t,
+            _ => panic!("Expected a Table block"),
+        };
+
+        assert_eq!(table.block_id, Some(SlackBlockId("table_block_1".into())));
+        assert_eq!(table.rows.len(), 2);
+        assert_eq!(table.rows[0].len(), 2);
+
+        // first row, first cell is raw_text
+        match &table.rows[0][0] {
+            SlackTableCell::RawText(c) => assert_eq!(c.text, "Header A"),
+            _ => panic!("Expected RawText cell"),
+        }
+
+        // second row, second cell is rich_text
+        match &table.rows[1][1] {
+            SlackTableCell::RichText(c) => assert_eq!(c.elements.len(), 1),
+            _ => panic!("Expected RichText cell"),
+        }
+
+        let settings = table
+            .column_settings
+            .expect("column_settings should be present");
+        assert_eq!(settings.len(), 2);
+        assert_eq!(settings[0].is_wrapped, Some(true));
+        assert_eq!(settings[1].align, Some(SlackTableColumnAlign::Right));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_table_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_table_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_task_card_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_task_card_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+
+        let task_card = match block {
+            SlackBlock::TaskCard(t) => t,
+            _ => panic!("Expected a TaskCard block"),
+        };
+
+        assert_eq!(task_card.task_id, SlackTaskId("task_1".into()));
+        assert_eq!(task_card.title, "Fetching weather data");
+        assert_eq!(
+            task_card.block_id,
+            Some(SlackBlockId("task_card_block_1".into()))
+        );
+        assert_eq!(task_card.status, Some(SlackTaskCardStatus::InProgress));
+
+        let output = task_card.output.expect("output should be present");
+        let output_block = match output {
+            SlackRichTextInlineContent::RichText(b) => b,
+        };
+        assert_eq!(output_block.elements.len(), 1);
+
+        let sources = task_card.sources.expect("sources should be present");
+        assert_eq!(sources.len(), 2);
+        match &sources[0] {
+            SlackTaskCardSource::Url(u) => assert_eq!(u.text, "weather.com"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_task_card_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_task_card_block.json");
         let block: SlackBlock = serde_json::from_str(payload)?;
         let serialized = serde_json::to_string(&block)?;
         let block2: SlackBlock = serde_json::from_str(&serialized)?;
