@@ -1,0 +1,9 @@
+{
+  "type": "alert",
+  "block_id": "alert_block_1",
+  "text": {
+    "type": "mrkdwn",
+    "text": "Your disk is almost full. Please free up space."
+  },
+  "level": "warning"
+}

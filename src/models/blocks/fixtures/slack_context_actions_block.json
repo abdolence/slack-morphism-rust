@@ -1,0 +1,16 @@
+{
+  "type": "context_actions",
+  "block_id": "context_actions_1",
+  "elements": [
+    {
+      "type": "icon_button",
+      "action_id": "delete_action",
+      "icon": "trash",
+      "text": {
+        "type": "plain_text",
+        "text": "Delete"
+      },
+      "value": "delete_item"
+    }
+  ]
+}

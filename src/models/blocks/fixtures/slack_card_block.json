@@ -1,0 +1,33 @@
+{
+  "type": "card",
+  "block_id": "card_block_1",
+  "title": {
+    "type": "mrkdwn",
+    "text": "My Card"
+  },
+  "subtitle": {
+    "type": "mrkdwn",
+    "text": "A short subtitle."
+  },
+  "body": {
+    "type": "mrkdwn",
+    "text": "A short description of the card."
+  },
+  "hero_image": {
+    "type": "image",
+    "image_url": "https://example.com/hero.png",
+    "alt_text": "hero image"
+  },
+  "actions": [
+    {
+      "type": "button",
+      "action_id": "card_action_1",
+      "text": {
+        "type": "plain_text",
+        "text": "Open"
+      },
+      "style": "primary",
+      "value": "open"
+    }
+  ]
+}

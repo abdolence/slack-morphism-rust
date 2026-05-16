@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use url::Url;
 
+use super::workflow::SlackBlockWorkflowButtonElement;
 use crate::*;
 
 #[skip_serializing_none]
@@ -12,6 +13,9 @@ pub struct SlackBlockId(pub String);
 
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
 pub struct SlackTaskId(pub String);
+
+#[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
+pub struct SlackAccessibilityLabel(pub String);
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -42,6 +46,14 @@ pub enum SlackBlock {
     Table(SlackTableBlock),
     #[serde(rename = "task_card")]
     TaskCard(SlackTaskCardBlock),
+    #[serde(rename = "alert")]
+    Alert(SlackAlertBlock),
+    #[serde(rename = "card")]
+    Card(SlackCardBlock),
+    #[serde(rename = "carousel")]
+    Carousel(SlackCarouselBlock),
+    #[serde(rename = "context_actions")]
+    ContextActions(SlackContextActionsBlock),
     #[serde(rename = "share_shortcut")]
     ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
@@ -55,6 +67,7 @@ pub struct SlackSectionBlock {
     pub text: Option<SlackBlockText>,
     pub fields: Option<Vec<SlackBlockText>>,
     pub accessory: Option<SlackSectionBlockElement>,
+    pub expand: Option<bool>,
 }
 
 impl From<SlackSectionBlock> for SlackBlock {
@@ -207,6 +220,8 @@ pub enum SlackSectionBlockElement {
     RadioButtons(SlackBlockRadioButtonsElement),
     #[serde(rename = "checkboxes")]
     Checkboxes(SlackBlockCheckboxesElement),
+    #[serde(rename = "workflow_button")]
+    WorkflowButton(SlackBlockWorkflowButtonElement),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -242,6 +257,8 @@ pub enum SlackActionBlockElement {
     ConversationsSelect(SlackBlockConversationsSelectElement),
     #[serde(rename = "channels_select")]
     ChannelsSelect(SlackBlockChannelsSelectElement),
+    #[serde(rename = "workflow_button")]
+    WorkflowButton(SlackBlockWorkflowButtonElement),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -298,6 +315,8 @@ pub enum SlackInputBlockElement {
     EmailInput(SlackBlockEmailInputElement),
     #[serde(rename = "rich_text_input")]
     RichTextInput(SlackBlockRichTextInputElement),
+    #[serde(rename = "file_input")]
+    FileInput(SlackBlockFileInputElement),
 }
 
 #[skip_serializing_none]
@@ -320,6 +339,13 @@ impl From<SlackBlockImageElement> for SlackContextBlockElement {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackBlockButtonStyle {
+    Primary,
+    Danger,
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockButtonElement {
@@ -327,8 +353,9 @@ pub struct SlackBlockButtonElement {
     pub text: SlackBlockPlainTextOnly,
     pub url: Option<Url>,
     pub value: Option<String>,
-    pub style: Option<String>,
+    pub style: Option<SlackBlockButtonStyle>,
     pub confirm: Option<SlackBlockConfirmItem>,
+    pub accessibility_label: Option<SlackAccessibilityLabel>,
 }
 
 impl From<SlackBlockButtonElement> for SlackSectionBlockElement {
@@ -753,6 +780,22 @@ impl From<SlackBlockDateTimePickerElement> for SlackActionBlockElement {
     }
 }
 
+/**
+ * https://docs.slack.dev/reference/block-kit/composition-objects/dispatch-action-configuration-object
+ */
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackDispatchActionTrigger {
+    OnEnterPressed,
+    OnCharacterEntered,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackDispatchActionConfig {
+    pub trigger_actions_on: Option<Vec<SlackDispatchActionTrigger>>,
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockPlainTextInputElement {
@@ -763,6 +806,7 @@ pub struct SlackBlockPlainTextInputElement {
     pub min_length: Option<u64>,
     pub max_length: Option<u64>,
     pub focus_on_load: Option<bool>,
+    pub dispatch_action_config: Option<SlackDispatchActionConfig>,
 }
 
 impl From<SlackBlockPlainTextInputElement> for SlackSectionBlockElement {
@@ -1468,6 +1512,180 @@ impl From<SlackUrlSourceElement> for SlackTaskCardSource {
     }
 }
 
+/**
+ * https://docs.slack.dev/reference/block-kit/block-elements/file-input-element
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockFileInputElement {
+    pub action_id: SlackActionId,
+    pub filetypes: Option<Vec<String>>,
+    pub max_files: Option<u64>,
+}
+
+impl From<SlackBlockFileInputElement> for SlackInputBlockElement {
+    fn from(element: SlackBlockFileInputElement) -> Self {
+        SlackInputBlockElement::FileInput(element)
+    }
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/alert-block
+ */
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackAlertLevel {
+    Warning,
+    Error,
+    Info,
+    Success,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAlertBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub text: SlackBlockText,
+    pub level: Option<SlackAlertLevel>,
+}
+
+impl From<SlackAlertBlock> for SlackBlock {
+    fn from(block: SlackAlertBlock) -> Self {
+        SlackBlock::Alert(block)
+    }
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/card-block
+ */
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackCardImageElement {
+    #[serde(rename = "image")]
+    Image(SlackBlockImageElement),
+}
+
+impl From<SlackBlockImageElement> for SlackCardImageElement {
+    fn from(element: SlackBlockImageElement) -> Self {
+        SlackCardImageElement::Image(element)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackCardActionBlockElement {
+    #[serde(rename = "button")]
+    Button(SlackBlockButtonElement),
+}
+
+impl From<SlackBlockButtonElement> for SlackCardActionBlockElement {
+    fn from(element: SlackBlockButtonElement) -> Self {
+        SlackCardActionBlockElement::Button(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackCardBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub title: Option<SlackBlockText>,
+    pub subtitle: Option<SlackBlockText>,
+    pub body: Option<SlackBlockText>,
+    pub hero_image: Option<SlackCardImageElement>,
+    pub icon: Option<SlackCardImageElement>,
+    pub actions: Option<Vec<SlackCardActionBlockElement>>,
+}
+
+impl From<SlackCardBlock> for SlackBlock {
+    fn from(block: SlackCardBlock) -> Self {
+        SlackBlock::Card(block)
+    }
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/carousel-block
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackCarouselBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub elements: Vec<SlackBlock>,
+}
+
+impl From<SlackCarouselBlock> for SlackBlock {
+    fn from(block: SlackCarouselBlock) -> Self {
+        SlackBlock::Carousel(block)
+    }
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/context-actions-block
+ * https://docs.slack.dev/reference/block-kit/block-elements/feedback-buttons-element
+ * https://docs.slack.dev/reference/block-kit/block-elements/icon-button-element
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackFeedbackButtonItem {
+    pub action_id: SlackActionId,
+    pub value: String,
+    pub text: SlackBlockPlainTextOnly,
+    pub confirm: Option<SlackBlockConfirmItem>,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockFeedbackButtonsElement {
+    pub action_id: SlackActionId,
+    pub positive: SlackFeedbackButtonItem,
+    pub negative: SlackFeedbackButtonItem,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackBlockIconButtonElement {
+    pub action_id: SlackActionId,
+    pub icon: String,
+    pub text: SlackBlockPlainTextOnly,
+    pub value: Option<String>,
+    pub confirm: Option<SlackBlockConfirmItem>,
+    pub accessibility_label: Option<SlackAccessibilityLabel>,
+    pub visible_to_user_ids: Option<Vec<SlackUserId>>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackContextActionBlockElement {
+    #[serde(rename = "feedback_buttons")]
+    FeedbackButtons(SlackBlockFeedbackButtonsElement),
+    #[serde(rename = "icon_button")]
+    IconButton(SlackBlockIconButtonElement),
+}
+
+impl From<SlackBlockFeedbackButtonsElement> for SlackContextActionBlockElement {
+    fn from(element: SlackBlockFeedbackButtonsElement) -> Self {
+        SlackContextActionBlockElement::FeedbackButtons(element)
+    }
+}
+
+impl From<SlackBlockIconButtonElement> for SlackContextActionBlockElement {
+    fn from(element: SlackBlockIconButtonElement) -> Self {
+        SlackContextActionBlockElement::IconButton(element)
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackContextActionsBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub elements: Vec<SlackContextActionBlockElement>,
+}
+
+impl From<SlackContextActionsBlock> for SlackBlock {
+    fn from(block: SlackContextActionsBlock) -> Self {
+        SlackBlock::ContextActions(block)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -1746,6 +1964,126 @@ mod test {
     #[test]
     fn test_slack_task_card_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
         let payload = include_str!("./fixtures/slack_task_card_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_alert_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_alert_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        match block {
+            SlackBlock::Alert(alert) => {
+                assert_eq!(alert.level, Some(SlackAlertLevel::Warning));
+            }
+            _ => panic!("Expected Alert block"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_alert_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_alert_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_card_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_card_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        match block {
+            SlackBlock::Card(card) => {
+                assert!(card.hero_image.is_some());
+                assert!(card.actions.is_some());
+                let actions = card.actions.unwrap();
+                assert_eq!(actions.len(), 1);
+                match &actions[0] {
+                    SlackCardActionBlockElement::Button(btn) => {
+                        assert_eq!(btn.style, Some(SlackBlockButtonStyle::Primary));
+                    }
+                }
+            }
+            _ => panic!("Expected Card block"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_card_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_card_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_context_actions_block_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_context_actions_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        match block {
+            SlackBlock::ContextActions(ctx) => {
+                assert_eq!(ctx.elements.len(), 1);
+                match &ctx.elements[0] {
+                    SlackContextActionBlockElement::IconButton(btn) => {
+                        assert_eq!(btn.icon, "trash");
+                    }
+                    _ => panic!("Expected IconButton element"),
+                }
+            }
+            _ => panic!("Expected ContextActions block"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_context_actions_block_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_context_actions_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let serialized = serde_json::to_string(&block)?;
+        let block2: SlackBlock = serde_json::from_str(&serialized)?;
+        assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_workflow_button_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_workflow_button.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        match block {
+            SlackBlock::Actions(actions) => {
+                assert_eq!(actions.elements.len(), 1);
+                match &actions.elements[0] {
+                    SlackActionBlockElement::WorkflowButton(btn) => {
+                        assert_eq!(btn.style, Some(SlackBlockButtonStyle::Primary));
+                        let params = btn
+                            .workflow
+                            .trigger
+                            .customizable_input_parameters
+                            .as_ref()
+                            .expect("params should be present");
+                        assert_eq!(params.len(), 1);
+                        assert_eq!(params[0].name, "user_input");
+                    }
+                    _ => panic!("Expected WorkflowButton element"),
+                }
+            }
+            _ => panic!("Expected Actions block"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_workflow_button_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_workflow_button.json");
         let block: SlackBlock = serde_json::from_str(payload)?;
         let serialized = serde_json::to_string(&block)?;
         let block2: SlackBlock = serde_json::from_str(&serialized)?;
