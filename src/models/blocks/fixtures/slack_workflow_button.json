@@ -1,0 +1,26 @@
+{
+  "type": "actions",
+  "block_id": "workflow_actions",
+  "elements": [
+    {
+      "type": "workflow_button",
+      "action_id": "start_workflow",
+      "text": {
+        "type": "plain_text",
+        "text": "Start Workflow"
+      },
+      "workflow": {
+        "trigger": {
+          "url": "https://slack.com/shortcuts/Ft0ABC123/xyz",
+          "customizable_input_parameters": [
+            {
+              "name": "user_input",
+              "value": "hello"
+            }
+          ]
+        }
+      },
+      "style": "primary"
+    }
+  ]
+}

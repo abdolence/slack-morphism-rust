@@ -36,71 +36,92 @@ async fn test_command_events_function(
 
     println!("{:#?}", user_info_resp);
 
+    let blocks: Vec<SlackBlock> = slack_blocks![
+        some_into(SlackSectionBlock::new().with_text(md!(
+            "Working section for {}. Team ID: {:?}",
+            event.user_id.to_slack_format(),
+            user_info_resp.user.team_id
+        ))),
+        some_into(SlackActionsBlock::new(slack_blocks![
+            some_into(
+                SlackBlockButtonElement::new(
+                    "my-simple-action-button".into(),
+                    pt!("Action button")
+                )
+                .with_style(SlackBlockButtonStyle::Primary)
+                .with_accessibility_label(SlackAccessibilityLabel(
+                    "Perform the main action".into()
+                ))
+            ),
+            some_into(
+                SlackBlockStaticSelectElement::new("my-simple-static-menu".into())
+                    .with_options(vec![SlackBlockChoiceItem::new(
+                        pt!("my-option1"),
+                        "my-option1-value".to_string()
+                    )])
+            )
+        ])),
+                some_into(SlackCardBlock::new().with_title(md!("Library status")).with_body(md!(
+                    "slack-morphism is up and running."
+                ))),
+        some_into(SlackContextActionsBlock::new(vec![
+            SlackBlockIconButtonElement::new(
+                "delete_card".into(),
+                "trash".into(),
+                pt!("Delete")
+            )
+            .with_value("delete_item".into())
+            .with_accessibility_label(SlackAccessibilityLabel("Delete this item".into()))
+            .into()
+        ])),
+        some_into(
+            SlackTableBlock::new(vec![
+                vec![
+                    SlackTableCell::RawText(SlackTableRawTextCell::new("Name".into())),
+                    SlackTableCell::RawText(SlackTableRawTextCell::new("Status".into())),
+                ],
+                vec![
+                    SlackTableCell::RawText(SlackTableRawTextCell::new(
+                        "Slack Morphism".into()
+                    )),
+                    SlackTableCell::RichText(SlackTableRichTextCell::new(vec![
+                        SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
+                            SlackRichTextText::new("Active".into())
+                                .with_style(SlackRichTextStyle::new().with_bold(true))
+                        )])
+                        .into()
+                    ])),
+                ],
+            ])
+            .with_column_settings(vec![
+                SlackTableColumnSetting::new(),
+                SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
+            ])
+        ),
+        some_into(
+            SlackTaskCardBlock::new("task_demo".into(), "Checking library status".into())
+                .with_status(SlackTaskCardStatus::Complete)
+                .with_output(
+                    SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
+                        SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                            "All systems operational".into()
+                        ))
+                    ])
+                    .into()])
+                    .into()
+                )
+                .with_sources(vec![SlackUrlSourceElement::new(
+                    Url::parse("https://slack-rust.abdolence.dev").expect("A proper url"),
+                    "slack-morphism docs".into()
+                )
+                .into()])
+        )
+    ];
+
     Ok(SlackCommandEventResponse::new(
         SlackMessageContent::new()
             .with_text(format!("Working on it: {:?}", user_info_resp.user.team_id).into())
-            .with_blocks(slack_blocks![
-                some_into(SlackSectionBlock::new().with_text(md!(
-                    "Working section for {}. Team ID: {:?}",
-                    event.user_id.to_slack_format(),
-                    user_info_resp.user.team_id
-                ))),
-                some_into(SlackActionsBlock::new(slack_blocks![
-                    some_into(SlackBlockButtonElement::new(
-                        "my-simple-action-button".into(),
-                        pt!("Action button")
-                    )),
-                    some_into(
-                        SlackBlockStaticSelectElement::new("my-simple-static-menu".into())
-                            .with_options(vec![SlackBlockChoiceItem::new(
-                                pt!("my-option1"),
-                                "my-option1-value".to_string()
-                            )])
-                    )
-                ])),
-                some_into(
-                    SlackTableBlock::new(vec![
-                        vec![
-                            SlackTableCell::RawText(SlackTableRawTextCell::new("Name".into())),
-                            SlackTableCell::RawText(SlackTableRawTextCell::new("Status".into())),
-                        ],
-                        vec![
-                            SlackTableCell::RawText(SlackTableRawTextCell::new(
-                                "Slack Morphism".into()
-                            )),
-                            SlackTableCell::RichText(SlackTableRichTextCell::new(vec![
-                                SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
-                                    SlackRichTextText::new("Active".into())
-                                        .with_style(SlackRichTextStyle::new().with_bold(true))
-                                )])
-                                .into()
-                            ])),
-                        ],
-                    ])
-                    .with_column_settings(vec![
-                        SlackTableColumnSetting::new(),
-                        SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
-                    ])
-                ),
-                some_into(
-                    SlackTaskCardBlock::new("task_demo".into(), "Checking library status".into())
-                        .with_status(SlackTaskCardStatus::Complete)
-                        .with_output(
-                            SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
-                                SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                                    "All systems operational".into()
-                                ))
-                            ])
-                            .into()])
-                            .into()
-                        )
-                        .with_sources(vec![SlackUrlSourceElement::new(
-                            Url::parse("https://slack-rust.abdolence.dev").expect("A proper url"),
-                            "slack-morphism docs".into()
-                        )
-                        .into()])
-                )
-            ]),
+            .with_blocks(blocks),
     ))
 }
 
