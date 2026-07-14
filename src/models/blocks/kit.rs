@@ -1284,7 +1284,7 @@ pub struct SlackRichTextText {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextLink {
-    pub url: Url,
+    pub url: SlackRelaxedUrl,
     pub text: Option<String>,
     #[serde(rename = "unsafe")]
     pub unsafe_: Option<bool>,

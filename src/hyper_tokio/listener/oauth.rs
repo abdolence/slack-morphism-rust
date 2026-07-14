@@ -99,8 +99,8 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                 );
                 let redirect_error_url = format!(
                     "{}{}",
-                    &config.redirect_error_redirect_url,
-                    req.uri().query().map_or("".into(), |q| format!("?{}", &q))
+                    config.redirect_error_redirect_url,
+                    req.uri().query().map_or("".into(), |q| format!("?{}", q))
                 );
                 HyperExtensions::hyper_redirect_to(&redirect_error_url)
             }
