@@ -295,28 +295,28 @@ impl SlackRelaxedUrl {
 impl TryFrom<&SlackRelaxedUrl> for Url {
     type Error = url::ParseError;
 
-    fn try_from(value: &SlackRelaxedUrl) -> Result<Self, Self::Error> {
-        Url::parse(value.value())
+    fn try_from(relaxed_url: &SlackRelaxedUrl) -> Result<Self, Self::Error> {
+        Url::parse(relaxed_url.value())
     }
 }
 
 impl TryFrom<SlackRelaxedUrl> for Url {
     type Error = url::ParseError;
 
-    fn try_from(value: SlackRelaxedUrl) -> Result<Self, Self::Error> {
-        Url::parse(value.value())
+    fn try_from(relaxed_url: SlackRelaxedUrl) -> Result<Self, Self::Error> {
+        Url::parse(relaxed_url.value())
     }
 }
 
 impl From<Url> for SlackRelaxedUrl {
-    fn from(value: Url) -> Self {
-        SlackRelaxedUrl(value.to_string())
+    fn from(url: Url) -> Self {
+        SlackRelaxedUrl(url.to_string())
     }
 }
 
 impl From<&Url> for SlackRelaxedUrl {
-    fn from(value: &Url) -> Self {
-        SlackRelaxedUrl(value.to_string())
+    fn from(url: &Url) -> Self {
+        SlackRelaxedUrl(url.to_string())
     }
 }
 

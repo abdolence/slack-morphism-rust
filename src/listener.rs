@@ -164,7 +164,7 @@ impl SlackOAuthListenerConfig {
         Url::parse(
             format!(
                 "{}{}",
-                &self.redirect_callback_host, &self.redirect_callback_path
+                self.redirect_callback_host, self.redirect_callback_path
             )
             .as_str(),
         )
