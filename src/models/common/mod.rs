@@ -280,6 +280,46 @@ pub struct SlackEventType(pub String);
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackEnterpriseId(pub String);
 
+/// This type is needed since Slack allowes invalid URLs in some places like Rich sections
+/// and we still need to read them on the client side, so we store it as a string
+/// but provide convinent messages to convert to Url if possible.
+#[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackRelaxedUrl(pub String);
+
+impl SlackRelaxedUrl {
+    pub fn to_url(&self) -> Result<Url, url::ParseError> {
+        self.try_into()
+    }
+}
+
+impl TryFrom<&SlackRelaxedUrl> for Url {
+    type Error = url::ParseError;
+
+    fn try_from(value: &SlackRelaxedUrl) -> Result<Self, Self::Error> {
+        Url::parse(value.value())
+    }
+}
+
+impl TryFrom<SlackRelaxedUrl> for Url {
+    type Error = url::ParseError;
+
+    fn try_from(value: SlackRelaxedUrl) -> Result<Self, Self::Error> {
+        Url::parse(value.value())
+    }
+}
+
+impl From<Url> for SlackRelaxedUrl {
+    fn from(value: Url) -> Self {
+        SlackRelaxedUrl(value.to_string())
+    }
+}
+
+impl From<&Url> for SlackRelaxedUrl {
+    fn from(value: &Url) -> Self {
+        SlackRelaxedUrl(value.to_string())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
