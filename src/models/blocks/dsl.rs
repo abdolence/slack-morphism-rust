@@ -6,7 +6,7 @@ macro_rules! md {
         SlackBlockMarkDownText::new($e.into()).into()
     };
 
-    ($e : expr, $($es:expr),+) => {
+    ($e : expr, $($es:expr),+ $(,)?) => {
         md!(format!($e,$($es),+))
     };
 }
@@ -17,7 +17,7 @@ macro_rules! pt {
         SlackBlockPlainText::new($e.into()).into()
     };
 
-    ($e : expr, $($es:expr),+) => {
+    ($e : expr, $($es:expr),+ $(,)?) => {
         pt!(format!($e,$($es),+))
     };
 }
@@ -56,7 +56,7 @@ macro_rules! slack_blocks {
 
     () => { vec![] };
 
-    ($($pred : tt($item:expr $(=> $item_r:expr)?)),+) => {{
+    ($($pred : tt($item:expr $(=> $item_r:expr)?)),+ $(,)?) => {{
         vec![
             $(slack_block_item! ($pred($item $(=> $item_r)?))),*
         ].into_iter().flatten().collect()
