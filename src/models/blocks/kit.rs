@@ -1259,6 +1259,10 @@ pub enum SlackRichTextInlineElement {
     Broadcast(SlackRichTextBroadcast),
     #[serde(rename = "color")]
     Color(SlackRichTextColor),
+    #[serde(rename = "message_mention")]
+    MessageMention(SlackRichTextMessageMention),
+    #[serde(untagged)]
+    Unknown(serde_json::Value),
 }
 
 #[skip_serializing_none]
@@ -1347,6 +1351,18 @@ pub struct SlackRichTextBroadcast {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextColor {
     pub value: String,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackRichTextMessageMention {
+    pub url: SlackRelaxedUrl,
+    pub text: Option<String>,
+    pub channel_id: Option<SlackChannelId>,
+    pub author_id: Option<SlackUserId>,
+    pub message_ts: Option<SlackTs>,
+    pub thread_ts: Option<SlackTs>,
+    pub style: Option<SlackRichTextStyle>,
 }
 
 /**
@@ -2088,6 +2104,76 @@ mod test {
         let serialized = serde_json::to_string(&block)?;
         let block2: SlackBlock = serde_json::from_str(&serialized)?;
         assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_rich_text_message_mention_deserialize() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = serde_json::json!({
+            "type": "rich_text",
+            "block_id": "msgm1",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "message_mention",
+                            "url": "https://acme.slack.com/archives/C12345678/p1784153496441789?thread_ts=1784153496.441789&cid=C12345678",
+                            "text": "a message",
+                            "channel_id": "C12345678",
+                            "author_id": "U12345678",
+                            "message_ts": "1784153496.441789",
+                            "thread_ts": "1784153496.441789"
+                        }
+                    ]
+                }
+            ]
+        })
+        .to_string();
+        let block: SlackBlock = serde_json::from_str(&payload)?;
+        match block {
+            SlackBlock::RichText(rich_text) => match &rich_text.elements[0] {
+                SlackRichTextElement::Section(section) => match &section.elements[0] {
+                    SlackRichTextInlineElement::MessageMention(mention) => {
+                        assert_eq!(mention.channel_id, Some(SlackChannelId("C12345678".into())));
+                        assert_eq!(mention.author_id, Some(SlackUserId("U12345678".into())));
+                        assert_eq!(
+                            mention.message_ts,
+                            Some(SlackTs("1784153496.441789".into()))
+                        );
+                    }
+                    other => panic!("Expected MessageMention element, got {other:?}"),
+                },
+                _ => panic!("Expected Section element"),
+            },
+            _ => panic!("Expected RichText block"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_rich_text_unknown_inline_element_deserialize() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let payload = serde_json::json!({
+            "type": "rich_text_section",
+            "elements": [
+                {
+                    "type": "some_future_element",
+                    "foo": "bar"
+                }
+            ]
+        })
+        .to_string();
+        let section: SlackRichTextElement = serde_json::from_str(&payload)?;
+        match section {
+            SlackRichTextElement::Section(section) => match &section.elements[0] {
+                SlackRichTextInlineElement::Unknown(value) => {
+                    assert_eq!(value["type"], "some_future_element");
+                }
+                other => panic!("Expected Unknown element, got {other:?}"),
+            },
+            _ => panic!("Expected Section element"),
+        }
         Ok(())
     }
 }
