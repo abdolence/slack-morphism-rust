@@ -322,7 +322,6 @@ where
 
         {
             let thread_identity = identity.clone();
-            let thread_last_time_pong_received = last_time_pong_received;
             let thread_destroyed = destroyed.clone();
 
             tokio::spawn(async move {
@@ -368,8 +367,6 @@ where
                                 thread_identity.id.to_string(),
                                 &body
                             );
-                            let mut last_pong = thread_last_time_pong_received.write().await;
-                            last_pong.time = SystemTime::now();
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
                             warn!(
