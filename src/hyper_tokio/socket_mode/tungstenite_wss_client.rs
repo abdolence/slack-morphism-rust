@@ -37,7 +37,6 @@ where
 #[derive(Clone, Debug)]
 enum SlackTungsteniteWssClientCommand {
     Message(String),
-    Pong(Vec<u8>),
     Exit,
 }
 
@@ -245,21 +244,6 @@ where
                                         rx.close()
                                     }
                                 }
-                                SlackTungsteniteWssClientCommand::Pong(body) => {
-                                    trace!(
-                                        slack_wss_client_id = thread_identity.id.to_string().as_str(),
-                                        "[{}] Pong to Slack: {:?}",
-                                        thread_identity.id.to_string(),
-                                        body
-                                    );
-                                    if writer
-                                        .send(tokio_tungstenite::tungstenite::Message::Pong(body.into()))
-                                        .await
-                                        .is_err()
-                                    {
-                                        rx.close()
-                                    }
-                                }
                                 SlackTungsteniteWssClientCommand::Exit => {
                                     writer.close().await.unwrap_or(());
                                     rx.close();
@@ -376,8 +360,6 @@ where
                                 thread_identity.id.to_string(),
                                 &body
                             );
-                            tx.send(SlackTungsteniteWssClientCommand::Pong(body.into()))
-                                .unwrap_or(());
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Pong(body)) => {
                             trace!(
