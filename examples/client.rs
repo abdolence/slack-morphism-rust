@@ -6,8 +6,8 @@ use rsb_derive::Builder;
 use std::time::Duration;
 use url::Url;
 
-use futures::stream::BoxStream;
-use futures::TryStreamExt;
+use futures_util::stream::BoxStream;
+use futures_util::TryStreamExt;
 
 async fn test_simple_api_calls() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = SlackClient::new(SlackClientHyperConnector::new()?);

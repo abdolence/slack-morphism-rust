@@ -2,7 +2,7 @@ use crate::api::SlackApiAppsConnectionOpenRequest;
 use crate::errors::*;
 use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::*;
-use futures::{SinkExt, StreamExt};
+use futures_util::{SinkExt, StreamExt};
 use rvstruct::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;

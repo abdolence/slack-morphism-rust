@@ -1,9 +1,9 @@
 use crate::errors::*;
 use crate::{ClientResult, SlackClientHttpConnector, SlackClientSession};
 
-use futures::future::BoxFuture;
-use futures::stream::BoxStream;
-use futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
+use futures_util::future::BoxFuture;
+use futures_util::stream::BoxStream;
+use futures_util::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 use std::marker::PhantomData;
 
 pub trait SlackApiResponseScroller<SCHC>

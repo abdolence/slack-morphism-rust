@@ -4,7 +4,7 @@ use crate::listener::{SlackClientEventsUserState, UserCallbackFunction};
 use crate::models::events::{SlackCommandEvent, SlackCommandEventResponse};
 use crate::models::socket_mode::SlackSocketModeHelloEvent;
 use crate::{AnyStdResult, SlackClient, SlackClientHttpConnector, UserCallbackResult};
-use futures::future::BoxFuture;
+use futures_util::future::BoxFuture;
 use std::future::Future;
 use std::sync::Arc;
 use tracing::*;

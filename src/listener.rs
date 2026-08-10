@@ -1,7 +1,7 @@
 use crate::models::*;
 use crate::{BoxError, ClientResult, SlackClient, SlackClientHttpConnector};
-use futures::executor::block_on;
-use futures::FutureExt;
+use futures_executor::block_on;
+use futures_util::FutureExt;
 use rsb_derive::Builder;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;

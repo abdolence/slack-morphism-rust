@@ -31,8 +31,8 @@ async fn example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let scroller = scroller_req.scroller();
     
     // Option 1: Create a Rust Futures Stream from this scroller and use it
-    use futures::stream::BoxStream;
-    use futures::TryStreamExt;
+    use futures_util::stream::BoxStream;
+    use futures_util::TryStreamExt;
     
     let mut items_stream = scroller.to_items_stream(&session);
     while let Some(items) = items_stream.try_next().await? {

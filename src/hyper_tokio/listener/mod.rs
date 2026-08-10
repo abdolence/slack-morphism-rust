@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::sync::Arc;
 
-use futures::future::{BoxFuture, FutureExt};
+use futures_util::future::{BoxFuture, FutureExt};
 use hyper::body::Incoming;
 use hyper::{Request, Response};
 use hyper_util::client::legacy::connect::Connect;

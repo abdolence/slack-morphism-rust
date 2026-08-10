@@ -12,7 +12,7 @@ use crate::ratectl::*;
 use crate::scroller::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
-use futures::future::{BoxFuture, FutureExt};
+use futures_util::future::{BoxFuture, FutureExt};
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
 where

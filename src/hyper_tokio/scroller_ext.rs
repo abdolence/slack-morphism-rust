@@ -1,7 +1,7 @@
 use crate::*;
-use futures::future::BoxFuture;
-use futures::stream::BoxStream;
-use futures::TryStreamExt;
+use futures_util::future::BoxFuture;
+use futures_util::stream::BoxStream;
+use futures_util::TryStreamExt;
 use std::time::Duration;
 use tokio_stream::StreamExt;
 

@@ -7,7 +7,7 @@ use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use crate::hyper_tokio::*;
 pub use crate::models::events::*;
 pub use crate::models::SlackResponseUrl;
-use futures::future::{BoxFuture, FutureExt, TryFutureExt};
+use futures_util::future::{BoxFuture, FutureExt, TryFutureExt};
 use http_body_util::Empty;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
