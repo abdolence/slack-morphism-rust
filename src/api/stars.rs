@@ -10,7 +10,7 @@ use serde_with::skip_serializing_none;
 use crate::models::*;
 use crate::ratectl::*;
 use crate::*;
-use futures::future::{BoxFuture, FutureExt};
+use futures_util::future::{BoxFuture, FutureExt};
 use std::collections::HashSet;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>

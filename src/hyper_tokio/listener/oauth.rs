@@ -7,7 +7,7 @@ use crate::errors::*;
 use crate::listener::*;
 use crate::{AnyStdResult, SlackClient, SlackClientHttpApiUri};
 
-use futures::future::{BoxFuture, FutureExt};
+use futures_util::future::{BoxFuture, FutureExt};
 use hyper::body::Incoming;
 use hyper::{Method, Request, Response};
 use hyper_util::client::legacy::connect::Connect;

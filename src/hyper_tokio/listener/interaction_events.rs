@@ -7,7 +7,7 @@ use crate::signature_verifier::SlackEventSignatureVerifier;
 use crate::blocks::SlackViewSubmissionResponse;
 use crate::hyper_tokio::hyper_ext::HyperExtensions;
 use crate::hyper_tokio::*;
-use futures::future::{BoxFuture, FutureExt, TryFutureExt};
+use futures_util::future::{BoxFuture, FutureExt, TryFutureExt};
 use http_body_util::{BodyExt, Empty, Full};
 use hyper::body::Incoming;
 use hyper::{Method, Request, Response, StatusCode};

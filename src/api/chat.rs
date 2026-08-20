@@ -13,7 +13,7 @@ use crate::ratectl::*;
 use crate::scroller::*;
 use crate::SlackClientSession;
 use crate::{ClientResult, SlackClientHttpConnector};
-use futures::future::{BoxFuture, FutureExt};
+use futures_util::future::{BoxFuture, FutureExt};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use url::Url;

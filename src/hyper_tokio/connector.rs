@@ -4,7 +4,7 @@ use crate::hyper_tokio::Body;
 use crate::models::{SlackClientId, SlackClientSecret};
 use crate::*;
 use async_recursion::async_recursion;
-use futures::future::{BoxFuture, FutureExt};
+use futures_util::future::{BoxFuture, FutureExt};
 use http_body_util::{BodyExt, Empty, Full};
 use hyper::http::StatusCode;
 use hyper::Request;
@@ -447,7 +447,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
                     0,
                 )
                 .boxed(),
-            Err(err) => futures::future::err(err.into()).boxed(),
+            Err(err) => futures_util::future::err(err.into()).boxed(),
         }
     }
 
