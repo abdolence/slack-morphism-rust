@@ -161,7 +161,7 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                     some(md!(
                         "Current time is: {}",
                         fmt_slack_date(
-                            &SlackDateTime::now().0,
+                            SlackDateTime::now().value(),
                             SlackDateTimeFormats::DatePretty.to_string().as_str(),
                             None
                         )
@@ -212,7 +212,7 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                 some(md!(
                     "Current time is: {}",
                     fmt_slack_date(
-                        &SlackDateTime::now().0,
+                        SlackDateTime::now().value(),
                         SlackDateTimeFormats::DatePretty.to_string().as_str(),
                         None
                     )
