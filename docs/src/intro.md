@@ -20,6 +20,7 @@ Includes also all type/models definitions that used for Slack Web/Events APIs.
 This library provided the following features:
 - `hyper`: Slack client support/binding for Hyper/Tokio/Tungstenite.
 - `axum`:  Slack client support/binding for [axum framework](https://github.com/tokio-rs/axum) support.
+- `obsolete-chrono`: deprecated. Keeps the date/time types backed by `chrono` instead of `jiff` to ease migration.
 
 ### TLS-related configuration features
 By default, `hyper` and `axum` features use `rustls-native-certs` and `hyper-rustls/ring` setup for TLS configuration, 

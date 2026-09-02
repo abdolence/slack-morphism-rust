@@ -1,5 +1,3 @@
-use chrono::serde::ts_seconds;
-use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize};
@@ -7,6 +5,12 @@ use serde_with::{serde_as, skip_serializing_none};
 use std::hash::Hash;
 use std::*;
 use url::Url;
+
+pub(crate) mod datetime;
+
+pub use datetime::*;
+
+use datetime::unix_seconds;
 
 mod user;
 
@@ -54,17 +58,31 @@ pub use assistant::*;
 pub struct SlackTs(pub String);
 
 impl SlackTs {
-    pub fn to_date_time_opt(&self) -> Option<DateTime<Utc>> {
-        let parts: Vec<&str> = self.value().split('.').collect();
-        if let Ok(ts_int) = parts[0].parse::<i64>() {
-            match Utc.timestamp_millis_opt(ts_int * 1000) {
-                chrono::LocalResult::None => None,
-                chrono::LocalResult::Single(result) => Some(result),
-                chrono::LocalResult::Ambiguous(first, _) => Some(first),
+    /// Converts a Slack timestamp (`<seconds>.<microseconds>`) to an instant.
+    ///
+    /// The fractional part is optional and is interpreted as microseconds,
+    /// padded or truncated to six digits.
+    pub fn to_date_time_opt(&self) -> Option<SlackUtcDateTime> {
+        let value = self.value();
+        let (seconds_part, micros_part) = match value.split_once('.') {
+            Some((seconds, micros)) => (seconds, Some(micros)),
+            None => (value.as_str(), None),
+        };
+
+        let seconds: i64 = seconds_part.parse().ok()?;
+
+        let micros: u32 = match micros_part {
+            Some(micros_part) => {
+                let mut digits: String = micros_part.chars().take(6).collect();
+                while digits.len() < 6 {
+                    digits.push('0');
+                }
+                digits.parse().ok()?
             }
-        } else {
-            None
-        }
+            None => 0,
+        };
+
+        datetime::from_unix_seconds_micros(seconds, micros)
     }
 }
 
@@ -126,11 +144,11 @@ impl SlackTextFormat for SlackUserGroupId {
 pub struct SlackBotId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
-pub struct SlackDateTime(#[serde(with = "ts_seconds")] pub DateTime<Utc>);
+pub struct SlackDateTime(#[serde(with = "unix_seconds")] pub SlackUtcDateTime);
 
 impl SlackDateTime {
     pub fn now() -> Self {
-        Self(Utc::now())
+        Self(datetime::now())
     }
 }
 
@@ -138,8 +156,8 @@ impl SlackDateTime {
 pub struct SlackDate(pub String);
 
 impl SlackDate {
-    pub fn to_naive_date(&self) -> Option<NaiveDate> {
-        NaiveDate::parse_from_str(self.value(), "%Y-%m-%d").ok()
+    pub fn to_naive_date(&self) -> Option<SlackCivilDate> {
+        datetime::parse_civil_date(self.value())
     }
 }
 
@@ -323,15 +341,56 @@ impl From<&Url> for SlackRelaxedUrl {
 #[cfg(test)]
 mod test {
     use super::*;
+    use serde_json::json;
+
+    fn test_date_time() -> SlackUtcDateTime {
+        "2020-01-01T00:42:42Z".parse::<SlackUtcDateTime>().unwrap()
+    }
 
     #[test]
     fn test_slack_date_time() {
-        let dt = SlackDateTime(
-            DateTime::parse_from_rfc3339("2020-01-01T00:42:42Z")
-                .unwrap()
-                .into(),
-        );
+        let dt = SlackDateTime(test_date_time());
         let json = serde_json::to_value(&dt).unwrap();
         assert_eq!(json.as_u64().unwrap(), 1577839362);
+
+        let parsed: SlackDateTime = serde_json::from_value(json!(1577839362)).unwrap();
+        assert_eq!(parsed, dt);
+        assert_eq!(serde_json::from_value::<SlackDateTime>(json).unwrap(), dt);
+    }
+
+    #[test]
+    fn test_slack_ts_to_date_time_with_micros() {
+        let ts = SlackTs("1577839362.000400".to_string());
+        let dt = ts.to_date_time_opt().unwrap();
+
+        assert_eq!(datetime::unix_seconds(&dt), 1577839362);
+        assert_eq!(
+            Some(dt),
+            datetime::from_unix_seconds_micros(1577839362, 400)
+        );
+        assert_ne!(Some(dt), datetime::from_unix_seconds_micros(1577839362, 0));
+    }
+
+    #[test]
+    fn test_slack_ts_to_date_time_without_fraction() {
+        let ts = SlackTs("1577839362".to_string());
+        let dt = ts.to_date_time_opt().unwrap();
+
+        assert_eq!(datetime::unix_seconds(&dt), 1577839362);
+        assert_eq!(Some(dt), datetime::from_unix_seconds_micros(1577839362, 0));
+    }
+
+    #[test]
+    fn test_slack_ts_to_date_time_invalid() {
+        assert_eq!(SlackTs("garbage".to_string()).to_date_time_opt(), None);
+    }
+
+    #[test]
+    fn test_slack_date_to_naive_date() {
+        assert!(SlackDate("2020-01-01".to_string())
+            .to_naive_date()
+            .is_some());
+        assert_eq!(SlackDate("2020-13-01".to_string()).to_naive_date(), None);
+        assert_eq!(SlackDate("garbage".to_string()).to_naive_date(), None);
     }
 }

@@ -17,6 +17,8 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo fmt -- --check && cargo clippy --all-features -- -Dwarnings && cargo test --all-features
+      - run: cargo fmt -- --check
+      - run: cargo clippy --features hyper,axum -- -Dwarnings && cargo test --features hyper,axum
+      - run: cargo clippy --all-features -- -Dwarnings && cargo test --all-features
       - run: cargo check --no-default-features --features hyper
       - run: cargo check --no-default-features --features axum
