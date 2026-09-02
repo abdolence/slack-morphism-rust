@@ -1,4 +1,3 @@
-use chrono::prelude::*;
 use slack_morphism::prelude::*;
 
 use rsb_derive::Builder;
@@ -162,7 +161,7 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                     some(md!(
                         "Current time is: {}",
                         fmt_slack_date(
-                            &Local::now(),
+                            &SlackDateTime::now().0,
                             SlackDateTimeFormats::DatePretty.to_string().as_str(),
                             None
                         )
@@ -192,7 +191,7 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
 pub struct SlackHomeNewsItem {
     pub title: String,
     pub body: String,
-    pub published: DateTime<Utc>,
+    pub published: SlackUtcDateTime,
 }
 
 #[derive(Debug, Clone, Builder)]
@@ -213,7 +212,7 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                 some(md!(
                     "Current time is: {}",
                     fmt_slack_date(
-                        &Local::now(),
+                        &SlackDateTime::now().0,
                         SlackDateTimeFormats::DatePretty.to_string().as_str(),
                         None
                     )

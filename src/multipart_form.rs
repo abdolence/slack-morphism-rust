@@ -12,7 +12,7 @@ pub struct FileMultipartData<'a> {
 pub fn generate_multipart_boundary() -> String {
     format!(
         "----WebKitFormBoundarySlackMorphismRust{}",
-        chrono::Utc::now().timestamp()
+        crate::current_unix_seconds()
     )
 }
 

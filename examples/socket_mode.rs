@@ -1,4 +1,3 @@
-use chrono::prelude::*;
 use rsb_derive::Builder;
 use slack_morphism::prelude::*;
 use std::sync::Arc;
@@ -142,11 +141,11 @@ async fn test_push_events_sm_function(
                         SlackHomeNewsItem::new(
                         "Google claimed quantum supremacy in 2019 — and sparked controversy".into(),
                         "In October, researchers from Google claimed to have achieved a milestone known as quantum supremacy. They had created the first quantum computer that could perform a calculation that is impossible for a standard computer.".into(),
-                        DateTime::parse_from_rfc3339("2019-12-16T12:00:09Z").unwrap().into()),
+                        "2019-12-16T12:00:09Z".parse::<SlackUtcDateTime>().unwrap()),
                         SlackHomeNewsItem::new(
                             "Quantum jitter lets heat travel across a vacuum".into(),
                             "A new experiment shows that quantum fluctuations permit heat to bridge empty space.".into(),
-                            DateTime::parse_from_rfc3339("2019-12-16T12:00:09Z").unwrap().into())
+                            "2019-12-16T12:00:09Z".parse::<SlackUtcDateTime>().unwrap())
                     ],
                     home_event.user.clone(),
                 );
@@ -166,7 +165,7 @@ async fn test_push_events_sm_function(
 pub struct SlackHomeNewsItem {
     pub title: String,
     pub body: String,
-    pub published: DateTime<Utc>,
+    pub published: SlackUtcDateTime,
 }
 
 #[derive(Debug, Clone, Builder)]

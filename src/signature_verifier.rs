@@ -33,7 +33,7 @@ impl SlackEventSignatureVerifier {
         body: &'b str,
         ts: &'b str,
     ) -> Result<(), SlackEventSignatureVerifierError> {
-        self.verify_at_time(hash, body, ts, chrono::Utc::now().timestamp())
+        self.verify_at_time(hash, body, ts, crate::current_unix_seconds())
     }
 
     fn verify_at_time<'b>(
@@ -223,6 +223,7 @@ impl Error for SlackEventTimestampError {}
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::current_unix_seconds;
 
     #[test]
     fn check_signature_success() {
@@ -233,7 +234,7 @@ mod test {
         let verifier = SlackEventSignatureVerifier::new(&key_str.into());
 
         const TEST_BODY: &str = "test-body";
-        let test_ts = chrono::Utc::now().timestamp().to_string();
+        let test_ts = current_unix_seconds().to_string();
 
         let hash = verifier.sign(TEST_BODY, &test_ts).unwrap();
         verifier
@@ -282,7 +283,7 @@ mod test {
         let verifier_malicious = SlackEventSignatureVerifier::new(&key_str_malicious.into());
 
         const TEST_BODY: &str = "test-body";
-        let test_ts = chrono::Utc::now().timestamp().to_string();
+        let test_ts = current_unix_seconds().to_string();
 
         let hash = verifier_malicious.sign(TEST_BODY, &test_ts).unwrap();
         let err = verifier_correct
@@ -304,7 +305,7 @@ mod test {
 
         const TEST_BODY: &str = "test-body";
 
-        let test_ts = (chrono::Utc::now().timestamp() - 10 * 60 * 1000).to_string();
+        let test_ts = (current_unix_seconds() - 10 * 60 * 1000).to_string();
         let hash = verifier.sign(TEST_BODY, &test_ts).unwrap();
 
         match verifier.verify(&hash, TEST_BODY, &test_ts).unwrap_err() {
