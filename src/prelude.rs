@@ -16,3 +16,5 @@ pub use crate::hyper_tokio::*;
 
 #[cfg(feature = "axum-base")]
 pub use crate::axum_support::*;
+
+pub use rvstruct::ValueStruct; // .value() / .into_value() on every Slack newtype
