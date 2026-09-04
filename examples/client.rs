@@ -106,7 +106,7 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let complete_file_upload_req =
         SlackApiFilesCompleteUploadExternalRequest::new(vec![SlackApiFilesComplete::new(
             upload_url_resp.file_id,
-        )]); // .with_channel_id("C.....".into());
+        )]); // .with_channel_id("C.....".into()).with_blocks(vec![...]);
 
     let complete_file_upload_resp = session
         .files_complete_upload_external(&complete_file_upload_req)

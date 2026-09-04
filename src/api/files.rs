@@ -6,6 +6,7 @@ use crate::api::{
     SlackApiUsersConversationsRequest, SlackApiUsersConversationsResponse,
     SlackApiUsersProfileSetRequest, SlackApiUsersProfileSetResponse,
 };
+use crate::blocks::*;
 use crate::models::*;
 use crate::multipart_form::FileMultipartData;
 use crate::ratectl::*;
@@ -17,6 +18,7 @@ use rsb_derive::Builder;
 use rvstruct::ValueStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 impl<'a, SCHC> SlackClientSession<'a, SCHC>
 where
@@ -313,13 +315,25 @@ pub struct SlackApiFilesUploadViaUrlRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiFilesUploadViaUrlResponse {}
 
+///
+/// https://api.slack.com/methods/files.completeUploadExternal
+///
+/// `initial_comment` and `blocks` are mutually exclusive: when `initial_comment` is set,
+/// Slack ignores `blocks`.
+///
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiFilesCompleteUploadExternalRequest {
     pub files: Vec<SlackApiFilesComplete>,
     pub channel_id: Option<SlackChannelId>,
+    #[serde(serialize_with = "to_csv")]
+    pub channels: Option<Vec<SlackChannelId>>,
     pub initial_comment: Option<String>,
+    pub blocks: Option<Vec<SlackBlock>>,
     pub thread_ts: Option<SlackTs>,
+    pub username: Option<String>,
+    pub icon_url: Option<Url>,
+    pub icon_emoji: Option<SlackEmoji>,
 }
 
 #[skip_serializing_none]
@@ -352,5 +366,60 @@ fn to_csv<S: Serializer>(x: &Option<Vec<SlackChannelId>>, s: S) -> Result<S::Ok,
             let y: Vec<String> = ids.iter().map(|v| v.0.clone()).collect();
             y.join(",").serialize(s)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_api_files_complete_upload_external_request_serialization() {
+        let payload =
+            include_str!("./fixtures/slack_api_files_complete_upload_external_request.json");
+        let expected: serde_json::Value = serde_json::from_str(payload).unwrap();
+
+        let request =
+            SlackApiFilesCompleteUploadExternalRequest::new(vec![SlackApiFilesComplete::new(
+                SlackFileId("F123456".into()),
+            )])
+            .opt_channel_id(Some(SlackChannelId("C123456".into())))
+            .with_channels(vec![
+                SlackChannelId("C1".into()),
+                SlackChannelId("C2".into()),
+            ])
+            .with_blocks(vec![SlackMarkdownBlock::new("*bold* text".into()).into()])
+            .with_thread_ts(SlackTs("1234567890.123456".into()))
+            .with_username("test-bot".into())
+            .with_icon_url(Url::parse("https://example.com/icon.png").unwrap())
+            .with_icon_emoji(SlackEmoji::new(":tada:".into()));
+
+        let actual = serde_json::to_value(&request).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_slack_api_files_complete_upload_external_request_minimal() {
+        let request =
+            SlackApiFilesCompleteUploadExternalRequest::new(vec![SlackApiFilesComplete::new(
+                SlackFileId("F123456".into()),
+            )]);
+
+        let actual = serde_json::to_value(&request).unwrap();
+        let expected: serde_json::Value =
+            serde_json::from_str(r#"{"files":[{"id":"F123456"}]}"#).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_slack_api_files_complete_upload_external_response() {
+        let payload =
+            include_str!("./fixtures/slack_api_files_complete_upload_external_response.json");
+        let model: SlackApiFilesCompleteUploadExternalResponse =
+            serde_json::from_str(payload).unwrap();
+
+        assert_eq!(model.files.len(), 1);
+        assert_eq!(model.files[0].id, SlackFileId("F123456".into()));
+        assert_eq!(model.files[0].title, Some("test-file".into()));
     }
 }
