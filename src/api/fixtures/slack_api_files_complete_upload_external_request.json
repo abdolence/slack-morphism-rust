@@ -1,0 +1,17 @@
+{
+  "files": [
+    { "id": "F123456" }
+  ],
+  "channel_id": "C123456",
+  "channels": "C1,C2",
+  "blocks": [
+    {
+      "type": "markdown",
+      "text": "*bold* text"
+    }
+  ],
+  "thread_ts": "1234567890.123456",
+  "username": "test-bot",
+  "icon_url": "https://example.com/icon.png",
+  "icon_emoji": ":tada:"
+}
