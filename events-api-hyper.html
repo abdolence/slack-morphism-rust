@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e336f63f.js";
+            window.path_to_searchindex_js = "searchindex-c2d351f2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-132cf9d3.js"></script>
@@ -256,14 +256,17 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         Ok(())
     }
 
-    // Interaction events handler
+    // Interaction events handler.
+    // Returning `SlackInteractionResponse` lets one handler answer every kind of
+    // interaction: options for `block_suggestion`, a `response_action` for
+    // `view_submission`, and a plain acknowledgement for everything else.
     async fn slack_interaction_events_function(event: SlackInteractionEvent, 
         _client: Arc&lt;SlackHyperClient&gt;,
         _states: SlackClientEventsUserState
-    ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+    ) -&gt; Result&lt;SlackInteractionResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
         println!("{:#?}", event);
 
-        Ok(())
+        Ok(SlackInteractionResponse::Empty)
     }
 
     // Commands events handler
@@ -355,6 +358,31 @@ async fn create_slack_events_listener_server() -&gt; Result&lt;(), Box&lt;dyn st
         e.into()
     })
 }</code></pre>
+<h2 id="options-load-url--block_suggestion"><a class="header" href="#options-load-url--block_suggestion">Options Load URL / <code>block_suggestion</code></a></h2>
+<p>When a user types into an <code>external_select</code> or <code>multi_external_select</code> menu, Slack sends a
+<code>block_suggestion</code> payload to the app’s <em>Options Load URL</em>. Point that URL at the same
+<code>/interaction</code> route as the Interactivity Request URL and answer the event with
+<code>SlackBlockSuggestionResponse</code>:</p>
+<pre><code class="language-rust noplaypen">async fn slack_interaction_events_function(
+    event: SlackInteractionEvent,
+    _client: Arc&lt;SlackHyperClient&gt;,
+    _states: SlackClientEventsUserState,
+) -&gt; Result&lt;SlackInteractionResponse, Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+    match event {
+        SlackInteractionEvent::BlockSuggestion(suggestion_event) =&gt; {
+            // `suggestion_event.value` is what the user has typed so far
+            Ok(SlackBlockSuggestionResponse::Options(SlackBlockSuggestionOptions::new(vec![
+                SlackBlockChoiceItem::new(pt!("Unexpected sentience"), "AI-2323".to_string())
+                    .with_description(pt!("Issue AI-2323")),
+            ]))
+            .into())
+        }
+        _ =&gt; Ok(SlackInteractionResponse::Empty),
+    }
+}</code></pre>
+<p>Slack limits the reply to 100 options, or to 100 option groups
+(<code>SlackBlockSuggestionResponse::OptionGroups</code>) of 100 options each, and only <code>plain_text</code>
+is allowed in the option text and description.</p>
 <p>Complete example look at <a href="https://github.com/abdolence/slack-morphism-rust/tree/master/examples">github</a></p>
 
                     </main>
