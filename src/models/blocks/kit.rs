@@ -1964,9 +1964,7 @@ mod test {
         assert_eq!(task_card.status, Some(SlackTaskCardStatus::InProgress));
 
         let output = task_card.output.expect("output should be present");
-        let output_block = match output {
-            SlackRichTextInlineContent::RichText(b) => b,
-        };
+        let SlackRichTextInlineContent::RichText(output_block) = output;
         assert_eq!(output_block.elements.len(), 1);
 
         let sources = task_card.sources.expect("sources should be present");

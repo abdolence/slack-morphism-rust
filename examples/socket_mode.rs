@@ -154,7 +154,7 @@ async fn test_command_events_function(
 
     Ok(SlackCommandEventResponse::new(
         SlackMessageContent::new()
-            .with_text(format!("Working on it: {:?}", user_info_resp.user.team_id).into())
+            .with_text(format!("Working on it: {:?}", user_info_resp.user.team_id))
             .with_blocks(blocks),
     ))
 }
@@ -218,7 +218,7 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
             .latest_news
             .clone()
             .into_iter()
-            .map(|news_item| {
+            .flat_map(|news_item| {
                 vec![
                     SlackSectionBlock::new()
                         .with_text(md!(" • *{}*\n>{}", news_item.title, news_item.body))
@@ -234,7 +234,6 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
                     .into(),
                 ]
             })
-            .flatten()
             .collect();
 
         [
@@ -254,74 +253,54 @@ impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
             new_blocks,
             slack_blocks![
                 some_into(SlackDividerBlock::new()),
-                some_into(SlackRichTextBlock::new(
-                    vec![
-                        SlackRichTextSection::new(
-                            vec![
-                                SlackRichTextInlineElement::Text(
-                                    SlackRichTextText::new("Let's use some rich text: ".into())
-                                        .with_style(SlackRichTextStyle::new().with_bold(true))
-                                ),
-                                SlackRichTextInlineElement::Emoji(
-                                    SlackRichTextEmoji::new("slightly_smiling_face".into()).into()
-                                ),
-                            ]
-                            .into()
+                some_into(SlackRichTextBlock::new(vec![
+                    SlackRichTextSection::new(vec![
+                        SlackRichTextInlineElement::Text(
+                            SlackRichTextText::new("Let's use some rich text: ".into())
+                                .with_style(SlackRichTextStyle::new().with_bold(true))
+                        ),
+                        SlackRichTextInlineElement::Emoji(SlackRichTextEmoji::new(
+                            "slightly_smiling_face".into()
+                        )),
+                    ])
+                    .into(),
+                    SlackRichTextSection::new(vec![SlackRichTextInlineElement::Date(
+                        SlackRichTextDate::new(
+                            SlackDateTime::now(),
+                            SlackDateTimeFormats::DateLong.to_string()
                         )
-                        .into(),
-                        SlackRichTextSection::new(
-                            vec![SlackRichTextInlineElement::Date(SlackRichTextDate::new(
-                                SlackDateTime::now(),
-                                SlackDateTimeFormats::DateLong.to_string()
-                            ))]
-                            .into()
-                        )
-                        .into(),
-                        SlackRichTextQuote::new(
-                            vec![
-                                SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                                    "While there is life, there is a hope. ".into()
-                                )),
-                                SlackRichTextInlineElement::Link(SlackRichTextLink::new(
-                                    Url::parse("https://slack-rust.abdolence.dev")
-                                        .expect("A proper url")
-                                        .into()
-                                ))
-                            ]
-                            .into()
-                        )
-                        .into(),
-                        SlackRichTextList::new(
-                            SlackRichTextListStyle::Bullet,
-                            vec![
-                                SlackRichTextSection::new(
-                                    vec![SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                                        "Item 1".into()
-                                    ))]
-                                    .into(),
-                                )
-                                .into(),
-                                SlackRichTextSection::new(
-                                    vec![SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                                        "Item 2".into()
-                                    ))]
-                                    .into(),
-                                )
+                    )])
+                    .into(),
+                    SlackRichTextQuote::new(vec![
+                        SlackRichTextInlineElement::Text(SlackRichTextText::new(
+                            "While there is life, there is a hope. ".into()
+                        )),
+                        SlackRichTextInlineElement::Link(SlackRichTextLink::new(
+                            Url::parse("https://slack-rust.abdolence.dev")
+                                .expect("A proper url")
                                 .into()
-                            ]
-                            .into()
-                        )
-                        .into(),
-                        SlackRichTextPreformatted::new(
-                            vec![SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                                "Let's use some preformatted text: ".into()
-                            ))]
+                        ))
+                    ])
+                    .into(),
+                    SlackRichTextList::new(
+                        SlackRichTextListStyle::Bullet,
+                        vec![
+                            SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
+                                SlackRichTextText::new("Item 1".into())
+                            )],)
                             .into(),
-                        )
-                        .into(),
-                    ]
-                    .into()
-                ))
+                            SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
+                                SlackRichTextText::new("Item 2".into())
+                            )],)
+                            .into()
+                        ]
+                    )
+                    .into(),
+                    SlackRichTextPreformatted::new(vec![SlackRichTextInlineElement::Text(
+                        SlackRichTextText::new("Let's use some preformatted text: ".into())
+                    )],)
+                    .into(),
+                ]))
             ],
         ]
         .concat()
