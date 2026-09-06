@@ -55,11 +55,45 @@ async fn test_command_event(
     ))
 }
 
+// A tiny in-memory catalogue the external select menus search through.
+const EXAMPLE_ISSUES: &[(&str, &str)] = &[
+    ("AI-2323", "Unexpected sentience"),
+    ("AI-2324", "The model refuses to answer"),
+    ("OPS-101", "Disk pressure on the build host"),
+];
+
+fn find_example_issues(query: &str) -> Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>> {
+    let query = query.to_lowercase();
+    EXAMPLE_ISSUES
+        .iter()
+        .filter(|(id, title)| {
+            id.to_lowercase().contains(&query) || title.to_lowercase().contains(&query)
+        })
+        .map(|(id, title)| {
+            SlackBlockChoiceItem::new(pt!(*title), id.to_string())
+                .with_description(pt!(format!("Issue {}", id)))
+        })
+        .collect()
+}
+
 async fn test_interaction_event(
     Extension(_environment): Extension<Arc<SlackHyperListenerEnvironment>>,
     Extension(event): Extension<SlackInteractionEvent>,
-) {
+) -> SlackInteractionResponse {
     println!("Received interaction event: {:?}", event);
+
+    match event {
+        // Slack posts this to the app's Options Load URL while a user types
+        // into an `external_select` / `multi_external_select` menu.
+        SlackInteractionEvent::BlockSuggestion(suggestion_event) => {
+            SlackBlockSuggestionResponse::Options(SlackBlockSuggestionOptions::new(
+                find_example_issues(&suggestion_event.value),
+            ))
+            .into()
+        }
+        // Everything else only needs an acknowledgement.
+        _ => SlackInteractionResponse::Empty,
+    }
 }
 
 fn test_error_handler(

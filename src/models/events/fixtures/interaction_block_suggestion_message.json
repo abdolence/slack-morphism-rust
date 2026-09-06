@@ -1,0 +1,63 @@
+{
+  "type": "block_suggestion",
+  "token": "XXXXXXXXXXXXXXXXXXXXXXXX",
+  "action_id": "my-external-select-action",
+  "block_id": "my-external-select-block",
+  "value": "sentien",
+  "team": {
+    "id": "TXXXXXXXXXX",
+    "domain": "slack-morphism",
+    "enterprise_id": "EXXXXXXXXXX",
+    "enterprise_name": "Slack Morphism Enterprise"
+  },
+  "user": {
+    "id": "UXXXXXXXXXX",
+    "team_id": "TXXXXXXXXXX",
+    "username": "slack.user",
+    "name": "slack.user"
+  },
+  "channel": {
+    "id": "CXXXXXXXXXX",
+    "name": "general"
+  },
+  "container": {
+    "type": "message",
+    "message_ts": "1701735043.989889",
+    "channel_id": "CXXXXXXXXXX",
+    "is_ephemeral": false
+  },
+  "api_app_id": "AXXXXXXXXXX",
+  "enterprise": {
+    "id": "EXXXXXXXXXX",
+    "name": "Slack Morphism Enterprise"
+  },
+  "is_enterprise_install": false,
+  "message": {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Pick a related issue",
+    "ts": "1701735043.989889",
+    "bot_id": "BXXXXXXXXXX",
+    "app_id": "AXXXXXXXXXX",
+    "team": "TXXXXXXXXXX",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "my-external-select-block",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Pick a related issue"
+        },
+        "accessory": {
+          "type": "external_select",
+          "action_id": "my-external-select-action",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Start typing to search"
+          },
+          "min_query_length": 1
+        }
+      }
+    ]
+  }
+}

@@ -57,8 +57,11 @@ where
             + Sync,
     >,
     pub interaction_callback: Box<
-        dyn SlackSocketModeListenerCallback<SCHC, SlackInteractionEvent, UserCallbackResult<()>>
-            + Send
+        dyn SlackSocketModeListenerCallback<
+                SCHC,
+                SlackInteractionEvent,
+                UserCallbackResult<SlackInteractionResponse>,
+            > + Send
             + Sync,
     >,
     pub push_events_callback: Box<
@@ -123,14 +126,27 @@ where
         )))
     }
 
-    pub fn with_interaction_events<F>(
+    /// Registers an interaction events callback.
+    ///
+    /// The callback may return anything convertible into [`SlackInteractionResponse`],
+    /// so both the existing `Result<(), _>` handlers and handlers replying with
+    /// options for `block_suggestion` or a `response_action` for `view_submission` work here.
+    pub fn with_interaction_events<F, R>(
         mut self,
         interaction_events_fn: UserCallbackFunction<SlackInteractionEvent, F, SCHC>,
     ) -> Self
     where
-        F: Future<Output = UserCallbackResult<()>> + Send + 'static,
+        F: Future<Output = UserCallbackResult<R>> + Send + 'static,
+        R: Into<SlackInteractionResponse> + Send + 'static,
     {
-        self.interaction_callback = Box::new(interaction_events_fn);
+        self.interaction_callback = Box::new(
+            move |event: SlackInteractionEvent,
+                  client: Arc<SlackClient<SCHC>>,
+                  states: SlackClientEventsUserState| {
+                let user_callback = interaction_events_fn(event, client, states);
+                async move { user_callback.await.map(Into::into) }
+            },
+        );
         self
     }
 
@@ -138,7 +154,7 @@ where
         event: SlackInteractionEvent,
         _client: Arc<SlackClient<SCHC>>,
         _states: SlackClientEventsUserState,
-    ) -> UserCallbackResult<()> {
+    ) -> UserCallbackResult<SlackInteractionResponse> {
         warn!(
             "No callback is specified for interactive events: {:?}",
             event

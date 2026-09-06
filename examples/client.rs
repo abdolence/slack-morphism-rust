@@ -41,7 +41,7 @@ async fn test_post_message() -> Result<(), Box<dyn std::error::Error + Send + Sy
         SlackApiChatPostMessageRequest::new("#random".into(), message.render_template());
 
     let post_chat_resp = session.chat_post_message(&post_chat_req).await?;
-    println!("post chat resp: {:#?}", &post_chat_resp);
+    println!("post chat resp: {:#?}", post_chat_resp);
 
     Ok(())
 }
@@ -92,7 +92,7 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let get_upload_url_req =
         SlackApiFilesGetUploadUrlExternalRequest::new("test.txt".into(), test_content.len());
     let upload_url_resp = session.get_upload_url_external(&get_upload_url_req).await?;
-    println!("get url resp: {:#?}", &upload_url_resp);
+    println!("get url resp: {:#?}", upload_url_resp);
 
     let file_upload_req = SlackApiFilesUploadViaUrlRequest::new(
         upload_url_resp.upload_url,
@@ -101,7 +101,7 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
     );
 
     let file_upload_resp = session.files_upload_via_url(&file_upload_req).await?;
-    println!("file_upload_resp: {:#?}", &file_upload_resp);
+    println!("file_upload_resp: {:#?}", file_upload_resp);
 
     let complete_file_upload_req =
         SlackApiFilesCompleteUploadExternalRequest::new(vec![SlackApiFilesComplete::new(
@@ -113,7 +113,7 @@ async fn test_file_upload() -> Result<(), Box<dyn std::error::Error + Send + Syn
         .await?;
     println!(
         "complete_file_upload_resp: {:#?}",
-        &complete_file_upload_resp
+        complete_file_upload_resp
     );
 
     let all_channels_scroller = SlackApiConversationsListRequest::new().scroller();

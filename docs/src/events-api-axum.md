@@ -48,11 +48,26 @@ async fn test_command_event(
     ))
 }
 
+// `SlackInteractionResponse` implements `axum::response::IntoResponse`, so one handler
+// can answer every kind of interaction: options for `block_suggestion`, a
+// `response_action` for `view_submission`, and an empty 200 for everything else.
 async fn test_interaction_event(
     Extension(_environment): Extension<Arc<SlackHyperListenerEnvironment>>,
     Extension(event): Extension<SlackInteractionEvent>,
-) {
+) -> SlackInteractionResponse {
     println!("Received interaction event: {:?}", event);
+
+    match event {
+        SlackInteractionEvent::BlockSuggestion(suggestion_event) => {
+            // `suggestion_event.value` is what the user has typed so far.
+            // Slack allows at most 100 plain text options here.
+            SlackBlockSuggestionResponse::Options(SlackBlockSuggestionOptions::new(vec![
+                SlackBlockChoiceItem::new(pt!("Unexpected sentience"), "AI-2323".to_string()),
+            ]))
+            .into()
+        }
+        _ => SlackInteractionResponse::Empty,
+    }
 }
 
 fn test_error_handler(
@@ -130,3 +145,7 @@ async fn test_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 ``` 
 Complete example look at [github](https://github.com/abdolence/slack-morphism-rust/tree/master/examples)
+
+To serve the Options Load URL for `external_select` menus, point it at the same
+`/interaction` route: the `block_suggestion` payload arrives through the same extractor.
+See [Events API for Hyper](events-api-hyper.md) for the limits Slack applies to the reply.

@@ -1,0 +1,81 @@
+{
+  "type": "block_suggestion",
+  "token": "XXXXXXXXXXXXXXXXXXXXXXXX",
+  "action_id": "my-external-select-action",
+  "block_id": "my-external-select-block",
+  "value": "sentien",
+  "team": {
+    "id": "TXXXXXXXXXX",
+    "domain": "slack-morphism"
+  },
+  "user": {
+    "id": "UXXXXXXXXXX",
+    "team_id": "TXXXXXXXXXX",
+    "username": "slack.user",
+    "name": "slack.user"
+  },
+  "container": {
+    "type": "view",
+    "view_id": "VXXXXXXXXXX"
+  },
+  "api_app_id": "AXXXXXXXXXX",
+  "enterprise": null,
+  "is_enterprise_install": false,
+  "function_data": {
+    "execution_id": "ExXXXXXXXXXX",
+    "function": {
+      "callback_id": "sample_function"
+    },
+    "inputs": {
+      "user_id": "UXXXXXXXXXX"
+    }
+  },
+  "bot_access_token": "xwfp-XXXXXXXXXXXXXXXXXXXXXXXX",
+  "view": {
+    "id": "VXXXXXXXXXX",
+    "team_id": "TXXXXXXXXXX",
+    "type": "modal",
+    "title": {
+      "type": "plain_text",
+      "text": "Report an issue"
+    },
+    "blocks": [
+      {
+        "type": "input",
+        "block_id": "my-external-select-block",
+        "label": {
+          "type": "plain_text",
+          "text": "Related issue"
+        },
+        "element": {
+          "type": "external_select",
+          "action_id": "my-external-select-action",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Start typing to search"
+          },
+          "min_query_length": 1
+        }
+      }
+    ],
+    "close": {
+      "type": "plain_text",
+      "text": "Cancel"
+    },
+    "submit": {
+      "type": "plain_text",
+      "text": "Submit"
+    },
+    "private_metadata": "",
+    "callback_id": "my-modal-callback-id",
+    "state": {
+      "values": {}
+    },
+    "hash": "1701743154.XXXXXXXX",
+    "root_view_id": "VXXXXXXXXXX",
+    "app_id": "AXXXXXXXXXX",
+    "external_id": "",
+    "app_installed_team_id": "TXXXXXXXXXX",
+    "bot_id": "BXXXXXXXXXX"
+  }
+}
