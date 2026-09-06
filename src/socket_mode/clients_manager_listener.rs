@@ -9,6 +9,7 @@ use crate::events::SlackInteractionResponse;
 use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
 use rvstruct::ValueStruct;
+use serde::Serialize;
 use tracing::*;
 
 #[async_trait]
@@ -46,6 +47,25 @@ where
             clients_manager: manager,
             listener_environment,
             callbacks: Arc::new(callbacks),
+        }
+    }
+
+    /// Serialises a Socket Mode acknowledgement frame.
+    ///
+    /// A failure is reported to the configured error handler and yields `None`, so no
+    /// acknowledgement is sent and Slack redelivers the envelope instead of the client
+    /// panicking.
+    fn ack_frame<A: Serialize>(&self, ack: &A) -> Option<String> {
+        match serde_json::to_string(ack) {
+            Ok(frame) => Some(frame),
+            Err(err) => {
+                self.listener_environment.error_handler.clone()(
+                    SlackClientProtocolError::new(err).into(),
+                    self.listener_environment.client.clone(),
+                    self.listener_environment.user_state.clone(),
+                );
+                None
+            }
         }
     }
 }
@@ -95,10 +115,11 @@ where
                         let envelope_id = event.envelope_params.envelope_id.clone();
                         let accepts_response_payload =
                             event.envelope_params.accepts_response_payload;
-                        let reply = serde_json::to_string(
-                            &SlackSocketModeEventCommonAcknowledge::new(envelope_id.clone()),
-                        )
-                        .unwrap();
+                        let bare_ack = || {
+                            self.ack_frame(&SlackSocketModeEventCommonAcknowledge::new(
+                                envelope_id.clone(),
+                            ))
+                        };
 
                         match self
                             .callbacks
@@ -110,15 +131,12 @@ where
                             )
                             .await
                         {
-                            Ok(SlackInteractionResponse::Empty) => Some(reply),
-                            Ok(payload) if accepts_response_payload => Some(
-                                serde_json::to_string(
-                                    &SlackSocketModeInteractiveEventAck::new(
-                                        SlackSocketModeEventCommonAcknowledge::new(envelope_id),
-                                    )
-                                    .with_payload(payload),
+                            Ok(SlackInteractionResponse::Empty) => bare_ack(),
+                            Ok(payload) if accepts_response_payload => self.ack_frame(
+                                &SlackSocketModeInteractiveEventAck::new(
+                                    SlackSocketModeEventCommonAcknowledge::new(envelope_id.clone()),
                                 )
-                                .unwrap(),
+                                .with_payload(payload),
                             ),
                             Ok(payload) => {
                                 let response_kind = match payload {
@@ -136,7 +154,7 @@ where
                                     response_kind,
                                     envelope_id.value()
                                 );
-                                Some(reply)
+                                bare_ack()
                             }
                             Err(err) => {
                                 if self.listener_environment.error_handler.clone()(
@@ -146,7 +164,7 @@ where
                                 )
                                 .is_success()
                                 {
-                                    Some(reply)
+                                    bare_ack()
                                 } else {
                                     None
                                 }
@@ -154,11 +172,11 @@ where
                         }
                     }
                     SlackSocketModeEvent::EventsApi(event) => {
-                        let reply =
-                            serde_json::to_string(&SlackSocketModeEventCommonAcknowledge::new(
-                                event.envelope_params.envelope_id,
+                        let bare_ack = || {
+                            self.ack_frame(&SlackSocketModeEventCommonAcknowledge::new(
+                                event.envelope_params.envelope_id.clone(),
                             ))
-                            .unwrap();
+                        };
 
                         match self
                             .callbacks
@@ -170,7 +188,7 @@ where
                             )
                             .await
                         {
-                            Ok(_) => Some(reply),
+                            Ok(_) => bare_ack(),
                             Err(err) => {
                                 if self.listener_environment.error_handler.clone()(
                                     err,
@@ -179,7 +197,7 @@ where
                                 )
                                 .is_success()
                                 {
-                                    Some(reply)
+                                    bare_ack()
                                 } else {
                                     None
                                 }
@@ -198,16 +216,13 @@ where
                             )
                             .await
                         {
-                            Ok(reply) => Some(
-                                serde_json::to_string(
-                                    &SlackSocketModeCommandEventAck::new(
-                                        SlackSocketModeEventCommonAcknowledge::new(
-                                            event.envelope_params.envelope_id,
-                                        ),
-                                    )
-                                    .with_payload(reply),
+                            Ok(reply) => self.ack_frame(
+                                &SlackSocketModeCommandEventAck::new(
+                                    SlackSocketModeEventCommonAcknowledge::new(
+                                        event.envelope_params.envelope_id,
+                                    ),
                                 )
-                                .unwrap(),
+                                .with_payload(reply),
                             ),
                             Err(err) => {
                                 if self.listener_environment.error_handler.clone()(
@@ -217,16 +232,11 @@ where
                                 )
                                 .is_success()
                                 {
-                                    Some(
-                                        serde_json::to_string(
-                                            &SlackSocketModeCommandEventAck::new(
-                                                SlackSocketModeEventCommonAcknowledge::new(
-                                                    event.envelope_params.envelope_id,
-                                                ),
-                                            ),
-                                        )
-                                        .unwrap(),
-                                    )
+                                    self.ack_frame(&SlackSocketModeCommandEventAck::new(
+                                        SlackSocketModeEventCommonAcknowledge::new(
+                                            event.envelope_params.envelope_id,
+                                        ),
+                                    ))
                                 } else {
                                     None
                                 }
