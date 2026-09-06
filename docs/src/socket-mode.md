@@ -12,13 +12,17 @@ and don't want to work with HTTP endpoints yourself.
 ```rust,noplaypen
 use slack_morphism::prelude::*;
 
+// Returning `SlackInteractionResponse` lets one handler answer every kind of
+// interaction: options for `block_suggestion`, a `response_action` for
+// `view_submission`, and a bare acknowledgement for everything else.
+// Handlers returning `Result<(), _>` keep working as before.
 async fn test_interaction_events_function(
     event: SlackInteractionEvent,
     _client: Arc<SlackHyperClient>,
     _states: SlackClientEventsUserState,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<SlackInteractionResponse, Box<dyn std::error::Error + Send + Sync>> {
     println!("{:#?}", event);
-    Ok(())
+    Ok(SlackInteractionResponse::Empty)
 }
 
 async fn test_command_events_function(
@@ -84,6 +88,41 @@ socket_mode_listener.listen_for(&app_token).await?;
 socket_mode_listener.serve().await;
 
 ```
+
+## Options Load URL / `block_suggestion`
+
+Socket Mode apps don't configure an Options Load URL: when a user types into an
+`external_select` or `multi_external_select` menu, the `block_suggestion` payload arrives
+on the same socket as any other interaction. Answer it by returning
+`SlackBlockSuggestionResponse` from the interaction callback:
+
+```rust,noplaypen
+async fn test_interaction_events_function(
+    event: SlackInteractionEvent,
+    _client: Arc<SlackHyperClient>,
+    _states: SlackClientEventsUserState,
+) -> Result<SlackInteractionResponse, Box<dyn std::error::Error + Send + Sync>> {
+    match event {
+        SlackInteractionEvent::BlockSuggestion(suggestion_event) => {
+            // `suggestion_event.value` is what the user has typed so far
+            Ok(SlackBlockSuggestionResponse::Options(SlackBlockSuggestionOptions::new(vec![
+                SlackBlockChoiceItem::new(pt!("Unexpected sentience"), "AI-2323".to_string())
+                    .with_description(pt!("Issue AI-2323")),
+            ]))
+            .into())
+        }
+        _ => Ok(SlackInteractionResponse::Empty),
+    }
+}
+```
+
+The response travels back in the socket acknowledgement, so it is only sent when Slack
+marked the envelope with `accepts_response_payload`. Otherwise the library logs a warning
+and sends a bare acknowledgement.
+
+Slack limits the reply to 100 options, or to 100 option groups
+(`SlackBlockSuggestionResponse::OptionGroups`) of 100 options each, and only `plain_text`
+is allowed in the option text and description.
 
 ## Important caveats
 

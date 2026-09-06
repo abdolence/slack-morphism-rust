@@ -81,14 +81,17 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
         Ok(())
     }
 
-    // Interaction events handler
+    // Interaction events handler.
+    // Returning `SlackInteractionResponse` lets one handler answer every kind of
+    // interaction: options for `block_suggestion`, a `response_action` for
+    // `view_submission`, and a plain acknowledgement for everything else.
     async fn slack_interaction_events_function(event: SlackInteractionEvent, 
         _client: Arc<SlackHyperClient>,
         _states: SlackClientEventsUserState
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<SlackInteractionResponse, Box<dyn std::error::Error + Send + Sync>> {
         println!("{:#?}", event);
 
-        Ok(())
+        Ok(SlackInteractionResponse::Empty)
     }
 
     // Commands events handler
@@ -181,5 +184,36 @@ async fn create_slack_events_listener_server() -> Result<(), Box<dyn std::error:
     })
 }
 ``` 
+
+## Options Load URL / `block_suggestion`
+
+When a user types into an `external_select` or `multi_external_select` menu, Slack sends a
+`block_suggestion` payload to the app's *Options Load URL*. Point that URL at the same
+`/interaction` route as the Interactivity Request URL and answer the event with
+`SlackBlockSuggestionResponse`:
+
+```rust,noplaypen
+async fn slack_interaction_events_function(
+    event: SlackInteractionEvent,
+    _client: Arc<SlackHyperClient>,
+    _states: SlackClientEventsUserState,
+) -> Result<SlackInteractionResponse, Box<dyn std::error::Error + Send + Sync>> {
+    match event {
+        SlackInteractionEvent::BlockSuggestion(suggestion_event) => {
+            // `suggestion_event.value` is what the user has typed so far
+            Ok(SlackBlockSuggestionResponse::Options(SlackBlockSuggestionOptions::new(vec![
+                SlackBlockChoiceItem::new(pt!("Unexpected sentience"), "AI-2323".to_string())
+                    .with_description(pt!("Issue AI-2323")),
+            ]))
+            .into())
+        }
+        _ => Ok(SlackInteractionResponse::Empty),
+    }
+}
+```
+
+Slack limits the reply to 100 options, or to 100 option groups
+(`SlackBlockSuggestionResponse::OptionGroups`) of 100 options each, and only `plain_text`
+is allowed in the option text and description.
 
 Complete example look at [github](https://github.com/abdolence/slack-morphism-rust/tree/master/examples)
