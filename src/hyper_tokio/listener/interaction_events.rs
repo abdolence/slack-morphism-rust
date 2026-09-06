@@ -57,55 +57,43 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
 
                                 let payload = body_params
                                     .get("payload")
-                                    .ok_or_else( || SlackClientError::SystemError(
-                                        SlackClientSystemError::new().with_message(
-                                            "Absent payload in the request from Slack".into(),
-                                        ),
-                                    ))
+                                    .ok_or_else(|| {
+                                        SlackClientError::SystemError(
+                                            SlackClientSystemError::new().with_message(
+                                                "Absent payload in the request from Slack".into(),
+                                            ),
+                                        )
+                                    })
                                     .map_err(|e| e.into());
 
                                 payload.and_then(|payload_value| {
                                     serde_json::from_str::<SlackInteractionEvent>(payload_value)
-                                        .map_err(|e| SlackClientProtocolError::new(e).with_json_body(payload_value.clone()).into())
+                                        .map_err(|e| {
+                                            SlackClientProtocolError::new(e)
+                                                .with_json_body(payload_value.clone())
+                                                .into()
+                                        })
                                 })
                             })
                             .and_then(|event| async move {
                                 match event {
-                                    Ok(view_submission_event@SlackInteractionEvent::ViewSubmission(_)) => {
-                                        match interaction_service_fn(view_submission_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
-                                            Ok(response) => {
-                                                response.to_http_response(&view_submission_event)
-                                            }
-                                            Err(err) => {
-                                                let status_code = thread_error_handler(err, sc, thread_user_state_storage);
-                                                Response::builder()
-                                                    .status(status_code)
-                                                    .body(Empty::new().boxed())
-                                                    .map_err(|e| e.into())
-                                            }
-                                        }
-
-                                    }
-                                    Ok(block_suggestion_event@SlackInteractionEvent::BlockSuggestion(_)) => {
-                                        match interaction_service_fn(block_suggestion_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
-                                            Ok(response) => {
-                                                response.to_http_response(&block_suggestion_event)
-                                            }
-                                            Err(err) => {
-                                                let status_code = thread_error_handler(err, sc, thread_user_state_storage);
-                                                Response::builder()
-                                                    .status(status_code)
-                                                    .body(Empty::new().boxed())
-                                                    .map_err(|e| e.into())
-                                            }
-                                        }
-
-                                    }
                                     Ok(interaction_event) => {
-                                        match interaction_service_fn(interaction_event.clone(), sc.clone(), thread_user_state_storage.clone()).await {
-                                            Ok(response) => response.to_http_response(&interaction_event),
+                                        match interaction_service_fn(
+                                            interaction_event.clone(),
+                                            sc.clone(),
+                                            thread_user_state_storage.clone(),
+                                        )
+                                        .await
+                                        {
+                                            Ok(response) => {
+                                                response.to_http_response(&interaction_event)
+                                            }
                                             Err(err) => {
-                                                let status_code = thread_error_handler(err, sc, thread_user_state_storage);
+                                                let status_code = thread_error_handler(
+                                                    err,
+                                                    sc,
+                                                    thread_user_state_storage,
+                                                );
                                                 Response::builder()
                                                     .status(status_code)
                                                     .body(Empty::new().boxed())
@@ -114,7 +102,11 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                                         }
                                     }
                                     Err(event_err) => {
-                                        let status_code = thread_error_handler(event_err, sc, thread_user_state_storage);
+                                        let status_code = thread_error_handler(
+                                            event_err,
+                                            sc,
+                                            thread_user_state_storage,
+                                        );
                                         Response::builder()
                                             .status(status_code)
                                             .body(Empty::new().boxed())
@@ -137,17 +129,11 @@ pub trait SlackInteractionEventResponse {
 }
 
 impl SlackInteractionEventResponse for () {
-    fn to_http_response(&self, event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
-        match event {
-            SlackInteractionEvent::ViewSubmission(_) => Response::builder()
-                .status(StatusCode::OK)
-                .body(Empty::new().boxed())
-                .map_err(|e| e.into()),
-            _ => Response::builder()
-                .status(StatusCode::OK)
-                .body(Empty::new().boxed())
-                .map_err(|e| e.into()),
-        }
+    fn to_http_response(&self, _event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
+        Response::builder()
+            .status(StatusCode::OK)
+            .body(Empty::new().boxed())
+            .map_err(|e| e.into())
     }
 }
 
@@ -168,5 +154,72 @@ impl SlackInteractionEventResponse for SlackBlockSuggestionResponse {
             .status(StatusCode::OK)
             .header("content-type", "application/json; charset=utf-8")
             .body(Full::new(json_str.into()).boxed())?)
+    }
+}
+
+impl SlackInteractionEventResponse for SlackInteractionResponse {
+    fn to_http_response(&self, event: &SlackInteractionEvent) -> AnyStdResult<Response<Body>> {
+        match self {
+            SlackInteractionResponse::Empty => ().to_http_response(event),
+            SlackInteractionResponse::ViewSubmission(response) => response.to_http_response(event),
+            SlackInteractionResponse::BlockSuggestion(response) => response.to_http_response(event),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::blocks::SlackBlockChoiceItem;
+    use crate::blocks::SlackBlockPlainTextOnly;
+
+    fn test_block_suggestion_event() -> SlackInteractionEvent {
+        let payload =
+            include_str!("../../models/events/fixtures/interaction_block_suggestion_view.json");
+        serde_json::from_str(payload).unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_empty_interaction_response_to_http_response() {
+        let event = test_block_suggestion_event();
+        let response = SlackInteractionResponse::Empty
+            .to_http_response(&event)
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("content-type"), None);
+        assert!(response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes()
+            .is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_block_suggestion_interaction_response_to_http_response() {
+        let event = test_block_suggestion_event();
+        let response =
+            SlackInteractionResponse::BlockSuggestion(SlackBlockSuggestionResponse::Options(
+                SlackBlockSuggestionOptions::new(vec![SlackBlockChoiceItem::new(
+                    SlackBlockPlainTextOnly::from("Unexpected sentience"),
+                    "AI-2323".to_string(),
+                )]),
+            ))
+            .to_http_response(&event)
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get("content-type").unwrap(),
+            "application/json; charset=utf-8"
+        );
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(
+            std::str::from_utf8(&body).unwrap(),
+            r#"{"options":[{"text":{"type":"plain_text","text":"Unexpected sentience"},"value":"AI-2323"}]}"#
+        );
     }
 }

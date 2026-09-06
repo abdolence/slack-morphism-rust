@@ -385,6 +385,7 @@ pub struct SlackBlockConfirmItem {
 pub struct SlackBlockChoiceItem<T: Into<SlackBlockText>> {
     pub text: T,
     pub value: String,
+    pub description: Option<SlackBlockPlainTextOnly>,
     pub url: Option<Url>,
 }
 

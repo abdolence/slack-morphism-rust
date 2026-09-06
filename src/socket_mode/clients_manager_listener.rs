@@ -5,8 +5,10 @@ use async_trait::async_trait;
 use std::sync::{Arc, Weak};
 
 use crate::errors::*;
+use crate::events::SlackInteractionResponse;
 use crate::listener::SlackClientEventsListenerEnvironment;
 use crate::socket_mode::wss_client_id::SlackSocketModeWssClientId;
+use rvstruct::ValueStruct;
 use tracing::*;
 
 #[async_trait]
@@ -90,11 +92,13 @@ where
                         None
                     }
                     SlackSocketModeEvent::Interactive(event) => {
-                        let reply =
-                            serde_json::to_string(&SlackSocketModeEventCommonAcknowledge::new(
-                                event.envelope_params.envelope_id,
-                            ))
-                            .unwrap();
+                        let envelope_id = event.envelope_params.envelope_id.clone();
+                        let accepts_response_payload =
+                            event.envelope_params.accepts_response_payload;
+                        let reply = serde_json::to_string(
+                            &SlackSocketModeEventCommonAcknowledge::new(envelope_id.clone()),
+                        )
+                        .unwrap();
 
                         match self
                             .callbacks
@@ -106,7 +110,34 @@ where
                             )
                             .await
                         {
-                            Ok(_) => Some(reply),
+                            Ok(SlackInteractionResponse::Empty) => Some(reply),
+                            Ok(payload) if accepts_response_payload => Some(
+                                serde_json::to_string(
+                                    &SlackSocketModeInteractiveEventAck::new(
+                                        SlackSocketModeEventCommonAcknowledge::new(envelope_id),
+                                    )
+                                    .with_payload(payload),
+                                )
+                                .unwrap(),
+                            ),
+                            Ok(payload) => {
+                                let response_kind = match payload {
+                                    SlackInteractionResponse::Empty => "empty",
+                                    SlackInteractionResponse::ViewSubmission(_) => {
+                                        "view_submission"
+                                    }
+                                    SlackInteractionResponse::BlockSuggestion(_) => {
+                                        "block_suggestion"
+                                    }
+                                };
+                                warn!(
+                                    "[{}] Dropping a '{}' interaction response for the envelope '{}': Slack didn't accept a response payload for it",
+                                    client_id.to_string(),
+                                    response_kind,
+                                    envelope_id.value()
+                                );
+                                Some(reply)
+                            }
                             Err(err) => {
                                 if self.listener_environment.error_handler.clone()(
                                     err,
