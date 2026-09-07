@@ -329,6 +329,12 @@ pub struct SlackApiFilesCompleteUploadExternalRequest {
     #[serde(serialize_with = "to_csv")]
     pub channels: Option<Vec<SlackChannelId>>,
     pub initial_comment: Option<String>,
+    /// Blocks for the file share message.
+    ///
+    /// Note: as of September 2026 Slack answers `internal_error` when this contains a
+    /// `markdown` block, in every request encoding, while the same block is accepted by
+    /// `chat.postMessage`. `section` and `rich_text` blocks work. Tracked upstream in
+    /// https://github.com/slackapi/python-slack-sdk/issues/1756
     pub blocks: Option<Vec<SlackBlock>>,
     pub thread_ts: Option<SlackTs>,
     pub username: Option<String>,
