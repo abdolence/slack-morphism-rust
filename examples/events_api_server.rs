@@ -105,16 +105,14 @@ async fn test_command_events_function(
     Ok(SlackCommandEventResponse::new(
         SlackMessageContent::new()
             .with_text("Working on it".into())
-            .with_blocks(slack_blocks![some_into(
-                SlackSectionBlock::new()
-                    .with_text(md!("Working on it. Anything related?"))
-                    .with_accessory(
-                        SlackBlockExternalSelectElement::new("my-external-select-action".into())
-                            .with_placeholder(pt!("Start typing to search"))
-                            .with_min_query_length(1)
-                            .into()
-                    )
-            )]),
+            .with_blocks(slack_blocks![SlackSectionBlock::new()
+                .with_text(md!("Working on it. Anything related?"))
+                .with_accessory(
+                    SlackBlockExternalSelectElement::new("my-external-select-action".into())
+                        .with_placeholder(pt!("Start typing to search"))
+                        .with_min_query_length(1)
+                        .into()
+                )]),
     ))
 }
 

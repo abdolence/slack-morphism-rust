@@ -69,87 +69,64 @@ async fn test_command_events_function(
     println!("{:#?}", user_info_resp);
 
     let blocks: Vec<SlackBlock> = slack_blocks![
-        some_into(SlackSectionBlock::new().with_text(md!(
+        SlackSectionBlock::new().with_text(md!(
             "Working section for {}. Team ID: {:?}",
             event.user_id.to_slack_format(),
             user_info_resp.user.team_id
-        ))),
-        some_into(SlackActionsBlock::new(slack_blocks![
-            some_into(
-                SlackBlockButtonElement::new(
-                    "my-simple-action-button".into(),
-                    pt!("Action button")
-                )
+        )),
+        SlackActionsBlock::new(slack_blocks![
+            SlackBlockButtonElement::new("my-simple-action-button".into(), pt!("Action button"))
                 .with_style(SlackBlockButtonStyle::Primary)
                 .with_accessibility_label(SlackAccessibilityLabel(
                     "Perform the main action".into()
-                ))
-            ),
-            some_into(
-                SlackBlockStaticSelectElement::new("my-simple-static-menu".into()).with_options(
-                    vec![SlackBlockChoiceItem::new(
-                        pt!("my-option1"),
-                        "my-option1-value".to_string()
-                    )]
-                )
-            ),
-            some_into(
-                SlackBlockExternalSelectElement::new("my-external-select-action".into())
-                    .with_placeholder(pt!("Start typing to search"))
-                    .with_min_query_length(1)
-            )
-        ])),
-        some_into(
-            SlackCardBlock::new()
-                .with_title(md!("Library status"))
-                .with_body(md!("slack-morphism is up and running."))
-        ),
-        some_into(SlackContextActionsBlock::new(vec![
-            SlackBlockIconButtonElement::new("delete_card".into(), "trash".into(), pt!("Delete"))
-                .with_value("delete_item".into())
-                .with_accessibility_label(SlackAccessibilityLabel("Delete this item".into()))
-                .into()
-        ])),
-        some_into(
-            SlackTableBlock::new(vec![
-                vec![
-                    SlackTableCell::RawText(SlackTableRawTextCell::new("Name".into())),
-                    SlackTableCell::RawText(SlackTableRawTextCell::new("Status".into())),
-                ],
-                vec![
-                    SlackTableCell::RawText(SlackTableRawTextCell::new("Slack Morphism".into())),
-                    SlackTableCell::RichText(SlackTableRichTextCell::new(vec![
-                        SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
-                            SlackRichTextText::new("Active".into())
-                                .with_style(SlackRichTextStyle::new().with_bold(true))
-                        )])
-                        .into()
-                    ])),
-                ],
-            ])
-            .with_column_settings(vec![
-                SlackTableColumnSetting::new(),
-                SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
-            ])
-        ),
-        some_into(
-            SlackTaskCardBlock::new("task_demo".into(), "Checking library status".into())
-                .with_status(SlackTaskCardStatus::Complete)
-                .with_output(
-                    SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
-                        SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                            "All systems operational".into()
-                        ))
-                    ])
-                    .into()])
-                    .into()
-                )
-                .with_sources(vec![SlackUrlSourceElement::new(
-                    Url::parse("https://slack-rust.abdolence.dev").expect("A proper url"),
-                    "slack-morphism docs".into()
-                )
-                .into()])
+                )),
+            SlackBlockStaticSelectElement::new("my-simple-static-menu".into()).with_options(vec![
+                SlackBlockChoiceItem::new(pt!("my-option1"), "my-option1-value".to_string())
+            ]),
+            SlackBlockExternalSelectElement::new("my-external-select-action".into())
+                .with_placeholder(pt!("Start typing to search"))
+                .with_min_query_length(1),
+        ]),
+        SlackCardBlock::new()
+            .with_title(md!("Library status"))
+            .with_body(md!("slack-morphism is up and running.")),
+        SlackContextActionsBlock::new(vec![SlackBlockIconButtonElement::new(
+            "delete_card".into(),
+            "trash".into(),
+            pt!("Delete")
         )
+        .with_value("delete_item".into())
+        .with_accessibility_label(SlackAccessibilityLabel("Delete this item".into()))
+        .into()]),
+        SlackTableBlock::new(vec![
+            vec!["Name".into(), "Status".into()],
+            vec![
+                "Slack Morphism".into(),
+                SlackTableRichTextCell::new(vec![SlackRichTextSection::new(vec![
+                    SlackRichTextText::new("Active".into()).bold().into()
+                ])
+                .into()])
+                .into(),
+            ],
+        ])
+        .with_column_settings(vec![
+            SlackTableColumnSetting::new(),
+            SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
+        ]),
+        SlackTaskCardBlock::new("task_demo".into(), "Checking library status".into())
+            .with_status(SlackTaskCardStatus::Complete)
+            .with_output(
+                SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
+                    "All systems operational".into()
+                ])
+                .into()])
+                .into()
+            )
+            .with_sources(vec![SlackUrlSourceElement::new(
+                Url::parse("https://slack-rust.abdolence.dev").expect("a hard-coded, valid URL"),
+                "slack-morphism docs".into()
+            )
+            .into()]),
     ];
 
     Ok(SlackCommandEventResponse::new(
@@ -214,96 +191,67 @@ pub struct SlackHomeTabBlocksTemplateExample {
 
 impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
     fn render_template(&self) -> Vec<SlackBlock> {
-        let new_blocks: Vec<SlackBlock> = self
-            .latest_news
-            .clone()
-            .into_iter()
-            .flat_map(|news_item| {
-                vec![
+        slack_blocks![
+            SlackSectionBlock::new()
+                .with_text(md!("Home tab for {}", self.user_id.to_slack_format())),
+            SlackImageBlock::new(
+                Url::parse("https://www.gstatic.com/webp/gallery/4.png")
+                    .expect("a hard-coded, valid URL")
+                    .into(),
+                "Test image".into()
+            ),
+            SlackSectionBlock::new().with_text(md!("Latest news:")),
+            ..self.latest_news.iter().flat_map(|news_item| {
+                let news_blocks: [SlackBlock; 2] = [
                     SlackSectionBlock::new()
                         .with_text(md!(" • *{}*\n>{}", news_item.title, news_item.body))
                         .into(),
-                    SlackContextBlock::new(slack_blocks![some(md!(
+                    SlackContextBlock::new(vec![md!(
                         "Published: {}",
                         fmt_slack_date(
                             &news_item.published,
                             SlackDateTimeFormats::DatePretty.to_string().as_str(),
                             None
                         )
-                    ))])
-                    .into(),
-                ]
-            })
-            .collect();
-
-        [
-            slack_blocks![
-                some_into(
-                    SlackSectionBlock::new()
-                        .with_text(md!("Home tab for {}", self.user_id.to_slack_format()))
-                ),
-                some_into(SlackImageBlock::new(
-                    Url::parse("https://www.gstatic.com/webp/gallery/4.png")
-                        .expect("A proper url")
-                        .into(),
-                    "Test image".into()
-                )),
-                some_into(SlackSectionBlock::new().with_text(md!("Latest news:")))
-            ],
-            new_blocks,
-            slack_blocks![
-                some_into(SlackDividerBlock::new()),
-                some_into(SlackRichTextBlock::new(vec![
-                    SlackRichTextSection::new(vec![
-                        SlackRichTextInlineElement::Text(
-                            SlackRichTextText::new("Let's use some rich text: ".into())
-                                .with_style(SlackRichTextStyle::new().with_bold(true))
-                        ),
-                        SlackRichTextInlineElement::Emoji(SlackRichTextEmoji::new(
-                            "slightly_smiling_face".into()
-                        )),
-                    ])
-                    .into(),
-                    SlackRichTextSection::new(vec![SlackRichTextInlineElement::Date(
-                        SlackRichTextDate::new(
-                            SlackDateTime::now(),
-                            SlackDateTimeFormats::DateLong.to_string()
-                        )
                     )])
                     .into(),
-                    SlackRichTextQuote::new(vec![
-                        SlackRichTextInlineElement::Text(SlackRichTextText::new(
-                            "While there is life, there is a hope. ".into()
-                        )),
-                        SlackRichTextInlineElement::Link(SlackRichTextLink::new(
-                            Url::parse("https://slack-rust.abdolence.dev")
-                                .expect("A proper url")
-                                .into()
-                        ))
-                    ])
-                    .into(),
-                    SlackRichTextList::new(
-                        SlackRichTextListStyle::Bullet,
-                        vec![
-                            SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
-                                SlackRichTextText::new("Item 1".into())
-                            )],)
-                            .into(),
-                            SlackRichTextSection::new(vec![SlackRichTextInlineElement::Text(
-                                SlackRichTextText::new("Item 2".into())
-                            )],)
+                ];
+                news_blocks
+            }),
+            SlackDividerBlock::new(),
+            SlackRichTextBlock::new(vec![
+                SlackRichTextSection::new(vec![
+                    SlackRichTextText::new("Let's use some rich text: ".into())
+                        .bold()
+                        .into(),
+                    SlackRichTextEmoji::new("slightly_smiling_face".into()).into(),
+                ])
+                .into(),
+                SlackRichTextSection::new(vec![SlackRichTextDate::new(
+                    SlackDateTime::now(),
+                    SlackDateTimeFormats::DateLong.to_string()
+                )
+                .into()])
+                .into(),
+                SlackRichTextQuote::new(vec![
+                    "While there is life, there is a hope. ".into(),
+                    SlackRichTextLink::new(
+                        Url::parse("https://slack-rust.abdolence.dev")
+                            .expect("a hard-coded, valid URL")
                             .into()
-                        ]
                     )
                     .into(),
-                    SlackRichTextPreformatted::new(vec![SlackRichTextInlineElement::Text(
-                        SlackRichTextText::new("Let's use some preformatted text: ".into())
-                    )],)
+                ])
+                .into(),
+                SlackRichTextList::new(
+                    SlackRichTextListStyle::Bullet,
+                    vec!["Item 1".into(), "Item 2".into()]
+                )
+                .into(),
+                SlackRichTextPreformatted::new(vec!["Let's use some preformatted text: ".into()])
                     .into(),
-                ]))
-            ],
+            ]),
         ]
-        .concat()
     }
 }
 
