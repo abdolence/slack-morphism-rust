@@ -299,9 +299,14 @@ impl Expr {
                     let inner_args = if s.args.is_empty() {
                         String::new()
                     } else {
+                        // The setter name and its opening paren sit at
+                        // `setter_indent`, so a multi-line argument nests
+                        // exactly as a hugged `Call` argument does: its own
+                        // items land at `setter_indent + INDENT`, not one
+                        // level deeper still.
                         s.args
                             .iter()
-                            .map(|a| a.render_at(setter_indent + INDENT, width))
+                            .map(|a| a.render_at(setter_indent, width))
                             .collect::<Vec<_>>()
                             .join(", ")
                     };
