@@ -57,6 +57,47 @@
 //!
 //! ```
 //!
+//! ## Block Kit
+//!
+//! Blocks, block elements, and views are modeled as typed structs and enums,
+//! with the [`slack_blocks!`] macro (and [`md!`]/[`pt!`] for text objects)
+//! to build the block lists they hold:
+//!
+//! ```
+//! use slack_morphism::prelude::*;
+//!
+//! let show_footer = true;
+//!
+//! let blocks: Vec<SlackBlock> = slack_blocks![
+//!     SlackHeaderBlock::new(pt!("Deploy report")),
+//!     SlackSectionBlock::new()
+//!         .with_text(md!("Deployed *{}* to {}", "api", "us-east-1"))
+//!         .with_fields(vec![md!("*Duration:*\n42s"), md!("*Result:*\nsuccess")]),
+//!     SlackActionsBlock::new(slack_blocks![
+//!         SlackBlockButtonElement::new("rollback".into(), pt!("Rollback"))
+//!             .with_style(SlackBlockButtonStyle::Danger),
+//!         SlackBlockButtonElement::new("details".into(), pt!("View details")),
+//!     ]),
+//!     SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
+//!         "Triggered by ".into(),
+//!         SlackRichTextText::new("the release bot".to_string()).bold().into(),
+//!     ])
+//!     .into()]),
+//!     SlackTableBlock::new(vec![
+//!         vec!["Service".into(), "Status".into()],
+//!         vec!["api".into(), "healthy".into()],
+//!     ]),
+//!     optionally(show_footer => SlackContextBlock::new(vec![md!("Posted automatically")])),
+//! ];
+//!
+//! let content = SlackMessageContent::new().with_blocks(blocks);
+//! # assert!(content.blocks.is_some());
+//! ```
+//!
+//! See the [`blocks::block_kit`] module docs for a full guide covering text
+//! objects, sections, actions and inputs, rich text, tables, templates, and
+//! views.
+//!
 //! ## Events API and OAuth support for Hyper and Axum
 //!
 //! The library provides two different ways to work with Slack Events API:

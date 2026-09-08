@@ -1194,6 +1194,19 @@ pub struct SlackRichTextSection {
     pub elements: Vec<SlackRichTextInlineElement>,
 }
 
+/// A bare string becomes a section holding a single unstyled text run.
+impl From<&str> for SlackRichTextSection {
+    fn from(value: &str) -> Self {
+        SlackRichTextSection::new(vec![value.into()])
+    }
+}
+
+impl From<String> for SlackRichTextSection {
+    fn from(value: String) -> Self {
+        SlackRichTextSection::new(vec![value.into()])
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextList {
@@ -1214,6 +1227,19 @@ pub enum SlackRichTextListElement {
 impl From<SlackRichTextSection> for SlackRichTextListElement {
     fn from(element: SlackRichTextSection) -> Self {
         SlackRichTextListElement::Section(element)
+    }
+}
+
+/// A bare string becomes a single-run section, the same as `SlackRichTextSection::from`.
+impl From<&str> for SlackRichTextListElement {
+    fn from(value: &str) -> Self {
+        SlackRichTextListElement::Section(value.into())
+    }
+}
+
+impl From<String> for SlackRichTextListElement {
+    fn from(value: String) -> Self {
+        SlackRichTextListElement::Section(value.into())
     }
 }
 
@@ -1266,6 +1292,79 @@ pub enum SlackRichTextInlineElement {
     Unknown(serde_json::Value),
 }
 
+/// A bare string becomes an unstyled text run.
+impl From<&str> for SlackRichTextInlineElement {
+    fn from(value: &str) -> Self {
+        SlackRichTextInlineElement::Text(SlackRichTextText::new(value.to_string()))
+    }
+}
+
+impl From<String> for SlackRichTextInlineElement {
+    fn from(value: String) -> Self {
+        SlackRichTextInlineElement::Text(SlackRichTextText::new(value))
+    }
+}
+
+impl From<SlackRichTextText> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextText) -> Self {
+        SlackRichTextInlineElement::Text(element)
+    }
+}
+
+impl From<SlackRichTextLink> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextLink) -> Self {
+        SlackRichTextInlineElement::Link(element)
+    }
+}
+
+impl From<SlackRichTextUser> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextUser) -> Self {
+        SlackRichTextInlineElement::User(element)
+    }
+}
+
+impl From<SlackRichTextChannel> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextChannel) -> Self {
+        SlackRichTextInlineElement::Channel(element)
+    }
+}
+
+impl From<SlackRichTextUserGroup> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextUserGroup) -> Self {
+        SlackRichTextInlineElement::UserGroup(element)
+    }
+}
+
+impl From<SlackRichTextEmoji> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextEmoji) -> Self {
+        SlackRichTextInlineElement::Emoji(element)
+    }
+}
+
+impl From<SlackRichTextDate> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextDate) -> Self {
+        SlackRichTextInlineElement::Date(element)
+    }
+}
+
+impl From<SlackRichTextBroadcast> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextBroadcast) -> Self {
+        SlackRichTextInlineElement::Broadcast(element)
+    }
+}
+
+impl From<SlackRichTextColor> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextColor) -> Self {
+        SlackRichTextInlineElement::Color(element)
+    }
+}
+
+impl From<SlackRichTextMessageMention> for SlackRichTextInlineElement {
+    fn from(element: SlackRichTextMessageMention) -> Self {
+        SlackRichTextInlineElement::MessageMention(element)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackRichTextStyle {
@@ -1284,6 +1383,36 @@ pub struct SlackRichTextStyle {
 pub struct SlackRichTextText {
     pub text: String,
     pub style: Option<SlackRichTextStyle>,
+}
+
+impl SlackRichTextText {
+    /// Sets the bold flag, preserving any other flags already set on `style`.
+    pub fn bold(mut self) -> Self {
+        self.style.get_or_insert_with(SlackRichTextStyle::new).bold = Some(true);
+        self
+    }
+
+    /// Sets the italic flag, preserving any other flags already set on `style`.
+    pub fn italic(mut self) -> Self {
+        self.style
+            .get_or_insert_with(SlackRichTextStyle::new)
+            .italic = Some(true);
+        self
+    }
+
+    /// Sets the strike flag, preserving any other flags already set on `style`.
+    pub fn strike(mut self) -> Self {
+        self.style
+            .get_or_insert_with(SlackRichTextStyle::new)
+            .strike = Some(true);
+        self
+    }
+
+    /// Sets the code flag, preserving any other flags already set on `style`.
+    pub fn code(mut self) -> Self {
+        self.style.get_or_insert_with(SlackRichTextStyle::new).code = Some(true);
+        self
+    }
 }
 
 #[skip_serializing_none]
@@ -1446,6 +1575,31 @@ pub enum SlackTableCell {
     RawText(SlackTableRawTextCell),
     #[serde(rename = "rich_text")]
     RichText(SlackTableRichTextCell),
+}
+
+/// A bare string becomes a raw-text cell.
+impl From<&str> for SlackTableCell {
+    fn from(value: &str) -> Self {
+        SlackTableCell::RawText(SlackTableRawTextCell::new(value.to_string()))
+    }
+}
+
+impl From<String> for SlackTableCell {
+    fn from(value: String) -> Self {
+        SlackTableCell::RawText(SlackTableRawTextCell::new(value))
+    }
+}
+
+impl From<SlackTableRawTextCell> for SlackTableCell {
+    fn from(cell: SlackTableRawTextCell) -> Self {
+        SlackTableCell::RawText(cell)
+    }
+}
+
+impl From<SlackTableRichTextCell> for SlackTableCell {
+    fn from(cell: SlackTableRichTextCell) -> Self {
+        SlackTableCell::RichText(cell)
+    }
 }
 
 #[skip_serializing_none]
@@ -2173,6 +2327,231 @@ mod test {
             },
             _ => panic!("Expected Section element"),
         }
+        Ok(())
+    }
+
+    #[test]
+    fn rich_text_str_converts_to_text_inline_element() -> Result<(), Box<dyn std::error::Error>> {
+        let element: SlackRichTextInlineElement = "hi".into();
+        assert_eq!(
+            serde_json::to_value(&element)?,
+            serde_json::json!({"type": "text", "text": "hi"})
+        );
+
+        let owned: SlackRichTextInlineElement = "hi".to_string().into();
+        assert_eq!(
+            serde_json::to_value(&owned)?,
+            serde_json::to_value(&element)?
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn rich_text_leaf_elements_convert_to_inline_elements() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let text: SlackRichTextInlineElement = SlackRichTextText::new("t".to_string()).into();
+        assert_eq!(
+            serde_json::to_value(&text)?,
+            serde_json::json!({"type": "text", "text": "t"})
+        );
+
+        let link: SlackRichTextInlineElement =
+            SlackRichTextLink::new(SlackRelaxedUrl("https://example.com".into())).into();
+        assert_eq!(
+            serde_json::to_value(&link)?,
+            serde_json::json!({"type": "link", "url": "https://example.com"})
+        );
+
+        let user: SlackRichTextInlineElement =
+            SlackRichTextUser::new(SlackUserId("U1".into())).into();
+        assert_eq!(
+            serde_json::to_value(&user)?,
+            serde_json::json!({"type": "user", "user_id": "U1"})
+        );
+
+        let channel: SlackRichTextInlineElement =
+            SlackRichTextChannel::new(SlackChannelId("C1".into())).into();
+        assert_eq!(
+            serde_json::to_value(&channel)?,
+            serde_json::json!({"type": "channel", "channel_id": "C1"})
+        );
+
+        let usergroup: SlackRichTextInlineElement =
+            SlackRichTextUserGroup::new(SlackUserGroupId("G1".into())).into();
+        assert_eq!(
+            serde_json::to_value(&usergroup)?,
+            serde_json::json!({"type": "usergroup", "usergroup_id": "G1"})
+        );
+
+        let emoji: SlackRichTextInlineElement =
+            SlackRichTextEmoji::new(SlackEmojiName("wave".into())).into();
+        assert_eq!(
+            serde_json::to_value(&emoji)?,
+            serde_json::json!({"type": "emoji", "name": "wave"})
+        );
+
+        let date: SlackRichTextInlineElement = SlackRichTextDate::new(
+            SlackDateTime("2020-01-01T00:42:42Z".parse::<SlackUtcDateTime>()?),
+            "{date_short}".to_string(),
+        )
+        .into();
+        assert_eq!(
+            serde_json::to_value(&date)?,
+            serde_json::json!({"type": "date", "timestamp": 1_577_839_362_i64, "format": "{date_short}"})
+        );
+
+        let broadcast: SlackRichTextInlineElement =
+            SlackRichTextBroadcast::new(SlackRichTextBroadcastRange::Here).into();
+        assert_eq!(
+            serde_json::to_value(&broadcast)?,
+            serde_json::json!({"type": "broadcast", "range": "here"})
+        );
+
+        let color: SlackRichTextInlineElement =
+            SlackRichTextColor::new("#ff0000".to_string()).into();
+        assert_eq!(
+            serde_json::to_value(&color)?,
+            serde_json::json!({"type": "color", "value": "#ff0000"})
+        );
+
+        let mention: SlackRichTextInlineElement = SlackRichTextMessageMention::new(
+            SlackRelaxedUrl("https://example.com/archives/C1/p1".into()),
+        )
+        .into();
+        assert_eq!(
+            serde_json::to_value(&mention)?,
+            serde_json::json!({"type": "message_mention", "url": "https://example.com/archives/C1/p1"})
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn rich_text_list_accepts_str_items() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_rich_text_block.json");
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        let expected_list = match block {
+            SlackBlock::RichText(r) => match &r.elements[1] {
+                SlackRichTextElement::List(l) => l.clone(),
+                other => panic!("Expected List element, got {other:?}"),
+            },
+            _ => panic!("Expected RichText block"),
+        };
+
+        let list = SlackRichTextList::new(
+            SlackRichTextListStyle::Bullet,
+            vec!["Item one".into(), "Item two".into()],
+        )
+        .with_indent(0);
+
+        assert_eq!(list, expected_list);
+        Ok(())
+    }
+
+    #[test]
+    fn rich_text_style_helpers_merge_flags() -> Result<(), Box<dyn std::error::Error>> {
+        let bold = SlackRichTextText::new("hi".to_string()).bold();
+        let json = serde_json::to_value(&bold)?;
+        assert_eq!(json["style"], serde_json::json!({"bold": true}));
+
+        let both = SlackRichTextText::new("hi".to_string())
+            .with_style(SlackRichTextStyle::new().with_italic(true))
+            .bold();
+        let json2 = serde_json::to_value(&both)?;
+        assert_eq!(
+            json2["style"],
+            serde_json::json!({"bold": true, "italic": true})
+        );
+
+        let struck = SlackRichTextText::new("hi".to_string()).strike();
+        assert_eq!(
+            serde_json::to_value(&struck)?["style"],
+            serde_json::json!({"strike": true})
+        );
+
+        let coded = SlackRichTextText::new("hi".to_string()).code();
+        assert_eq!(
+            serde_json::to_value(&coded)?["style"],
+            serde_json::json!({"code": true})
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn table_block_builds_from_str_cells() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_table_block.json");
+        let expected: serde_json::Value = serde_json::from_str(payload)?;
+
+        let block: SlackBlock = SlackTableBlock::new(vec![
+            vec!["Header A".into(), "Header B".into()],
+            vec![
+                "Data 1A".into(),
+                SlackTableRichTextCell::new(vec![SlackRichTextSection::new(vec![
+                    SlackRichTextLink::new(SlackRelaxedUrl("https://slack.com".into()))
+                        .with_text("Data 1B".to_string())
+                        .into(),
+                ])
+                .into()])
+                .into(),
+            ],
+        ])
+        .with_block_id(SlackBlockId("table_block_1".into()))
+        .with_column_settings(vec![
+            SlackTableColumnSetting::new().with_is_wrapped(true),
+            SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
+        ])
+        .into();
+
+        assert_eq!(serde_json::to_value(&block)?, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn rich_text_block_builds_fixture_with_conversions() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = include_str!("./fixtures/slack_rich_text_block.json");
+        let expected: serde_json::Value = serde_json::from_str(payload)?;
+
+        let section: SlackRichTextElement = SlackRichTextSection::new(vec![
+            SlackRichTextText::new("Hello ".to_string()).bold().into(),
+            SlackRichTextUser::new(SlackUserId("U123ABC456".into())).into(),
+            "! Check out ".into(),
+            SlackRichTextLink::new(SlackRelaxedUrl("https://example.com".into()))
+                .with_text("this link".to_string())
+                .with_style(SlackRichTextStyle::new().with_italic(true))
+                .into(),
+            SlackRichTextEmoji::new(SlackEmojiName("wave".into())).into(),
+            SlackRichTextChannel::new(SlackChannelId("C123ABC456".into())).into(),
+            SlackRichTextBroadcast::new(SlackRichTextBroadcastRange::Here).into(),
+        ])
+        .into();
+
+        let list: SlackRichTextElement = SlackRichTextList::new(
+            SlackRichTextListStyle::Bullet,
+            vec!["Item one".into(), "Item two".into()],
+        )
+        .with_indent(0)
+        .into();
+
+        let preformatted: SlackRichTextElement =
+            SlackRichTextPreformatted::new(vec![SlackRichTextText::new(
+                "fn main() {}\n".to_string(),
+            )
+            .into()])
+            .with_border(1)
+            .into();
+
+        let quote: SlackRichTextElement =
+            SlackRichTextQuote::new(vec![SlackRichTextText::new("A wise quote".to_string())
+                .italic()
+                .into()])
+            .into();
+
+        let block: SlackBlock = SlackRichTextBlock::new(vec![section, list, preformatted, quote])
+            .with_block_id(SlackBlockId("test_block".into()))
+            .into();
+
+        assert_eq!(serde_json::to_value(&block)?, expected);
         Ok(())
     }
 }

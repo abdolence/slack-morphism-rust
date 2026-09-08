@@ -149,40 +149,33 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
         SlackMessageContent::new()
             .with_text(format!("Hey {}", self.user_id.to_slack_format()))
             .with_blocks(slack_blocks![
-                some_into(
-                    SlackSectionBlock::new()
-                        .with_text(md!("Hey {}", self.user_id.to_slack_format()))
-                ),
-                some_into(SlackDividerBlock::new()),
-                some_into(SlackHeaderBlock::new(pt!("Simple header"))),
-                some_into(SlackDividerBlock::new()),
-                some_into(SlackContextBlock::new(slack_blocks![
-                    some(md!("This is an example of block message")),
-                    some(md!(
+                SlackSectionBlock::new().with_text(md!("Hey {}", self.user_id.to_slack_format())),
+                SlackDividerBlock::new(),
+                SlackHeaderBlock::new(pt!("Simple header")),
+                SlackDividerBlock::new(),
+                SlackContextBlock::new(vec![
+                    md!("This is an example of block message"),
+                    md!(
                         "Current time is: {}",
                         fmt_slack_date(
                             SlackDateTime::now().value(),
                             SlackDateTimeFormats::DatePretty.to_string().as_str(),
                             None
                         )
-                    ))
-                ])),
-                some_into(SlackDividerBlock::new()),
-                some_into(
-                    SlackImageBlock::new(
-                        Url::parse("https://www.gstatic.com/webp/gallery3/2_webp_ll.png")
-                            .expect("A proper URL")
-                            .into(),
-                        "Test Image".into(),
-                    )
-                    .with_title("Test Image".into())
-                ),
-                some_into(SlackActionsBlock::new(slack_blocks![some_into(
-                    SlackBlockButtonElement::new(
-                        "simple-message-button".into(),
-                        pt!("Simple button text")
-                    )
-                )]))
+                    ),
+                ]),
+                SlackDividerBlock::new(),
+                SlackImageBlock::new(
+                    Url::parse("https://www.gstatic.com/webp/gallery3/2_webp_ll.png")
+                        .expect("a hard-coded, valid URL literal")
+                        .into(),
+                    "Test Image".into(),
+                )
+                .with_title("Test Image".into()),
+                SlackActionsBlock::new(slack_blocks![SlackBlockButtonElement::new(
+                    "simple-message-button".into(),
+                    pt!("Simple button text")
+                )]),
             ])
     }
 }
@@ -203,21 +196,19 @@ pub struct SlackHomeTabBlocksTemplateExample {
 impl SlackBlocksTemplate for SlackHomeTabBlocksTemplateExample {
     fn render_template(&self) -> Vec<SlackBlock> {
         slack_blocks![
-            some_into(
-                SlackSectionBlock::new()
-                    .with_text(md!("Home tab for {}", self.user_id.to_slack_format()))
-            ),
-            some_into(SlackContextBlock::new(slack_blocks![
-                some(md!("This is an example of home tab")),
-                some(md!(
+            SlackSectionBlock::new()
+                .with_text(md!("Home tab for {}", self.user_id.to_slack_format())),
+            SlackContextBlock::new(vec![
+                md!("This is an example of home tab"),
+                md!(
                     "Current time is: {}",
                     fmt_slack_date(
                         SlackDateTime::now().value(),
                         SlackDateTimeFormats::DatePretty.to_string().as_str(),
                         None
                     )
-                ))
-            ]))
+                ),
+            ]),
         ]
     }
 }

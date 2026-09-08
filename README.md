@@ -17,13 +17,19 @@ The examples require to work the following environment variables (from your Slac
 
 - `SLACK_TEST_TOKEN` - for Slack client example
 - `SLACK_TEST_APP_TOKEN` - for Slack client with Socket Mode example
+- `SLACK_TEST_CHANNEL` - the channel to post to, for the `blocks_showcase` example
 - `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_BOT_SCOPE`, `SLACK_REDIRECT_HOST` - for OAuth routes for Events API example
 - `SLACK_SIGNING_SECRET` for all routes for Events API example
 
 To run example use with environment variables:
 ```
-# SLACK_... cargo run --example <client|events_api_server|axum_events_api_server|socket_mode> --all-features
+# SLACK_... cargo run --example <client|events_api_server|axum_events_api_server|socket_mode|blocks_showcase> --all-features
 ```
+
+`blocks_showcase` posts a single message covering every Block Kit block family
+(header, section, image, context, actions, divider, rich text, table, markdown,
+alert, card, task card) and prints a modal view for pasting into
+[Block Kit Builder](https://app.slack.com/block-kit-builder).
 
 Routes for this example are available on http://<your-host>:8080:
 

@@ -11,7 +11,7 @@ documentation = "https://docs.rs/slack_morphism"
 keywords = ["slack", "client"]
 categories = ["api-bindings"]
 readme = "README.md"
-include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE", "SECURITY.md"]
+include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE", "SECURITY.md", "docs/src/block-kit-support.md"]
 
 [badges]
 maintenance = { status = "actively-developed" }
@@ -127,3 +127,8 @@ required-features = ["hyper"]
 name = "axum_events_api_server"
 path = "examples/axum_events_api_server.rs"
 required-features = ["axum"]
+
+[[example]]
+name = "blocks_showcase"
+path = "examples/blocks_showcase.rs"
+required-features = ["hyper"]
