@@ -3,7 +3,7 @@
 
 use slack_morphism::prelude::*;
 
-use crate::emit::{stub, workflow};
+use crate::emit::{rich_text, workflow};
 use crate::leaf;
 use crate::writer::{Call, Expr, ListKind};
 use crate::Ctx;
@@ -45,11 +45,13 @@ pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut 
         SlackSectionBlockElement::Overflow(e) => emit_slack_block_overflow_element(e, ctx),
         SlackSectionBlockElement::DatePicker(e) => emit_slack_block_date_picker_element(e, ctx),
         SlackSectionBlockElement::TimePicker(e) => emit_slack_block_time_picker_element(e, ctx),
-        SlackSectionBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
-        SlackSectionBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
-        SlackSectionBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
-        SlackSectionBlockElement::RadioButtons(e) => stub(e, "radio buttons element", ctx),
-        SlackSectionBlockElement::Checkboxes(e) => stub(e, "checkboxes element", ctx),
+        SlackSectionBlockElement::PlainTextInput(e) => {
+            emit_slack_block_plain_text_input_element(e, ctx)
+        }
+        SlackSectionBlockElement::NumberInput(e) => emit_slack_block_number_input_element(e, ctx),
+        SlackSectionBlockElement::UrlInput(e) => emit_slack_block_url_input_element(e, ctx),
+        SlackSectionBlockElement::RadioButtons(e) => emit_slack_block_radio_buttons_element(e, ctx),
+        SlackSectionBlockElement::Checkboxes(e) => emit_slack_block_checkboxes_element(e, ctx),
         SlackSectionBlockElement::WorkflowButton(e) => {
             workflow::emit_slack_block_workflow_button_element(e, ctx)
         }
@@ -65,11 +67,13 @@ pub fn emit_slack_action_block_element(v: &SlackActionBlockElement, ctx: &mut Ct
         SlackActionBlockElement::DateTimePicker(e) => {
             emit_slack_block_date_time_picker_element(e, ctx)
         }
-        SlackActionBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
-        SlackActionBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
-        SlackActionBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
-        SlackActionBlockElement::RadioButtons(e) => stub(e, "radio buttons element", ctx),
-        SlackActionBlockElement::Checkboxes(e) => stub(e, "checkboxes element", ctx),
+        SlackActionBlockElement::PlainTextInput(e) => {
+            emit_slack_block_plain_text_input_element(e, ctx)
+        }
+        SlackActionBlockElement::NumberInput(e) => emit_slack_block_number_input_element(e, ctx),
+        SlackActionBlockElement::UrlInput(e) => emit_slack_block_url_input_element(e, ctx),
+        SlackActionBlockElement::RadioButtons(e) => emit_slack_block_radio_buttons_element(e, ctx),
+        SlackActionBlockElement::Checkboxes(e) => emit_slack_block_checkboxes_element(e, ctx),
         SlackActionBlockElement::StaticSelect(e) => emit_slack_block_static_select_element(e, ctx),
         SlackActionBlockElement::ExternalSelect(e) => {
             emit_slack_block_external_select_element(e, ctx)
@@ -132,14 +136,18 @@ pub fn emit_slack_input_block_element(v: &SlackInputBlockElement, ctx: &mut Ctx)
         SlackInputBlockElement::DateTimePicker(e) => {
             emit_slack_block_date_time_picker_element(e, ctx)
         }
-        SlackInputBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
-        SlackInputBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
-        SlackInputBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
-        SlackInputBlockElement::RadioButtons(e) => stub(e, "radio buttons element", ctx),
-        SlackInputBlockElement::Checkboxes(e) => stub(e, "checkboxes element", ctx),
-        SlackInputBlockElement::EmailInput(e) => stub(e, "email input element", ctx),
-        SlackInputBlockElement::RichTextInput(e) => stub(e, "rich text input element", ctx),
-        SlackInputBlockElement::FileInput(e) => stub(e, "file input element", ctx),
+        SlackInputBlockElement::PlainTextInput(e) => {
+            emit_slack_block_plain_text_input_element(e, ctx)
+        }
+        SlackInputBlockElement::NumberInput(e) => emit_slack_block_number_input_element(e, ctx),
+        SlackInputBlockElement::UrlInput(e) => emit_slack_block_url_input_element(e, ctx),
+        SlackInputBlockElement::RadioButtons(e) => emit_slack_block_radio_buttons_element(e, ctx),
+        SlackInputBlockElement::Checkboxes(e) => emit_slack_block_checkboxes_element(e, ctx),
+        SlackInputBlockElement::EmailInput(e) => emit_slack_block_email_input_element(e, ctx),
+        SlackInputBlockElement::RichTextInput(e) => {
+            emit_slack_block_rich_text_input_element(e, ctx)
+        }
+        SlackInputBlockElement::FileInput(e) => emit_slack_block_file_input_element(e, ctx),
     }
 }
 
@@ -872,47 +880,241 @@ pub fn emit_slack_block_plain_text_input_element(
     v: &SlackBlockPlainTextInputElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "plain text input element", ctx)
+    let SlackBlockPlainTextInputElement {
+        action_id,
+        placeholder,
+        initial_value,
+        multiline,
+        min_length,
+        max_length,
+        focus_on_load,
+        dispatch_action_config,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockPlainTextInputElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_value {
+        call = call.set("with_initial_value", leaf::value_str(x));
+    }
+    if let Some(x) = multiline {
+        call = call.set("with_multiline", leaf::bool_lit(*x));
+    }
+    if let Some(x) = min_length {
+        call = call.set("with_min_length", leaf::u64_lit(*x));
+    }
+    if let Some(x) = max_length {
+        call = call.set("with_max_length", leaf::u64_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = dispatch_action_config {
+        call = call.set(
+            "with_dispatch_action_config",
+            emit_slack_dispatch_action_config(x, ctx),
+        );
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_number_input_element(
     v: &SlackBlockNumberInputElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "number input element", ctx)
+    let SlackBlockNumberInputElement {
+        action_id,
+        is_decimal_allowed,
+        focus_on_load,
+        placeholder,
+        initial_value,
+        min_value,
+        max_value,
+    } = v;
+    let mut call = Call::new("SlackBlockNumberInputElement::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(leaf::bool_lit(*is_decimal_allowed));
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_value {
+        call = call.set("with_initial_value", leaf::value_str(x));
+    }
+    if let Some(x) = min_value {
+        call = call.set("with_min_value", leaf::value_str(x));
+    }
+    if let Some(x) = max_value {
+        call = call.set("with_max_value", leaf::value_str(x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_url_input_element(v: &SlackBlockUrlInputElement, ctx: &mut Ctx) -> Expr {
-    stub(v, "url input element", ctx)
+    let SlackBlockUrlInputElement {
+        action_id,
+        placeholder,
+        initial_value,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockUrlInputElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_value {
+        call = call.set("with_initial_value", leaf::value_str(x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_email_input_element(
     v: &SlackBlockEmailInputElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "email input element", ctx)
+    let SlackBlockEmailInputElement {
+        action_id,
+        focus_on_load,
+        placeholder,
+        initial_value,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockEmailInputElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_value {
+        call = call.set("with_initial_value", leaf::value_str(x.value()));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_radio_buttons_element(
     v: &SlackBlockRadioButtonsElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "radio buttons element", ctx)
+    let SlackBlockRadioButtonsElement {
+        action_id,
+        options,
+        initial_option,
+        confirm,
+        focus_on_load,
+    } = v;
+    let mut call = Call::new("SlackBlockRadioButtonsElement::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(Expr::List {
+            kind: ListKind::Vec,
+            items: options
+                .iter()
+                .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
+                .collect(),
+        });
+    if let Some(x) = initial_option {
+        call = call.set(
+            "with_initial_option",
+            emit_slack_block_choice_item(x, ctx, leaf::block_text),
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_checkboxes_element(v: &SlackBlockCheckboxesElement, ctx: &mut Ctx) -> Expr {
-    stub(v, "checkboxes element", ctx)
+    let SlackBlockCheckboxesElement {
+        action_id,
+        options,
+        initial_options,
+        confirm,
+        focus_on_load,
+    } = v;
+    let mut call = Call::new("SlackBlockCheckboxesElement::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(Expr::List {
+            kind: ListKind::Vec,
+            items: options
+                .iter()
+                .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
+                .collect(),
+        });
+    if let Some(x) = initial_options {
+        call = call.set(
+            "with_initial_options",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
+                    .collect(),
+            },
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_rich_text_input_element(
     v: &SlackBlockRichTextInputElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "rich text input element", ctx)
+    let SlackBlockRichTextInputElement {
+        action_id,
+        initial_value,
+        focus_on_load,
+        placeholder,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockRichTextInputElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = initial_value {
+        call = call.set(
+            "with_initial_value",
+            rich_text::emit_slack_rich_text_block(x, ctx),
+        );
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    call.into()
 }
 
-pub fn emit_slack_block_file_input_element(v: &SlackBlockFileInputElement, ctx: &mut Ctx) -> Expr {
-    stub(v, "file input element", ctx)
+pub fn emit_slack_block_file_input_element(v: &SlackBlockFileInputElement, _ctx: &mut Ctx) -> Expr {
+    let SlackBlockFileInputElement {
+        action_id,
+        filetypes,
+        max_files,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockFileInputElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = filetypes {
+        call = call.set(
+            "with_filetypes",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x.iter().map(|f| leaf::value_str(f)).collect(),
+            },
+        );
+    }
+    if let Some(x) = max_files {
+        call = call.set("with_max_files", leaf::u64_lit(*x));
+    }
+    call.into()
 }
 
 #[cfg(test)]
@@ -1045,5 +1247,20 @@ SlackActionsBlock::new(slack_blocks![
              .with_initial_date_time(SlackDateTime(\"2020-01-01T00:42:42Z\".parse()?))"
         );
         assert!(ctx.needs_result);
+    }
+
+    #[test]
+    fn a_number_input_takes_is_decimal_allowed_as_a_constructor_argument() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let element: SlackInputBlockElement = serde_json::from_value(json!({
+            "type": "number_input", "action_id": "a", "is_decimal_allowed": false,
+            "max_value": "10"
+        }))
+        .expect("parses");
+        assert_eq!(
+            emit_slack_input_block_element(&element, &mut ctx).flat(),
+            "SlackBlockNumberInputElement::new(\"a\".into(), false).with_max_value(\"10\".into())"
+        );
     }
 }
