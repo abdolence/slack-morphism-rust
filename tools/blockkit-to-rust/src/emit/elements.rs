@@ -8,76 +8,45 @@ use crate::leaf;
 use crate::writer::{Call, Expr, ListKind};
 use crate::Ctx;
 
-/// Every arm that is not an image or a text object ends in `.into()`, because
-/// `SlackSectionBlockElement` is what a `slack_blocks![]` list or a single
-/// `with_accessory` argument is typed as.
+/// `SlackSectionBlockElement` is only ever read back through
+/// `SlackSectionBlock.accessory`, a single-value position: the caller in
+/// `blocks.rs` appends the one `.into()` that promotes the arm's own return
+/// type into the enum, so no arm here adds its own.
 pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut Ctx) -> Expr {
     match v {
-        SlackSectionBlockElement::Image(e) => {
-            Expr::suffixed(emit_slack_block_image_element(e, ctx), ".into()")
-        }
-        SlackSectionBlockElement::Button(e) => {
-            Expr::suffixed(emit_slack_block_button_element(e, ctx), ".into()")
-        }
-        SlackSectionBlockElement::StaticSelect(e) => {
-            Expr::suffixed(emit_slack_block_static_select_element(e, ctx), ".into()")
-        }
+        SlackSectionBlockElement::Image(e) => emit_slack_block_image_element(e, ctx),
+        SlackSectionBlockElement::Button(e) => emit_slack_block_button_element(e, ctx),
+        SlackSectionBlockElement::StaticSelect(e) => emit_slack_block_static_select_element(e, ctx),
         SlackSectionBlockElement::MultiStaticSelect(e) => {
-            Expr::suffixed(stub(e, "multi static select element", ctx), ".into()")
+            stub(e, "multi static select element", ctx)
         }
-        SlackSectionBlockElement::ExternalSelect(e) => {
-            Expr::suffixed(stub(e, "external select element", ctx), ".into()")
-        }
+        SlackSectionBlockElement::ExternalSelect(e) => stub(e, "external select element", ctx),
         SlackSectionBlockElement::MultiExternalSelect(e) => {
-            Expr::suffixed(stub(e, "multi external select element", ctx), ".into()")
+            stub(e, "multi external select element", ctx)
         }
-        SlackSectionBlockElement::UsersSelect(e) => {
-            Expr::suffixed(stub(e, "users select element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::MultiUsersSelect(e) => {
-            Expr::suffixed(stub(e, "multi users select element", ctx), ".into()")
-        }
+        SlackSectionBlockElement::UsersSelect(e) => stub(e, "users select element", ctx),
+        SlackSectionBlockElement::MultiUsersSelect(e) => stub(e, "multi users select element", ctx),
         SlackSectionBlockElement::ConversationsSelect(e) => {
-            Expr::suffixed(stub(e, "conversations select element", ctx), ".into()")
+            stub(e, "conversations select element", ctx)
         }
-        SlackSectionBlockElement::MultiConversationsSelect(e) => Expr::suffixed(
-            stub(e, "multi conversations select element", ctx),
-            ".into()",
-        ),
-        SlackSectionBlockElement::ChannelsSelect(e) => {
-            Expr::suffixed(stub(e, "channels select element", ctx), ".into()")
+        SlackSectionBlockElement::MultiConversationsSelect(e) => {
+            stub(e, "multi conversations select element", ctx)
         }
+        SlackSectionBlockElement::ChannelsSelect(e) => stub(e, "channels select element", ctx),
         SlackSectionBlockElement::MultiChannelsSelect(e) => {
-            Expr::suffixed(stub(e, "multi channels select element", ctx), ".into()")
+            stub(e, "multi channels select element", ctx)
         }
-        SlackSectionBlockElement::Overflow(e) => {
-            Expr::suffixed(stub(e, "overflow element", ctx), ".into()")
+        SlackSectionBlockElement::Overflow(e) => stub(e, "overflow element", ctx),
+        SlackSectionBlockElement::DatePicker(e) => stub(e, "date picker element", ctx),
+        SlackSectionBlockElement::TimePicker(e) => stub(e, "time picker element", ctx),
+        SlackSectionBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
+        SlackSectionBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
+        SlackSectionBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
+        SlackSectionBlockElement::RadioButtons(e) => stub(e, "radio buttons element", ctx),
+        SlackSectionBlockElement::Checkboxes(e) => stub(e, "checkboxes element", ctx),
+        SlackSectionBlockElement::WorkflowButton(e) => {
+            workflow::emit_slack_block_workflow_button_element(e, ctx)
         }
-        SlackSectionBlockElement::DatePicker(e) => {
-            Expr::suffixed(stub(e, "date picker element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::TimePicker(e) => {
-            Expr::suffixed(stub(e, "time picker element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::PlainTextInput(e) => {
-            Expr::suffixed(stub(e, "plain text input element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::NumberInput(e) => {
-            Expr::suffixed(stub(e, "number input element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::UrlInput(e) => {
-            Expr::suffixed(stub(e, "url input element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::RadioButtons(e) => {
-            Expr::suffixed(stub(e, "radio buttons element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::Checkboxes(e) => {
-            Expr::suffixed(stub(e, "checkboxes element", ctx), ".into()")
-        }
-        SlackSectionBlockElement::WorkflowButton(e) => Expr::suffixed(
-            workflow::emit_slack_block_workflow_button_element(e, ctx),
-            ".into()",
-        ),
     }
 }
 
