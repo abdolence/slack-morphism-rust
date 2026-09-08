@@ -35,8 +35,12 @@ mod tests {
     fn a_stub_visitor_emits_the_from_value_path_and_records_no_error() {
         let options = Options::default();
         let mut ctx = Ctx::new(&options);
-        let block = SlackTableBlock::new(vec![vec!["a".into()]]);
-        let out = tables::emit_slack_table_block(&block, &mut ctx).flat();
+        // A response type no visitor will ever cover (`src/models/blocks/view.rs`
+        // models an API response, not a Builder input), so this test exercises
+        // `stub` itself rather than depending on any particular struct staying
+        // unimplemented as the rest of the emitter grows.
+        let value = SlackViewSubmissionClearResponse::new();
+        let out = stub(&value, "test value", &mut ctx).flat();
         assert!(out.starts_with("serde_json::from_value(json!("), "{out}");
         assert!(ctx.errors.is_empty());
         assert!(ctx.needs_json && ctx.needs_result);
