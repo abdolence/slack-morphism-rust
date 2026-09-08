@@ -4,7 +4,45 @@
 //! that the result serializes to the value the crate parsed from the fixture.
 //! A test that fails to compile is an emitter bug in the open.
 
-use blockkit_to_rust::testkit::{assert_same, parse_blocks, Normalize};
+use blockkit_to_rust::testkit::{assert_same, parse_block, parse_blocks, Normalize};
+
+#[rustfmt::skip]
+#[test]
+fn slack_conversations_select_with_filter_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackSectionBlock::new()
+        .with_text(pt!("Pick a channel"))
+        .with_accessory(SlackBlockConversationsSelectElement::new("channel_select".into())
+            .with_placeholder(pt!("Select a channel"))
+            .with_filter(SlackBlockConversationFilter::new()
+                .with_include(vec![SlackConversationFilterInclude::Public, SlackConversationFilterInclude::Private])
+                .with_exclude_external_shared_channels(true)
+                .with_exclude_bot_users(true)).into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_conversations_select_with_filter.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_conversations_select_with_filter_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackSectionBlock::new()
+        .with_text(pt!("Pick a channel"))
+        .with_accessory(SlackBlockConversationsSelectElement::new("channel_select".into())
+            .with_placeholder(pt!("Select a channel"))
+            .with_filter(SlackBlockConversationFilter::new()
+                .with_include(vec![SlackConversationFilterInclude::Public, SlackConversationFilterInclude::Private])
+                .with_exclude_external_shared_channels(true)
+                .with_exclude_bot_users(true)).into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_conversations_select_with_filter.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
 
 #[rustfmt::skip]
 #[test]
@@ -71,5 +109,65 @@ fn slack_image_blocks_exact() -> Result<(), Box<dyn std::error::Error>> {
 
     const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_image_blocks.json");
     assert_same(&blocks, &parse_blocks(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_workflow_button_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackActionsBlock::new(slack_blocks![
+        SlackActionBlockElement::WorkflowButton(
+            SlackBlockWorkflowButtonElement::new(
+                "start_workflow".into(),
+                pt!("Start Workflow"),
+                SlackWorkflow::new(
+                    SlackWorkflowTrigger::new(Url::parse("https://slack.com/shortcuts/Ft0ABC123/xyz")?)
+                        .with_customizable_input_parameters(vec![
+                            SlackWorkflowTriggerInputParameter::new("user_input".into(), "hello".into()),
+                        ]),
+                ),
+            )
+            .with_style(SlackBlockButtonStyle::Primary),
+        ),
+    ])
+    .with_block_id("workflow_actions".into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_workflow_button.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_workflow_button_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackActionsBlock::new(slack_blocks![
+        SlackActionBlockElement::WorkflowButton(
+            SlackBlockWorkflowButtonElement::new(
+                "start_workflow".into(),
+                pt!("Start Workflow"),
+                SlackWorkflow::new(
+                    SlackWorkflowTrigger::new(Url::parse("https://slack.com/shortcuts/Ft0ABC123/xyz")?)
+                        .with_customizable_input_parameters(vec![
+                            SlackWorkflowTriggerInputParameter::new("user_input".into(), "hello".into()),
+                        ]),
+                ),
+            )
+            .with_style(SlackBlockButtonStyle::Primary),
+        ),
+    ])
+    .with_block_id("workflow_actions".into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_workflow_button.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
     Ok(())
 }
