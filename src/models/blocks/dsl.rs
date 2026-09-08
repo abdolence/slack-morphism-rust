@@ -58,7 +58,7 @@ macro_rules! pt {
 macro_rules! slack_block_item {
     (optionally ($pred:expr => $item:expr)) => {{
         if $pred {
-            $crate::slack_block_item! (some $item)
+            $crate::slack_block_item! (some_into $item)
         }
         else {
             None
@@ -88,8 +88,13 @@ macro_rules! slack_block_item {
 ///
 /// - **Bare form**: any expression is pushed via `.into()`. `..iter` splices
 ///   every element of `iter` in, each also converted via `.into()`.
-///   `optionally(pred => item)` pushes `item` only when `pred` is true,
-///   evaluating neither `pred` nor `item` otherwise.
+///   `optionally(pred => item)` converts and pushes `item` the same way a
+///   bare item does, only when `pred` is true, evaluating neither `pred` nor
+///   `item` otherwise. `Into::into` is the identity conversion for an
+///   already-typed item, so `item` may be a block struct or an already-built
+///   target type; the one thing it cannot be is an expression that itself
+///   ends in an untyped `.into()`, such as `md!(..)`/`pt!(..)` — the same
+///   limit a bare item has (see [`md!`]).
 /// - **Legacy keyword form**: `some(item)`, `some_into(item)`,
 ///   `optionally(pred => item)`, `optionally_into(pred => item)`, matching
 ///   [`slack_block_item!`].
@@ -106,7 +111,7 @@ macro_rules! slack_block_item {
 ///
 /// let items: Vec<SlackBlock> = slack_blocks![
 ///     SlackHeaderBlock::new(pt!("Title")),
-///     optionally(show_divider => SlackDividerBlock::new().into()),
+///     optionally(show_divider => SlackDividerBlock::new()),
 ///     ..vec![SlackDividerBlock::new()],
 /// ];
 /// assert_eq!(items.len(), 3);
@@ -133,7 +138,7 @@ macro_rules! slack_blocks {
     };
 
     (@acc $v:ident; optionally($pred:expr => $item:expr) $(, $($rest:tt)*)?) => {
-        if $pred { $v.push($item); }
+        if $pred { $v.push(::core::convert::Into::into($item)); }
         $crate::slack_blocks!(@acc $v; $($($rest)*)?);
     };
 
@@ -297,12 +302,25 @@ mod tests {
     }
 
     #[test]
+    fn optionally_converts_its_item_like_a_bare_item() {
+        let blocks: Vec<SlackBlock> = crate::slack_blocks![
+            optionally(true => SlackDividerBlock::new()),
+            optionally(false => SlackDividerBlock::new()),
+        ];
+        assert_eq!(blocks.len(), 1);
+
+        let item: Option<SlackBlock> =
+            crate::slack_block_item!(optionally (true => SlackDividerBlock::new()));
+        assert!(item.is_some());
+    }
+
+    #[test]
     fn slack_block_item_still_works() {
         let some_item =
             crate::slack_block_item!(some SlackBlock::Divider(SlackDividerBlock::new()));
         assert!(some_item.is_some());
 
-        let none_item = crate::slack_block_item!(optionally (false => SlackBlock::Divider(SlackDividerBlock::new())));
+        let none_item: Option<SlackBlock> = crate::slack_block_item!(optionally (false => SlackBlock::Divider(SlackDividerBlock::new())));
         assert!(none_item.is_none());
     }
 

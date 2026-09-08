@@ -87,7 +87,7 @@
 //!         vec!["Service".into(), "Status".into()],
 //!         vec!["api".into(), "healthy".into()],
 //!     ]),
-//!     optionally(show_footer => SlackContextBlock::new(vec![md!("Posted automatically")]).into()),
+//!     optionally(show_footer => SlackContextBlock::new(vec![md!("Posted automatically")])),
 //! ];
 //!
 //! let content = SlackMessageContent::new().with_blocks(blocks);

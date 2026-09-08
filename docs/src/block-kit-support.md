@@ -83,7 +83,7 @@ let show_divider = true;
 
 let blocks: Vec<SlackBlock> = slack_blocks![
     SlackHeaderBlock::new(pt!("Weekly report")),
-    optionally(show_divider => SlackDividerBlock::new().into()),
+    optionally(show_divider => SlackDividerBlock::new()),
     ..(1..=3).map(|n| SlackSectionBlock::new().with_text(md!("Item {}", n))),
 ];
 
@@ -91,11 +91,9 @@ assert_eq!(blocks.len(), 5);
 ```
 
 - A bare expression is pushed via `.into()`.
-- `optionally(pred => item)` pushes `item` as-is only when `pred` is true;
-  neither `pred` nor `item` is evaluated when it is false. Unlike the bare
-  form, `item` is not converted automatically — end it with `.into()`
-  yourself when the list's element type differs from `item`'s own type, as
-  above.
+- `optionally(pred => item)` converts and pushes `item` the same way a bare
+  item does, only when `pred` is true; neither `pred` nor `item` is
+  evaluated when it is false.
 - `..iter` splices every element of an iterator or `Vec` in, each converted
   via `.into()` — useful for building a run of blocks from data instead of
   writing them out by hand, or for spreading in blocks assembled elsewhere,
