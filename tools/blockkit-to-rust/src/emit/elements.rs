@@ -31,14 +31,16 @@ pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut 
             emit_slack_block_multi_users_select_element(e, ctx)
         }
         SlackSectionBlockElement::ConversationsSelect(e) => {
-            stub(e, "conversations select element", ctx)
+            emit_slack_block_conversations_select_element(e, ctx)
         }
         SlackSectionBlockElement::MultiConversationsSelect(e) => {
-            stub(e, "multi conversations select element", ctx)
+            emit_slack_block_multi_conversations_select_element(e, ctx)
         }
-        SlackSectionBlockElement::ChannelsSelect(e) => stub(e, "channels select element", ctx),
+        SlackSectionBlockElement::ChannelsSelect(e) => {
+            emit_slack_block_channels_select_element(e, ctx)
+        }
         SlackSectionBlockElement::MultiChannelsSelect(e) => {
-            stub(e, "multi channels select element", ctx)
+            emit_slack_block_multi_channels_select_element(e, ctx)
         }
         SlackSectionBlockElement::Overflow(e) => stub(e, "overflow element", ctx),
         SlackSectionBlockElement::DatePicker(e) => stub(e, "date picker element", ctx),
@@ -72,9 +74,11 @@ pub fn emit_slack_action_block_element(v: &SlackActionBlockElement, ctx: &mut Ct
         }
         SlackActionBlockElement::UsersSelect(e) => emit_slack_block_users_select_element(e, ctx),
         SlackActionBlockElement::ConversationsSelect(e) => {
-            stub(e, "conversations select element", ctx)
+            emit_slack_block_conversations_select_element(e, ctx)
         }
-        SlackActionBlockElement::ChannelsSelect(e) => stub(e, "channels select element", ctx),
+        SlackActionBlockElement::ChannelsSelect(e) => {
+            emit_slack_block_channels_select_element(e, ctx)
+        }
         SlackActionBlockElement::WorkflowButton(e) => {
             workflow::emit_slack_block_workflow_button_element(e, ctx)
         }
@@ -110,14 +114,16 @@ pub fn emit_slack_input_block_element(v: &SlackInputBlockElement, ctx: &mut Ctx)
             emit_slack_block_multi_users_select_element(e, ctx)
         }
         SlackInputBlockElement::ConversationsSelect(e) => {
-            stub(e, "conversations select element", ctx)
+            emit_slack_block_conversations_select_element(e, ctx)
         }
         SlackInputBlockElement::MultiConversationsSelect(e) => {
-            stub(e, "multi conversations select element", ctx)
+            emit_slack_block_multi_conversations_select_element(e, ctx)
         }
-        SlackInputBlockElement::ChannelsSelect(e) => stub(e, "channels select element", ctx),
+        SlackInputBlockElement::ChannelsSelect(e) => {
+            emit_slack_block_channels_select_element(e, ctx)
+        }
         SlackInputBlockElement::MultiChannelsSelect(e) => {
-            stub(e, "multi channels select element", ctx)
+            emit_slack_block_multi_channels_select_element(e, ctx)
         }
         SlackInputBlockElement::DatePicker(e) => stub(e, "date picker element", ctx),
         SlackInputBlockElement::TimePicker(e) => stub(e, "time picker element", ctx),
@@ -553,37 +559,189 @@ pub fn emit_slack_block_multi_users_select_element(
 
 pub fn emit_slack_block_conversation_filter(
     v: &SlackBlockConversationFilter,
-    ctx: &mut Ctx,
+    _ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "conversation filter", ctx)
+    let SlackBlockConversationFilter {
+        include,
+        exclude_external_shared_channels,
+        exclude_bot_users,
+    } = v;
+    let mut call = Call::new("SlackBlockConversationFilter::new");
+    if let Some(x) = include {
+        call = call.set(
+            "with_include",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(emit_slack_conversation_filter_include)
+                    .collect(),
+            },
+        );
+    }
+    if let Some(x) = exclude_external_shared_channels {
+        call = call.set("with_exclude_external_shared_channels", leaf::bool_lit(*x));
+    }
+    if let Some(x) = exclude_bot_users {
+        call = call.set("with_exclude_bot_users", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_conversations_select_element(
     v: &SlackBlockConversationsSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "conversations select element", ctx)
+    let SlackBlockConversationsSelectElement {
+        action_id,
+        placeholder,
+        initial_conversation,
+        default_to_current_conversation,
+        confirm,
+        response_url_enabled,
+        focus_on_load,
+        filter,
+    } = v;
+    let mut call = Call::new("SlackBlockConversationsSelectElement::new")
+        .arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_conversation {
+        call = call.set("with_initial_conversation", leaf::value_str(x.value()));
+    }
+    if let Some(x) = default_to_current_conversation {
+        call = call.set("with_default_to_current_conversation", leaf::bool_lit(*x));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = response_url_enabled {
+        call = call.set("with_response_url_enabled", leaf::bool_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = filter {
+        call = call.set("with_filter", emit_slack_block_conversation_filter(x, ctx));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_multi_conversations_select_element(
     v: &SlackBlockMultiConversationsSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "multi conversations select element", ctx)
+    let SlackBlockMultiConversationsSelectElement {
+        action_id,
+        placeholder,
+        initial_conversations,
+        default_to_current_conversation,
+        confirm,
+        max_selected_items,
+        focus_on_load,
+        filter,
+    } = v;
+    let mut call = Call::new("SlackBlockMultiConversationsSelectElement::new")
+        .arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_conversations {
+        call = call.set(
+            "with_initial_conversations",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x.iter().map(|c| leaf::value_str(c.value())).collect(),
+            },
+        );
+    }
+    if let Some(x) = default_to_current_conversation {
+        call = call.set("with_default_to_current_conversation", leaf::bool_lit(*x));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = max_selected_items {
+        call = call.set("with_max_selected_items", leaf::u64_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = filter {
+        call = call.set("with_filter", emit_slack_block_conversation_filter(x, ctx));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_channels_select_element(
     v: &SlackBlockChannelsSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "channels select element", ctx)
+    let SlackBlockChannelsSelectElement {
+        action_id,
+        placeholder,
+        initial_channel,
+        confirm,
+        response_url_enabled,
+        focus_on_load,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockChannelsSelectElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_channel {
+        call = call.set("with_initial_channel", leaf::value_str(x.value()));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = response_url_enabled {
+        call = call.set("with_response_url_enabled", leaf::bool_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_multi_channels_select_element(
     v: &SlackBlockMultiChannelsSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "multi channels select element", ctx)
+    let SlackBlockMultiChannelsSelectElement {
+        action_id,
+        placeholder,
+        initial_channels,
+        confirm,
+        max_selected_items,
+        focus_on_load,
+    } = v;
+    let mut call = Call::new("SlackBlockMultiChannelsSelectElement::new")
+        .arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_channels {
+        call = call.set(
+            "with_initial_channels",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x.iter().map(|c| leaf::value_str(c.value())).collect(),
+            },
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = max_selected_items {
+        call = call.set("with_max_selected_items", leaf::u64_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_overflow_element(v: &SlackBlockOverflowElement, ctx: &mut Ctx) -> Expr {
@@ -757,5 +915,24 @@ SlackActionsBlock::new(slack_blocks![
             "SlackBlockImageElement::new(Url::parse(\"https://example.com/a.png\")?.into(), \
              \"a\".into()).into()"
         );
+    }
+
+    #[test]
+    fn the_conversation_filter_fixture_emits_builders() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let payload = include_str!(
+            "../../../../src/models/blocks/fixtures/slack_conversations_select_with_filter.json"
+        );
+        let block: SlackBlock = serde_json::from_str(payload).expect("fixture parses");
+        let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).flat();
+        assert!(
+            out.contains(
+                "SlackBlockConversationFilter::new().with_include(vec![\
+                 SlackConversationFilterInclude::Public, SlackConversationFilterInclude::Private])"
+            ),
+            "{out}"
+        );
+        assert!(!out.contains("serde_json::from_value"), "{out}");
     }
 }
