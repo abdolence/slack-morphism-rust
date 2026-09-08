@@ -138,6 +138,11 @@ pub fn convert(source: &str, options: &Options) -> Result<Output, ConvertError> 
             ("Vec<SlackBlock>", emit_block_list(items, &mut ctx))
         }
         (input::InputShape::Block(item), _) => (
+            // `emit_slack_block`'s arms return each variant's own struct type
+            // (matching its use as a bare item inside `slack_blocks![..]`, the
+            // only other place it is called), so a single-block binding needs
+            // its own conversion into `SlackBlock` here; a list binding gets
+            // one for free from the macro's per-item `.into()`.
             "SlackBlock",
             writer::Expr::suffixed(emit_one_block(item, 0, &mut ctx), ".into()"),
         ),
