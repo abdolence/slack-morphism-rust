@@ -406,6 +406,25 @@ assert_eq!(blocks.len(), 1);
 # Ok::<(), serde_json::Error>(())
 ```
 
+## Convert Block Kit Builder JSON
+
+Paste the JSON from
+[Block Kit Builder](https://app.slack.com/block-kit-builder) below and press
+Convert (or Ctrl+Enter) to get the equivalent builder code. The converter
+runs entirely in your browser: nothing is uploaded anywhere. It accepts a
+Builder message (`{"blocks": [...]}`), a bare block array, a single block, or
+a modal or home view; anything the crate cannot model is reported as an
+error rather than guessed at.
+
+<div id="blockkit-to-rust" data-assets="blockkit/">Open this page on the
+documentation site to use the converter.</div>
+
+The same conversion is available as a command-line tool:
+
+```sh
+cargo run --manifest-path tools/blockkit-to-rust/Cargo.toml --bin bk2rs < message.json
+```
+
 ## More examples
 
 `examples/blocks_showcase.rs` posts one message per block family covered on
