@@ -26,6 +26,11 @@ jobs:
       - name: Build converter
         run: wasm-pack build tools/blockkit-to-rust --release --target web --no-typescript --no-pack --out-dir ../../docs/src/blockkit --out-name blockkit_to_rust
       - run: cd docs && mdbook build
+      # wasm-pack writes a `.gitignore` containing `*` into its out-dir and mdbook
+      # copies it into the output; the publish action adds files with git, so
+      # that file would silently drop the module from the site.
+      - name: Unignore the converter module
+        run: rm -f docs/output/blockkit/.gitignore
       - name: Copy CNAME
         run: cp CNAME docs/output
       - name: Deploy
