@@ -10,8 +10,7 @@ pub mod writer;
 pub mod snapshot;
 pub mod testkit;
 
-#[cfg(target_arch = "wasm32")]
-mod wasm;
+pub mod wasm;
 
 use std::fmt;
 
