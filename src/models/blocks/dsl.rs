@@ -102,11 +102,21 @@ macro_rules! slack_block_item {
 /// ```
 /// use slack_morphism::prelude::*;
 ///
+/// let show_divider = true;
+///
 /// let items: Vec<SlackBlock> = slack_blocks![
+///     SlackHeaderBlock::new(pt!("Title")),
+///     optionally(show_divider => SlackDividerBlock::new().into()),
+///     ..vec![SlackDividerBlock::new()],
+/// ];
+/// assert_eq!(items.len(), 3);
+///
+/// // Legacy keyword form, still supported:
+/// let legacy_items: Vec<SlackBlock> = slack_blocks![
 ///     some_into(SlackHeaderBlock::new(pt!("Title"))),
 ///     optionally_into(true => SlackDividerBlock::new()),
 /// ];
-/// assert_eq!(items.len(), 2);
+/// assert_eq!(legacy_items.len(), 2);
 /// ```
 #[macro_export]
 macro_rules! slack_blocks {
