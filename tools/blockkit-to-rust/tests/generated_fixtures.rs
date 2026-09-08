@@ -4,7 +4,123 @@
 //! that the result serializes to the value the crate parsed from the fixture.
 //! A test that fails to compile is an emitter bug in the open.
 
-use blockkit_to_rust::testkit::{assert_same, parse_blocks, Normalize};
+use blockkit_to_rust::testkit::{assert_same, parse_block, parse_blocks, Normalize};
+
+#[rustfmt::skip]
+#[test]
+fn slack_alert_block_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackAlertBlock::new(md!("Your disk is almost full. Please free up space."))
+        .with_block_id("alert_block_1".into())
+        .with_level(SlackAlertLevel::Warning).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_alert_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_alert_block_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackAlertBlock::new(md!("Your disk is almost full. Please free up space."))
+        .with_block_id("alert_block_1".into())
+        .with_level(SlackAlertLevel::Warning).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_alert_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_card_block_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackCardBlock::new()
+        .with_block_id("card_block_1".into())
+        .with_title(md!("My Card"))
+        .with_subtitle(md!("A short subtitle."))
+        .with_body(md!("A short description of the card."))
+        .with_hero_image(SlackBlockImageElement::new(
+            Url::parse("https://example.com/hero.png")?.into(),
+            "hero image".into(),
+        ).into())
+        .with_actions(slack_blocks![
+            SlackBlockButtonElement::new("card_action_1".into(), pt!("Open"))
+                .with_value("open".into())
+                .with_style(SlackBlockButtonStyle::Primary),
+        ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_card_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_card_block_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackCardBlock::new()
+        .with_block_id("card_block_1".into())
+        .with_title(md!("My Card"))
+        .with_subtitle(md!("A short subtitle."))
+        .with_body(md!("A short description of the card."))
+        .with_hero_image(SlackBlockImageElement::new(
+            Url::parse("https://example.com/hero.png")?.into(),
+            "hero image".into(),
+        ).into())
+        .with_actions(slack_blocks![
+            SlackBlockButtonElement::new("card_action_1".into(), pt!("Open"))
+                .with_value("open".into())
+                .with_style(SlackBlockButtonStyle::Primary),
+        ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_card_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_context_actions_block_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackContextActionsBlock::new(slack_blocks![
+        SlackBlockIconButtonElement::new("delete_action".into(), "trash".into(), pt!("Delete"))
+            .with_value("delete_item".into()),
+    ])
+    .with_block_id("context_actions_1".into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_context_actions_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_context_actions_block_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackContextActionsBlock::new(slack_blocks![
+        SlackBlockIconButtonElement::new("delete_action".into(), "trash".into(), pt!("Delete"))
+            .with_value("delete_item".into()),
+    ])
+    .with_block_id("context_actions_1".into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_context_actions_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
 
 #[rustfmt::skip]
 #[test]
@@ -71,5 +187,171 @@ fn slack_image_blocks_exact() -> Result<(), Box<dyn std::error::Error>> {
 
     const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_image_blocks.json");
     assert_same(&blocks, &parse_blocks(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_rich_text_block_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackRichTextBlock::new(slack_blocks![
+        SlackRichTextSection::new(slack_blocks![
+            SlackRichTextText::new("Hello ".into()).bold(),
+            SlackRichTextUser::new("U123ABC456".into()),
+            "! Check out ",
+            SlackRichTextLink::new("https://example.com".into())
+                .with_text("this link".into())
+                .with_style(SlackRichTextStyle::new().with_italic(true)),
+            SlackRichTextEmoji::new("wave".into()),
+            SlackRichTextChannel::new("C123ABC456".into()),
+            SlackRichTextBroadcast::new(SlackRichTextBroadcastRange::Here),
+        ]),
+        SlackRichTextList::new(SlackRichTextListStyle::Bullet, slack_blocks!["Item one", "Item two"])
+            .with_indent(0),
+        SlackRichTextPreformatted::new(slack_blocks!["fn main() {}\n"]).with_border(1),
+        SlackRichTextQuote::new(slack_blocks![SlackRichTextText::new("A wise quote".into()).italic()]),
+    ])
+    .with_block_id("test_block".into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_rich_text_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_rich_text_block_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackRichTextBlock::new(slack_blocks![
+        SlackRichTextSection::new(slack_blocks![
+            SlackRichTextText::new("Hello ".into()).bold(),
+            SlackRichTextUser::new("U123ABC456".into()),
+            "! Check out ",
+            SlackRichTextLink::new("https://example.com".into())
+                .with_text("this link".into())
+                .with_style(SlackRichTextStyle::new().with_italic(true)),
+            SlackRichTextEmoji::new("wave".into()),
+            SlackRichTextChannel::new("C123ABC456".into()),
+            SlackRichTextBroadcast::new(SlackRichTextBroadcastRange::Here),
+        ]),
+        SlackRichTextList::new(SlackRichTextListStyle::Bullet, slack_blocks!["Item one", "Item two"])
+            .with_indent(0),
+        SlackRichTextPreformatted::new(slack_blocks!["fn main() {}\n"]).with_border(1),
+        SlackRichTextQuote::new(slack_blocks![SlackRichTextText::new("A wise quote".into()).italic()]),
+    ])
+    .with_block_id("test_block".into()).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_rich_text_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_table_block_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackTableBlock::new(vec![
+        slack_blocks!["Header A", "Header B"],
+        slack_blocks![
+            "Data 1A",
+            SlackTableRichTextCell::new(slack_blocks![
+                SlackRichTextSection::new(slack_blocks![
+                    SlackRichTextLink::new("https://slack.com".into()).with_text("Data 1B".into()),
+                ]),
+            ]),
+        ],
+    ])
+    .with_block_id("table_block_1".into())
+    .with_column_settings(vec![
+        SlackTableColumnSetting::new().with_is_wrapped(true),
+        SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
+    ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_table_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_table_block_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let block: SlackBlock = SlackTableBlock::new(vec![
+        slack_blocks!["Header A", "Header B"],
+        slack_blocks![
+            "Data 1A",
+            SlackTableRichTextCell::new(slack_blocks![
+                SlackRichTextSection::new(slack_blocks![
+                    SlackRichTextLink::new("https://slack.com".into()).with_text("Data 1B".into()),
+                ]),
+            ]),
+        ],
+    ])
+    .with_block_id("table_block_1".into())
+    .with_column_settings(vec![
+        SlackTableColumnSetting::new().with_is_wrapped(true),
+        SlackTableColumnSetting::new().with_align(SlackTableColumnAlign::Right),
+    ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_table_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_task_card_block_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackTaskCardBlock::new("task_1".into(), "Fetching weather data".into())
+        .with_block_id("task_card_block_1".into())
+        .with_status(SlackTaskCardStatus::InProgress)
+        .with_output(SlackRichTextBlock::new(slack_blocks![
+            SlackRichTextSection::new(slack_blocks!["Found weather data for Chicago from 2 sources"]),
+        ]).into())
+        .with_sources(vec![
+            SlackUrlSourceElement::new(Url::parse("https://weather.com/")?, "weather.com".into()).into(),
+            SlackUrlSourceElement::new(
+                Url::parse("https://www.accuweather.com/")?,
+                "accuweather.com".into(),
+            ).into(),
+        ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_task_card_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_task_card_block_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackTaskCardBlock::new("task_1".into(), "Fetching weather data".into())
+        .with_block_id("task_card_block_1".into())
+        .with_status(SlackTaskCardStatus::InProgress)
+        .with_output(SlackRichTextBlock::new(slack_blocks![
+            SlackRichTextSection::new(slack_blocks!["Found weather data for Chicago from 2 sources"]),
+        ]).into())
+        .with_sources(vec![
+            SlackUrlSourceElement::new(Url::parse("https://weather.com/")?, "weather.com".into()).into(),
+            SlackUrlSourceElement::new(
+                Url::parse("https://www.accuweather.com/")?,
+                "accuweather.com".into(),
+            ).into(),
+        ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_task_card_block.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
     Ok(())
 }

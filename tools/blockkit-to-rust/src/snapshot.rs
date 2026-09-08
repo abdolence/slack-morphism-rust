@@ -38,14 +38,8 @@ pub const FIXTURE_KINDS: &[(&str, FixtureKind)] = &[
 /// area that will take them. An entry is deleted when its visitors land, so the
 /// array is empty once every block, element and view has a hand-written visitor.
 pub const SKIPPED_FIXTURES: &[(&str, &str)] = &[
-    ("slack_alert_block.json", "tables"),
-    ("slack_card_block.json", "tables"),
-    ("slack_context_actions_block.json", "tables"),
     ("slack_conversations_select_with_filter.json", "elements"),
     ("slack_home_view.json", "views"),
-    ("slack_rich_text_block.json", "rich_text"),
-    ("slack_table_block.json", "tables"),
-    ("slack_task_card_block.json", "tables"),
     ("slack_workflow_button.json", "elements"),
 ];
 
