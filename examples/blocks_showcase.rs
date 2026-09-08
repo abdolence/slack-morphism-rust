@@ -52,9 +52,8 @@ fn catalogue_blocks(show_alert: bool) -> Vec<SlackBlock> {
             vec!["Header".into(), "block".into()],
         ]),
         SlackMarkdownBlock::new("**Markdown block** rendered with native Slack markdown.".into()),
-        optionally(show_alert => SlackBlock::Alert(
-            SlackAlertBlock::new(md!("This is an alert block.")).with_level(SlackAlertLevel::Info)
-        )),
+        optionally(show_alert => SlackAlertBlock::new(md!("This is an alert block."))
+            .with_level(SlackAlertLevel::Info)),
         SlackCardBlock::new()
             .with_title(md!("slack-morphism"))
             .with_body(md!("A modern Rust client for Slack.")),
