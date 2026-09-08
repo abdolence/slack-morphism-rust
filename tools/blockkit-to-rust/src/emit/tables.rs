@@ -107,12 +107,100 @@ pub fn emit_slack_table_column_setting(v: &SlackTableColumnSetting, _ctx: &mut C
     call.into()
 }
 
-pub fn emit_slack_task_card_block(v: &SlackTaskCardBlock, ctx: &mut Ctx) -> Expr {
-    stub(v, "task card block", ctx)
+pub fn emit_slack_task_card_status(v: &SlackTaskCardStatus) -> Expr {
+    match v {
+        SlackTaskCardStatus::Pending => leaf::unit_variant("SlackTaskCardStatus", "Pending"),
+        SlackTaskCardStatus::InProgress => leaf::unit_variant("SlackTaskCardStatus", "InProgress"),
+        SlackTaskCardStatus::Complete => leaf::unit_variant("SlackTaskCardStatus", "Complete"),
+        SlackTaskCardStatus::Error => leaf::unit_variant("SlackTaskCardStatus", "Error"),
+    }
 }
 
+pub fn emit_slack_url_source_element(v: &SlackUrlSourceElement, ctx: &mut Ctx) -> Expr {
+    let SlackUrlSourceElement { url, text } = v;
+    Call::new("SlackUrlSourceElement::new")
+        .arg(leaf::url_expr(url, ctx))
+        .arg(leaf::value_str(text))
+        .into()
+}
+
+pub fn emit_slack_task_card_source(v: &SlackTaskCardSource, ctx: &mut Ctx) -> Expr {
+    match v {
+        SlackTaskCardSource::Url(e) => emit_slack_url_source_element(e, ctx),
+    }
+}
+
+pub fn emit_slack_task_card_block(v: &SlackTaskCardBlock, ctx: &mut Ctx) -> Expr {
+    let SlackTaskCardBlock {
+        task_id,
+        title,
+        block_id,
+        status,
+        details,
+        output,
+        sources,
+    } = v;
+    let mut call = Call::new("SlackTaskCardBlock::new")
+        .arg(leaf::value_str(task_id.value()))
+        .arg(leaf::value_str(title));
+    if let Some(x) = block_id {
+        call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    if let Some(x) = status {
+        call = call.set("with_status", emit_slack_task_card_status(x));
+    }
+    if let Some(x) = details {
+        call = call.set(
+            "with_details",
+            rich_text::emit_slack_rich_text_inline_content(x, ctx),
+        );
+    }
+    if let Some(x) = output {
+        call = call.set(
+            "with_output",
+            rich_text::emit_slack_rich_text_inline_content(x, ctx),
+        );
+    }
+    if let Some(x) = sources {
+        call = call.set(
+            "with_sources",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(|s| emit_slack_task_card_source(s, ctx))
+                    .collect(),
+            },
+        );
+    }
+    call.into()
+}
+
+pub fn emit_slack_alert_level(v: &SlackAlertLevel) -> Expr {
+    match v {
+        SlackAlertLevel::Warning => leaf::unit_variant("SlackAlertLevel", "Warning"),
+        SlackAlertLevel::Error => leaf::unit_variant("SlackAlertLevel", "Error"),
+        SlackAlertLevel::Info => leaf::unit_variant("SlackAlertLevel", "Info"),
+        SlackAlertLevel::Success => leaf::unit_variant("SlackAlertLevel", "Success"),
+    }
+}
+
+/// `SlackAlertBlock` declares `block_id, text, level` but only `text` is
+/// required, so `new()` takes `text` alone.
 pub fn emit_slack_alert_block(v: &SlackAlertBlock, ctx: &mut Ctx) -> Expr {
-    stub(v, "alert block", ctx)
+    let SlackAlertBlock {
+        block_id,
+        text,
+        level,
+    } = v;
+    let mut call = Call::new("SlackAlertBlock::new").arg(leaf::block_text(text, ctx));
+    if let Some(x) = block_id {
+        call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    if let Some(x) = level {
+        call = call.set("with_level", emit_slack_alert_level(x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_card_block(v: &SlackCardBlock, ctx: &mut Ctx) -> Expr {
@@ -162,5 +250,19 @@ SlackTableBlock::new(vec![
             crate::emit::blocks::emit_slack_block(&block, &mut ctx).render(&mut w),
             expected
         );
+    }
+
+    #[test]
+    fn the_task_card_and_alert_fixtures_emit_builders() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        for payload in [
+            include_str!("../../../../src/models/blocks/fixtures/slack_task_card_block.json"),
+            include_str!("../../../../src/models/blocks/fixtures/slack_alert_block.json"),
+        ] {
+            let block: SlackBlock = serde_json::from_str(payload).expect("fixture parses");
+            let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).flat();
+            assert!(!out.contains("serde_json::from_value"), "{out}");
+        }
     }
 }
