@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c2d351f2.js";
+            window.path_to_searchindex_js = "searchindex-a182d523.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-132cf9d3.js"></script>
@@ -334,92 +334,347 @@ async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Syn
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="block-kit-support"><a class="header" href="#block-kit-support">Block Kit support</a></h1>
-<p>To support Slack Block Kit rich messages and views, the library provides:</p>
-<ul>
-<li>Well-typed models</li>
-<li>Macros to help build blocks, block elements</li>
-</ul>
-<p>Let’s take some very simple block example:</p>
+<p>Slack Block Kit messages and views are JSON documents built from a fixed set
+of block and element types. This library models each of those types as a
+Rust struct or enum, and provides a small set of macros — <code>slack_blocks!</code>,
+<code>md!</code>, <code>pt!</code> — to build the <code>Vec</code> of blocks or elements each block-holding
+type expects, without writing <code>.into()</code> on every item by hand.</p>
+<p>Everything below is real, compiling code. Run it yourself from
+<code>examples/blocks_showcase.rs</code>, or copy any snippet directly.</p>
+<h2 id="from-json-to-rust"><a class="header" href="#from-json-to-rust">From JSON to Rust</a></h2>
+<p>Take a very simple block, as Slack’s Block Kit Builder shows it:</p>
 <pre><code class="language-json">{
   "blocks": [
-      {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "A message *with some bold text* and _some italicized text_."
-        }
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "A message *with some bold text* and _some italicized text_."
       }
+    }
   ]
 }
 </code></pre>
-<p>Now, let’s look at how it looks with type-safe code using Slack Morphism Blocks macro support:</p>
+<p>The same block in type-safe Rust is one struct per JSON object, with the
+<code>type</code> tag implied by the struct, and <code>md!</code> standing in for the <code>mrkdwn</code>
+text object:</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
-let blocks : Vec&lt;SlackBlock&gt; = slack_blocks![
- some_into(
+let blocks: Vec&lt;SlackBlock&gt; = slack_blocks![
     SlackSectionBlock::new()
-        .with_text(md!("A message *with some bold text* and _some italicized text_."))
- )
+        .with_text(md!("A message *with some bold text* and _some italicized text_.")),
 ];</code></pre>
-<p>Let’s look at another more complex example for welcoming message:</p>
-<pre><code class="language-rust noplaypen">
-use slack_morphism::prelude::*;
+<p>Every block, element and composition object follows this pattern: a JSON
+object becomes <code>SlackXxx::new(required fields)</code>, each optional key becomes a
+<code>.with_key(..)</code> call, and a JSON array of blocks or elements becomes a
+<code>slack_blocks![..]</code> list.</p>
+<h2 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h2>
+<p>The smallest possible message is a single section block with some markdown
+text, wrapped in a <code>SlackMessageContent</code> and posted with
+<code>SlackApiChatPostMessageRequest</code>:</p>
+<pre><code class="language-rust no_run noplaypen">use slack_morphism::prelude::*;
 
-async fn example() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+<span class="boring">#[tokio::main]
+</span><span class="boring">async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+</span>let client = SlackClient::new(SlackClientHyperConnector::new()?);
+let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
+let session = client.open_session(&amp;token);
 
-    use std::time::Duration;
-    use rsb_derive::Builder;
+let blocks: Vec&lt;SlackBlock&gt; = slack_blocks![
+    SlackSectionBlock::new().with_text(md!("A message *with some bold text*.")),
+];
 
-    let hyper_connector = SlackClientHyperConnector::new();
-    let client = SlackClient::new(hyper_connector);
+let content = SlackMessageContent::new().with_blocks(blocks);
+let request = SlackApiChatPostMessageRequest::new("#general".into(), content);
 
-    let token_value: SlackApiTokenValue = "xoxb-89.....".into();
-    let token: SlackApiToken = SlackApiToken::new(token_value);
-    let session = client.open_session(&amp;token);
+session.chat_post_message(&amp;request).await?;
+<span class="boring">Ok(())
+</span><span class="boring">}</span></code></pre>
+<p>The rest of this page builds up from here: how text objects work, how
+<code>slack_blocks!</code> builds lists, and how each block and element family is
+constructed.</p>
+<h2 id="text-objects"><a class="header" href="#text-objects">Text objects</a></h2>
+<p>Block Kit has two flavors of text: <code>mrkdwn</code> (Slack’s own markdown) and
+<code>plain_text</code>. The library models them as <code>SlackBlockMarkDownText</code> and
+<code>SlackBlockPlainText</code>, and the <code>md!</code> and <code>pt!</code> macros build them:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
-    // Our welcome message params as a struct
-    #[derive(Debug, Clone, Builder)]
-    pub struct WelcomeMessageTemplateParams {
-        pub user_id: SlackUserId,
+let markdown: SlackBlockMarkDownText = md!("A message *with some bold text*.");
+let plain: SlackBlockPlainText = pt!("Plain text");
+
+// Both macros format like `format!` when given more than one argument.
+let user_id = SlackUserId("U1234".into());
+let greeting: SlackBlockMarkDownText = md!("Hey {}, welcome!", user_id.to_slack_format());</code></pre>
+<p><code>md!</code> and <code>pt!</code> convert into whatever type the call site expects via
+<code>Into</code>, so the same macro call can produce a <code>SlackBlockText</code>, a
+<code>SlackContextBlockElement</code>, or the raw <code>SlackBlockMarkDownText</code>/
+<code>SlackBlockPlainText</code>, depending on where it is used.</p>
+<p>Some fields require plain text specifically and reject markdown at the API
+level: block headers, button labels, and input labels are typed as
+<code>SlackBlockPlainTextOnly</code>, not <code>SlackBlockText</code>. Passing markdown there does
+not fail to compile — a plain string still converts — but Slack rejects the
+request at runtime with <code>invalid_blocks</code> if the string contains markdown
+syntax Slack cannot render as plain text. Use <code>pt!</code>, or a bare string
+literal, for these fields.</p>
+<h2 id="building-block-lists"><a class="header" href="#building-block-lists">Building block lists</a></h2>
+<p><code>slack_blocks!</code> builds a <code>Vec&lt;T&gt;</code> from a comma-separated list, converting
+each item with <code>.into()</code>. Any block or element type that has a <code>From</code> (or
+<code>Into</code>) conversion to the target item type can appear as a bare item:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let show_divider = true;
+
+let blocks: Vec&lt;SlackBlock&gt; = slack_blocks![
+    SlackHeaderBlock::new(pt!("Weekly report")),
+    optionally(show_divider =&gt; SlackDividerBlock::new()),
+    ..(1..=3).map(|n| SlackSectionBlock::new().with_text(md!("Item {}", n))),
+];
+
+assert_eq!(blocks.len(), 5);</code></pre>
+<ul>
+<li>A bare expression is pushed via <code>.into()</code>.</li>
+<li><code>optionally(pred =&gt; item)</code> converts and pushes <code>item</code> the same way a bare
+item does, only when <code>pred</code> is true; neither <code>pred</code> nor <code>item</code> is
+evaluated when it is false.</li>
+<li><code>..iter</code> splices every element of an iterator or <code>Vec</code> in, each converted
+via <code>.into()</code> — useful for building a run of blocks from data instead of
+writing them out by hand, or for spreading in blocks assembled elsewhere,
+as in <a href="#templates">Templates</a> below.</li>
+</ul>
+<p>These forms mix freely in one list. An older <code>some(item)</code> / <code>some_into(item)</code>
+/ <code>optionally_into(pred =&gt; item)</code> syntax still works and appears throughout
+older code and examples; prefer the bare form above in new code.</p>
+<p>One limit worth knowing up front: a bare <code>md!(..)</code> or <code>pt!(..)</code> call cannot
+be a list item directly, because its expansion already ends in an untyped
+<code>.into()</code> and the compiler has nothing left to infer the item type from
+(<code>E0283</code>). This only matters for a list whose items are text objects
+themselves, such as a context block’s elements or a section’s fields — give
+the list an explicit element type instead, as in
+<code>SlackContextBlock::new(vec![md!("hi")])</code> or
+<code>.with_fields(vec![md!("hi")])</code>, both used below.</p>
+<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
+<p>A section block carries a text object, optional fields (short text/value
+pairs laid out in a grid), and an optional accessory element:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let section = SlackSectionBlock::new()
+    .with_text(md!("*Deploy status*: all systems green"))
+    .with_fields(vec![md!("*Region:*\nus-east-1"), md!("*Duration:*\n42s")])
+    .with_accessory(
+        SlackBlockButtonElement::new("view-details".into(), pt!("Details")).into(),
+    );
+
+let block: SlackBlock = section.into();</code></pre>
+<h2 id="actions-and-inputs"><a class="header" href="#actions-and-inputs">Actions and inputs</a></h2>
+<p>Action blocks hold interactive elements — buttons, selects, pickers. Input
+blocks pair one element with a required label, for use in modals.</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let approve = SlackBlockButtonElement::new("approve".into(), pt!("Approve"))
+    .with_style(SlackBlockButtonStyle::Primary);
+let deny = SlackBlockButtonElement::new("deny".into(), pt!("Deny"))
+    .with_style(SlackBlockButtonStyle::Danger);
+
+let actions: SlackBlock = SlackActionsBlock::new(slack_blocks![approve, deny]).into();
+
+let region_select = SlackBlockStaticSelectElement::new("region".into())
+    .with_placeholder(pt!("Choose a region"))
+    .with_options(vec![
+        SlackBlockChoiceItem::new("US East".into(), "us-east-1".into()),
+        SlackBlockChoiceItem::new("EU West".into(), "eu-west-1".into()),
+    ]);
+
+let date_picker = SlackBlockDatePickerElement::new("deploy-date".into())
+    .with_placeholder(pt!("Pick a date"));
+
+let date_input: SlackBlock =
+    SlackInputBlock::new("Deploy date".into(), date_picker.into()).into();
+
+let _ = (actions, region_select, date_input);</code></pre>
+<h2 id="context"><a class="header" href="#context">Context</a></h2>
+<p>Context blocks hold a small run of text and image elements, usually shown in
+a muted style below other content. As noted above, its element list needs an
+explicit element type, so bare <code>md!</code>/<code>pt!</code> calls work directly inside
+<code>vec![...]</code> without going through <code>slack_blocks!</code>:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let context: SlackBlock =
+    SlackContextBlock::new(vec![md!("Posted by "), pt!("the release bot")]).into();</code></pre>
+<h2 id="rich-text"><a class="header" href="#rich-text">Rich text</a></h2>
+<p>Rich text blocks are Slack’s structured formatting model: sections made of
+inline runs (text, links, users, emoji, …), lists, quotes, and
+preformatted code. A bare string converts into an unstyled text run
+wherever an inline element is expected, and <code>SlackRichTextText</code> has
+<code>.bold()</code>, <code>.italic()</code>, <code>.strike()</code>, and <code>.code()</code> helpers for styled runs:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let section: SlackRichTextElement = SlackRichTextSection::new(vec![
+    "Build ".into(),
+    SlackRichTextText::new("passed".to_string()).bold().into(),
+    " ".into(),
+    SlackRichTextEmoji::new(SlackEmojiName("white_check_mark".into())).into(),
+])
+.into();
+
+let list: SlackRichTextElement = SlackRichTextList::new(
+    SlackRichTextListStyle::Bullet,
+    vec!["Unit tests".into(), "Integration tests".into()],
+)
+.into();
+
+let quote: SlackRichTextElement =
+    SlackRichTextQuote::new(vec!["Ship it.".into()]).into();
+
+let preformatted: SlackRichTextElement =
+    SlackRichTextPreformatted::new(vec!["cargo test --doc".into()]).into();
+
+let rich_text: SlackBlock =
+    SlackRichTextBlock::new(vec![section, list, quote, preformatted]).into();</code></pre>
+<p>The same bare-string conversion applies inside a <code>SlackRichTextList</code>’s items
+and a rich text table cell, below.</p>
+<h2 id="tables"><a class="header" href="#tables">Tables</a></h2>
+<p>Table blocks are a <code>Vec&lt;Vec&lt;SlackTableCell&gt;&gt;</code>. A bare string becomes a
+raw-text cell; a <code>SlackTableRichTextCell</code> holds rich text elements the same
+way a rich text block does:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let table: SlackBlock = SlackTableBlock::new(vec![
+    vec!["Service".into(), "Status".into()],
+    vec![
+        "api".into(),
+        SlackTableRichTextCell::new(vec![SlackRichTextSection::new(vec![
+            SlackRichTextText::new("healthy".to_string()).bold().into(),
+        ])
+        .into()])
+        .into(),
+    ],
+])
+.into();</code></pre>
+<h2 id="templates"><a class="header" href="#templates">Templates</a></h2>
+<p><code>SlackMessageTemplate</code> renders a full <code>SlackMessageContent</code>;
+<code>SlackBlocksTemplate</code> renders just a <code>Vec&lt;SlackBlock&gt;</code> meant to be spread
+into a larger message with <code>..</code>. A typical template takes its parameters as
+a struct built with <code>rsb_derive::Builder</code>:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+use rsb_derive::Builder;
+
+#[derive(Debug, Clone, Builder)]
+struct DeploySummaryParams {
+    service: String,
+    ok: bool,
+}
+
+impl SlackBlocksTemplate for DeploySummaryParams {
+    fn render_template(&amp;self) -&gt; Vec&lt;SlackBlock&gt; {
+        slack_blocks![
+            SlackDividerBlock::new(),
+            SlackContextBlock::new(vec![md!("Deployed by the release bot")]),
+        ]
     }
+}
 
-    // Define our welcome message template using block macros, a trait and models from the library
-    impl SlackMessageTemplate for WelcomeMessageTemplateParams {
-        fn render_template(&amp;self) -&gt; SlackMessageContent {
-            SlackMessageContent::new()
-                .with_text(format!("Hey {}", self.user_id.to_slack_format()))
-                .with_blocks(slack_blocks![
-                    some_into(
-                        SlackSectionBlock::new()
-                            .with_text(md!("Hey {}", self.user_id.to_slack_format()))
-                    ),
-                    some_into(SlackDividerBlock::new()),
-                    some_into(SlackImageBlock::new(
-                        "https://www.gstatic.com/webp/gallery3/2_webp_ll.png".into(),
-                        "Test Image".into()
-                    )),
-                    some_into(SlackHeaderBlock::new(
-                        pt!("Simple header")
-                    )),
-                    some_into(SlackActionsBlock::new(slack_blocks![some_into(
-                        SlackBlockButtonElement::new(
-                            "simple-message-button".into(),
-                            pt!("Simple button text")
-                        )
-                    )]))
-                ])
-        }
+#[derive(Debug, Clone, Builder)]
+struct WelcomeMessageParams {
+    user_id: SlackUserId,
+}
+
+impl SlackMessageTemplate for WelcomeMessageParams {
+    fn render_template(&amp;self) -&gt; SlackMessageContent {
+        let footer = DeploySummaryParams::new("api".into(), true);
+
+        SlackMessageContent::new()
+            .with_text(format!("Hey {}", self.user_id.to_slack_format()))
+            .with_blocks(slack_blocks![
+                SlackSectionBlock::new()
+                    .with_text(md!("Hey {}, welcome!", self.user_id.to_slack_format())),
+                ..footer.render_template(),
+            ])
     }
+}
 
-    // Use it
-    let message = WelcomeMessageTemplateParams::new("some-slack-uid".into());
+let message = WelcomeMessageParams::new("U1234".into());
+let content = message.render_template();
+assert_eq!(content.blocks.map(|b| b.len()), Some(3));</code></pre>
+<h2 id="views-and-modals"><a class="header" href="#views-and-modals">Views and modals</a></h2>
+<p>A modal is a <code>SlackModalView</code>: a title, a list of blocks (typically inputs),
+and optional submit/close button text. Opening one requires a <code>trigger_id</code>
+from the interaction that triggered it — a button click or a shortcut
+invocation, not something you can obtain outside of a live request. Publishing
+a home tab view uses <code>views.publish</code> and a user id instead:</p>
+<pre><code class="language-rust no_run noplaypen">use slack_morphism::prelude::*;
 
-    let post_chat_req =
-        SlackApiChatPostMessageRequest::new("#general".into(), message.render_template());
+<span class="boring">#[tokio::main]
+</span><span class="boring">async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
+</span>let client = SlackClient::new(SlackClientHyperConnector::new()?);
+let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
+let session = client.open_session(&amp;token);
 
-    Ok(())
-}</code></pre>
-<p>Look other examples in examples/templates.rs.</p>
+let name_input = SlackBlockPlainTextInputElement::new("name".into());
+
+let modal = SlackModalView::new(
+    "Deploy".into(),
+    vec![SlackInputBlock::new("Service name".into(), name_input.into()).into()],
+)
+.with_submit(pt!("Deploy"));
+
+let open_request = SlackApiViewsOpenRequest::new(
+    SlackTriggerId("123.456.abcdef".into()),
+    SlackView::Modal(modal),
+);
+session.views_open(&amp;open_request).await?;
+
+let home = SlackHomeView::new(vec![SlackSectionBlock::new()
+    .with_text(md!("Welcome to your home tab."))
+    .into()]);
+
+let publish_request =
+    SlackApiViewsPublishRequest::new(SlackUserId("U1234".into()), SlackView::Home(home));
+session.views_publish(&amp;publish_request).await?;
+<span class="boring">Ok(())
+</span><span class="boring">}</span></code></pre>
+<h2 id="troubleshooting-invalid_blocks"><a class="header" href="#troubleshooting-invalid_blocks">Troubleshooting <code>invalid_blocks</code></a></h2>
+<p>Slack validates blocks server-side and returns <code>invalid_blocks</code> with little
+detail beyond that. The usual causes:</p>
+<ul>
+<li><strong>Markdown where plain text is required.</strong> Header text, button labels,
+input labels, and similar <code>SlackBlockPlainTextOnly</code> fields do not render
+<code>mrkdwn</code> syntax; passing text with <code>*bold*</code> or a link in one of them either
+shows the literal asterisks or is rejected outright, depending on the
+field.</li>
+<li><strong>Text over 3000 characters.</strong> Section and context text objects have a
+3000-character limit; button and option text has a much smaller one (75
+characters for a button label).</li>
+<li><strong>More than 50 blocks in one message</strong>, or more than 100 in a modal or
+home tab.</li>
+<li><strong>A missing or duplicate <code>action_id</code>.</strong> Every interactive element needs an
+<code>action_id</code> unique within its view or message; the button, select, and
+input constructors above all take it as their first argument for this
+reason.</li>
+</ul>
+<p>When none of the above explains it, the fastest way to isolate a bad block is
+to paste the JSON from
+<a href="https://app.slack.com/block-kit-builder">Block Kit Builder</a> straight into
+<code>serde_json::from_str::&lt;Vec&lt;SlackBlock&gt;&gt;</code>, confirm it deserializes and
+matches what you expected, then compare it field by field against the blocks
+you built:</p>
+<pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
+
+let payload = r#"[
+    {
+        "type": "section",
+        "text": { "type": "mrkdwn", "text": "A message *with some bold text*." }
+    }
+]"#;
+
+let blocks: Vec&lt;SlackBlock&gt; = serde_json::from_str(payload)?;
+assert_eq!(blocks.len(), 1);
+<span class="boring">Ok::&lt;(), serde_json::Error&gt;(())</span></code></pre>
+<h2 id="more-examples"><a class="header" href="#more-examples">More examples</a></h2>
+<p><code>examples/blocks_showcase.rs</code> posts one message per block family covered on
+this page and prints a modal view. <code>examples/client.rs</code> shows a complete,
+runnable client setup including authentication. <code>examples/socket_mode.rs</code>
+shows handling interactions (button clicks, view submissions) that come back
+from the blocks you post.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="send-slack-webhook-messages"><a class="header" href="#send-slack-webhook-messages">Send Slack Webhook Messages</a></h1>
 <p>You can use <code>client..post_webhook_message</code> to post <a href="https://api.slack.com/messaging/webhooks">Slack Incoming Webhook</a> messages:</p>
