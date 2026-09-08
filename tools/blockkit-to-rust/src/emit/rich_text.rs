@@ -3,22 +3,152 @@
 
 use slack_morphism::prelude::*;
 
-use crate::emit::stub;
 use crate::leaf;
 use crate::raw;
-use crate::writer::{Call, Expr};
+use crate::writer::{Call, Expr, ListKind};
 use crate::Ctx;
 
 pub fn emit_slack_rich_text_block(v: &SlackRichTextBlock, ctx: &mut Ctx) -> Expr {
-    stub(v, "rich text block", ctx)
+    let SlackRichTextBlock { block_id, elements } = v;
+    let mut call = Call::new("SlackRichTextBlock::new").arg(Expr::List {
+        kind: ListKind::SlackBlocks,
+        items: elements
+            .iter()
+            .map(|e| emit_slack_rich_text_element(e, ctx))
+            .collect(),
+    });
+    if let Some(x) = block_id {
+        call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    call.into()
 }
 
+/// Every arm is spelled out: a new `SlackRichTextElement` variant must fail
+/// to compile here rather than fall into a silent default.
 pub fn emit_slack_rich_text_element(v: &SlackRichTextElement, ctx: &mut Ctx) -> Expr {
-    stub(v, "rich text element", ctx)
+    match v {
+        SlackRichTextElement::Section(e) => emit_slack_rich_text_section(e, ctx),
+        SlackRichTextElement::List(e) => emit_slack_rich_text_list(e, ctx),
+        SlackRichTextElement::Preformatted(e) => emit_slack_rich_text_preformatted(e, ctx),
+        SlackRichTextElement::Quote(e) => emit_slack_rich_text_quote(e, ctx),
+    }
 }
 
 pub fn emit_slack_rich_text_inline_content(v: &SlackRichTextInlineContent, ctx: &mut Ctx) -> Expr {
-    stub(v, "rich text inline content", ctx)
+    match v {
+        SlackRichTextInlineContent::RichText(b) => emit_slack_rich_text_block(b, ctx),
+    }
+}
+
+pub fn emit_slack_rich_text_section(v: &SlackRichTextSection, ctx: &mut Ctx) -> Expr {
+    let SlackRichTextSection { elements } = v;
+    Call::new("SlackRichTextSection::new")
+        .arg(Expr::List {
+            kind: ListKind::SlackBlocks,
+            items: elements
+                .iter()
+                .map(|e| emit_slack_rich_text_inline_element(e, ctx))
+                .collect(),
+        })
+        .into()
+}
+
+pub fn emit_slack_rich_text_list_style(v: &SlackRichTextListStyle) -> Expr {
+    match v {
+        SlackRichTextListStyle::Bullet => leaf::unit_variant("SlackRichTextListStyle", "Bullet"),
+        SlackRichTextListStyle::Ordered => leaf::unit_variant("SlackRichTextListStyle", "Ordered"),
+    }
+}
+
+/// Every arm is spelled out: a new `SlackRichTextListElement` variant must
+/// fail to compile here rather than fall into a silent default.
+pub fn emit_slack_rich_text_list_element(v: &SlackRichTextListElement, ctx: &mut Ctx) -> Expr {
+    match v {
+        SlackRichTextListElement::Section(section) => match collapsible_text(section) {
+            Some(text) => leaf::str_lit(text),
+            None => emit_slack_rich_text_section(section, ctx),
+        },
+    }
+}
+
+pub fn emit_slack_rich_text_list(v: &SlackRichTextList, ctx: &mut Ctx) -> Expr {
+    let SlackRichTextList {
+        style,
+        elements,
+        indent,
+        offset,
+        border,
+    } = v;
+    let mut call = Call::new("SlackRichTextList::new")
+        .arg(emit_slack_rich_text_list_style(style))
+        .arg(Expr::List {
+            kind: ListKind::SlackBlocks,
+            items: elements
+                .iter()
+                .map(|e| emit_slack_rich_text_list_element(e, ctx))
+                .collect(),
+        });
+    if let Some(x) = indent {
+        call = call.set("with_indent", leaf::u64_lit(*x));
+    }
+    if let Some(x) = offset {
+        call = call.set("with_offset", leaf::u64_lit(*x));
+    }
+    if let Some(x) = border {
+        call = call.set("with_border", leaf::u64_lit(*x));
+    }
+    call.into()
+}
+
+pub fn emit_slack_rich_text_preformatted(v: &SlackRichTextPreformatted, ctx: &mut Ctx) -> Expr {
+    let SlackRichTextPreformatted {
+        elements,
+        border,
+        language,
+    } = v;
+    let mut call = Call::new("SlackRichTextPreformatted::new").arg(Expr::List {
+        kind: ListKind::SlackBlocks,
+        items: elements
+            .iter()
+            .map(|e| emit_slack_rich_text_inline_element(e, ctx))
+            .collect(),
+    });
+    if let Some(x) = border {
+        call = call.set("with_border", leaf::u64_lit(*x));
+    }
+    if let Some(x) = language {
+        call = call.set("with_language", leaf::value_str(x));
+    }
+    call.into()
+}
+
+pub fn emit_slack_rich_text_quote(v: &SlackRichTextQuote, ctx: &mut Ctx) -> Expr {
+    let SlackRichTextQuote { elements, border } = v;
+    let mut call = Call::new("SlackRichTextQuote::new").arg(Expr::List {
+        kind: ListKind::SlackBlocks,
+        items: elements
+            .iter()
+            .map(|e| emit_slack_rich_text_inline_element(e, ctx))
+            .collect(),
+    });
+    if let Some(x) = border {
+        call = call.set("with_border", leaf::u64_lit(*x));
+    }
+    call.into()
+}
+
+/// The single unstyled run a bare `&str` would produce, if that is all the
+/// section holds. `From<&str>` for the list element and the table cell both
+/// build exactly this shape (`kit.rs:1234`, `:1581`), so collapsing is
+/// lossless.
+pub(crate) fn collapsible_text(section: &SlackRichTextSection) -> Option<&str> {
+    let SlackRichTextSection { elements } = section;
+    match elements.as_slice() {
+        [SlackRichTextInlineElement::Text(SlackRichTextText { text, style: None })] => {
+            Some(text.as_str())
+        }
+        _ => None,
+    }
 }
 
 /// `bold`, `italic`, `strike` and `code` have chainable helpers on
@@ -352,6 +482,44 @@ mod tests {
         assert_eq!(
             out,
             "SlackRichTextInlineElement::Unknown(json!({ \"type\": \"made_up\", \"x\": 1 }))"
+        );
+    }
+
+    #[test]
+    fn spec_example_three_rich_text_renders_verbatim() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let block: SlackBlock = serde_json::from_value(json!({
+            "type": "rich_text", "elements": [
+              { "type": "rich_text_section", "elements": [
+                { "type": "text", "text": "Build " },
+                { "type": "text", "text": "passed", "style": { "bold": true } },
+                { "type": "text", "text": " for " },
+                { "type": "link", "url": "https://ci.example.com/run/42", "text": "run 42" } ] },
+              { "type": "rich_text_list", "style": "bullet", "elements": [
+                { "type": "rich_text_section", "elements": [ { "type": "text", "text": "unit tests" } ] },
+                { "type": "rich_text_section", "elements": [ { "type": "text", "text": "clippy" } ] } ] } ]
+        }))
+        .expect("parses");
+        let mut w = crate::writer::Writer::new();
+        w.open("x");
+        let expected = "\
+SlackRichTextBlock::new(slack_blocks![
+        SlackRichTextSection::new(slack_blocks![
+            \"Build \",
+            SlackRichTextText::new(\"passed\".into()).bold(),
+            \" for \",
+            SlackRichTextLink::new(\"https://ci.example.com/run/42\".into())
+                .with_text(\"run 42\".into()),
+        ]),
+        SlackRichTextList::new(
+            SlackRichTextListStyle::Bullet,
+            slack_blocks![\"unit tests\", \"clippy\"],
+        ),
+    ])";
+        assert_eq!(
+            crate::emit::blocks::emit_slack_block(&block, &mut ctx).render(&mut w),
+            expected
         );
     }
 }
