@@ -67,6 +67,48 @@ pub fn datetime_expr(dt: &SlackDateTime, ctx: &mut Ctx) -> Expr {
     ))
 }
 
+/// `pt!(t)` when the object carries nothing but text, the builder form
+/// otherwise. Under `emoji_true_is_default` an `"emoji": true` counts as
+/// nothing, which is what keeps Block Kit Builder labels compact.
+pub fn plain_text(v: &SlackBlockPlainText, ctx: &mut Ctx) -> Expr {
+    let SlackBlockPlainText { text, emoji } = v;
+    let emoji_is_noise = ctx.options.emoji_true_is_default && *emoji == Some(true);
+    if emoji.is_none() || emoji_is_noise {
+        return Expr::Atom(format!("pt!({})", quoted(text)));
+    }
+    let mut call = Call::new("SlackBlockPlainText::new").arg(value_str(text));
+    if let Some(e) = emoji {
+        call = call.set("with_emoji", bool_lit(*e));
+    }
+    Expr::suffixed(call.into(), ".into()")
+}
+
+pub fn markdown_text(v: &SlackBlockMarkDownText, ctx: &mut Ctx) -> Expr {
+    let SlackBlockMarkDownText { text, verbatim } = v;
+    let _ = ctx;
+    if verbatim.is_none() {
+        return Expr::Atom(format!("md!({})", quoted(text)));
+    }
+    let mut call = Call::new("SlackBlockMarkDownText::new").arg(value_str(text));
+    if let Some(v) = verbatim {
+        call = call.set("with_verbatim", bool_lit(*v));
+    }
+    Expr::suffixed(call.into(), ".into()")
+}
+
+pub fn block_text(v: &SlackBlockText, ctx: &mut Ctx) -> Expr {
+    match v {
+        SlackBlockText::Plain(t) => plain_text(t, ctx),
+        SlackBlockText::MarkDown(t) => markdown_text(t, ctx),
+    }
+}
+
+/// `SlackBlockPlainTextOnly` keeps its inner value private, so it is read
+/// through the crate's own `From` impl rather than a new accessor.
+pub fn plain_text_only(v: &SlackBlockPlainTextOnly, ctx: &mut Ctx) -> Expr {
+    block_text(&SlackBlockText::from(v.clone()), ctx)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,5 +153,59 @@ mod tests {
             unit_variant("SlackBlockButtonStyle", "Primary").flat(),
             "SlackBlockButtonStyle::Primary"
         );
+    }
+
+    #[test]
+    fn emoji_true_is_pt_under_default_option() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let text = SlackBlockPlainText::new("Approve".into()).with_emoji(true);
+        assert_eq!(plain_text(&text, &mut ctx).flat(), "pt!(\"Approve\")");
+    }
+
+    #[test]
+    fn emoji_true_is_builder_form_when_exact() {
+        let options = Options {
+            emoji_true_is_default: false,
+            ..Options::default()
+        };
+        let mut ctx = Ctx::new(&options);
+        let text = SlackBlockPlainText::new("Approve".into()).with_emoji(true);
+        assert_eq!(
+            plain_text(&text, &mut ctx).flat(),
+            "SlackBlockPlainText::new(\"Approve\".into()).with_emoji(true).into()"
+        );
+    }
+
+    #[test]
+    fn emoji_false_always_takes_the_builder_form() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let text = SlackBlockPlainText::new("Approve".into()).with_emoji(false);
+        assert_eq!(
+            plain_text(&text, &mut ctx).flat(),
+            "SlackBlockPlainText::new(\"Approve\".into()).with_emoji(false).into()"
+        );
+    }
+
+    #[test]
+    fn markdown_with_verbatim_takes_the_builder_form() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let plain = SlackBlockMarkDownText::new("a *b*".into());
+        assert_eq!(markdown_text(&plain, &mut ctx).flat(), "md!(\"a *b*\")");
+        let verbatim = SlackBlockMarkDownText::new("a *b*".into()).with_verbatim(true);
+        assert_eq!(
+            markdown_text(&verbatim, &mut ctx).flat(),
+            "SlackBlockMarkDownText::new(\"a *b*\".into()).with_verbatim(true).into()"
+        );
+    }
+
+    #[test]
+    fn plain_text_only_reads_through_the_existing_from_impl() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let only: SlackBlockPlainTextOnly = "Title".into();
+        assert_eq!(plain_text_only(&only, &mut ctx).flat(), "pt!(\"Title\")");
     }
 }
