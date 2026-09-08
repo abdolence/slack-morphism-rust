@@ -29,6 +29,7 @@
         <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="assets/blockkit-widget-462ca711.css">
 
 
         <!-- Provide site root and default themes to javascript -->
@@ -36,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a182d523.js";
+            window.path_to_searchindex_js = "searchindex-2ea871d4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-132cf9d3.js"></script>
@@ -669,6 +670,21 @@ let payload = r#"[
 let blocks: Vec&lt;SlackBlock&gt; = serde_json::from_str(payload)?;
 assert_eq!(blocks.len(), 1);
 <span class="boring">Ok::&lt;(), serde_json::Error&gt;(())</span></code></pre>
+<h2 id="convert-block-kit-builder-json"><a class="header" href="#convert-block-kit-builder-json">Convert Block Kit Builder JSON</a></h2>
+<p>Paste the JSON from
+<a href="https://app.slack.com/block-kit-builder">Block Kit Builder</a> below and press
+Convert (or Ctrl+Enter) to get the equivalent builder code. The converter
+runs entirely in your browser: nothing is uploaded anywhere. It accepts a
+Builder message (<code>{"blocks": [...]}</code>), a bare block array, a single block, or
+a modal or home view; anything the crate cannot model is reported as an
+error rather than guessed at.</p>
+<div id="blockkit-to-rust" data-assets="blockkit/">The converter runs on the
+<a href="https://slack-rust.abdolence.dev/block-kit-support.html">documentation
+site</a>; open this page there to use it.</div>
+
+<p>The same conversion is available as a command-line tool:</p>
+<pre><code class="language-sh">cargo run --manifest-path tools/blockkit-to-rust/Cargo.toml --bin bk2rs &lt; message.json
+</code></pre>
 <h2 id="more-examples"><a class="header" href="#more-examples">More examples</a></h2>
 <p><code>examples/blocks_showcase.rs</code> posts one message per block family covered on
 this page and prints a modal view. <code>examples/client.rs</code> shows a complete,
@@ -1419,6 +1435,7 @@ let listener_environment = Arc::new(
         <script src="book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="assets/blockkit-widget-17219930.js"></script>
 
         <script>
         window.addEventListener('load', function() {
