@@ -42,9 +42,9 @@ pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut 
         SlackSectionBlockElement::MultiChannelsSelect(e) => {
             emit_slack_block_multi_channels_select_element(e, ctx)
         }
-        SlackSectionBlockElement::Overflow(e) => stub(e, "overflow element", ctx),
-        SlackSectionBlockElement::DatePicker(e) => stub(e, "date picker element", ctx),
-        SlackSectionBlockElement::TimePicker(e) => stub(e, "time picker element", ctx),
+        SlackSectionBlockElement::Overflow(e) => emit_slack_block_overflow_element(e, ctx),
+        SlackSectionBlockElement::DatePicker(e) => emit_slack_block_date_picker_element(e, ctx),
+        SlackSectionBlockElement::TimePicker(e) => emit_slack_block_time_picker_element(e, ctx),
         SlackSectionBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
         SlackSectionBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
         SlackSectionBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
@@ -59,10 +59,12 @@ pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut 
 pub fn emit_slack_action_block_element(v: &SlackActionBlockElement, ctx: &mut Ctx) -> Expr {
     match v {
         SlackActionBlockElement::Button(e) => emit_slack_block_button_element(e, ctx),
-        SlackActionBlockElement::Overflow(e) => stub(e, "overflow element", ctx),
-        SlackActionBlockElement::DatePicker(e) => stub(e, "date picker element", ctx),
-        SlackActionBlockElement::TimePicker(e) => stub(e, "time picker element", ctx),
-        SlackActionBlockElement::DateTimePicker(e) => stub(e, "date time picker element", ctx),
+        SlackActionBlockElement::Overflow(e) => emit_slack_block_overflow_element(e, ctx),
+        SlackActionBlockElement::DatePicker(e) => emit_slack_block_date_picker_element(e, ctx),
+        SlackActionBlockElement::TimePicker(e) => emit_slack_block_time_picker_element(e, ctx),
+        SlackActionBlockElement::DateTimePicker(e) => {
+            emit_slack_block_date_time_picker_element(e, ctx)
+        }
         SlackActionBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
         SlackActionBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
         SlackActionBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
@@ -125,9 +127,11 @@ pub fn emit_slack_input_block_element(v: &SlackInputBlockElement, ctx: &mut Ctx)
         SlackInputBlockElement::MultiChannelsSelect(e) => {
             emit_slack_block_multi_channels_select_element(e, ctx)
         }
-        SlackInputBlockElement::DatePicker(e) => stub(e, "date picker element", ctx),
-        SlackInputBlockElement::TimePicker(e) => stub(e, "time picker element", ctx),
-        SlackInputBlockElement::DateTimePicker(e) => stub(e, "date time picker element", ctx),
+        SlackInputBlockElement::DatePicker(e) => emit_slack_block_date_picker_element(e, ctx),
+        SlackInputBlockElement::TimePicker(e) => emit_slack_block_time_picker_element(e, ctx),
+        SlackInputBlockElement::DateTimePicker(e) => {
+            emit_slack_block_date_time_picker_element(e, ctx)
+        }
         SlackInputBlockElement::PlainTextInput(e) => stub(e, "plain text input element", ctx),
         SlackInputBlockElement::NumberInput(e) => stub(e, "number input element", ctx),
         SlackInputBlockElement::UrlInput(e) => stub(e, "url input element", ctx),
@@ -745,32 +749,123 @@ pub fn emit_slack_block_multi_channels_select_element(
 }
 
 pub fn emit_slack_block_overflow_element(v: &SlackBlockOverflowElement, ctx: &mut Ctx) -> Expr {
-    stub(v, "overflow element", ctx)
+    let SlackBlockOverflowElement {
+        action_id,
+        options,
+        confirm,
+    } = v;
+    let mut call = Call::new("SlackBlockOverflowElement::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(Expr::List {
+            kind: ListKind::Vec,
+            items: options
+                .iter()
+                .map(|o| emit_slack_block_choice_item(o, ctx, leaf::plain_text_only))
+                .collect(),
+        });
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_date_picker_element(
     v: &SlackBlockDatePickerElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "date picker element", ctx)
+    let SlackBlockDatePickerElement {
+        action_id,
+        placeholder,
+        initial_date,
+        confirm,
+        focus_on_load,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockDatePickerElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_date {
+        call = call.set("with_initial_date", leaf::value_str(x));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_time_picker_element(
     v: &SlackBlockTimePickerElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "time picker element", ctx)
+    let SlackBlockTimePickerElement {
+        action_id,
+        initial_time,
+        confirm,
+        focus_on_load,
+        placeholder,
+        timezone,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockTimePickerElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = initial_time {
+        call = call.set("with_initial_time", leaf::value_str(x));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = timezone {
+        call = call.set("with_timezone", leaf::value_str(x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_date_time_picker_element(
     v: &SlackBlockDateTimePickerElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "date time picker element", ctx)
+    let SlackBlockDateTimePickerElement {
+        action_id,
+        initial_date_time,
+        confirm,
+        focus_on_load,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockDateTimePickerElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = initial_date_time {
+        call = call.set("with_initial_date_time", leaf::datetime_expr(x, ctx));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
-pub fn emit_slack_dispatch_action_config(v: &SlackDispatchActionConfig, ctx: &mut Ctx) -> Expr {
-    stub(v, "dispatch action config", ctx)
+pub fn emit_slack_dispatch_action_config(v: &SlackDispatchActionConfig, _ctx: &mut Ctx) -> Expr {
+    let SlackDispatchActionConfig { trigger_actions_on } = v;
+    let mut call = Call::new("SlackDispatchActionConfig::new");
+    if let Some(x) = trigger_actions_on {
+        call = call.set(
+            "with_trigger_actions_on",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x.iter().map(emit_slack_dispatch_action_trigger).collect(),
+            },
+        );
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_plain_text_input_element(
@@ -934,5 +1029,21 @@ SlackActionsBlock::new(slack_blocks![
             "{out}"
         );
         assert!(!out.contains("serde_json::from_value"), "{out}");
+    }
+
+    #[test]
+    fn a_datetime_picker_renders_its_timestamp_as_a_parse_call() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let element: SlackActionBlockElement = serde_json::from_value(json!({
+            "type": "datetimepicker", "action_id": "a", "initial_date_time": 1577839362
+        }))
+        .expect("parses");
+        assert_eq!(
+            emit_slack_action_block_element(&element, &mut ctx).flat(),
+            "SlackBlockDateTimePickerElement::new(\"a\".into())\
+             .with_initial_date_time(SlackDateTime(\"2020-01-01T00:42:42Z\".parse()?))"
+        );
+        assert!(ctx.needs_result);
     }
 }
