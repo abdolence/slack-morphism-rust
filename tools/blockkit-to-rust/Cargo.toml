@@ -29,3 +29,9 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+# rustc 1.98 emits bulk-memory instructions on wasm32-unknown-unknown by
+# default; wasm-pack's bundled wasm-opt (binaryen 117) rejects them unless
+# told to accept the feature.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--enable-bulk-memory"]
