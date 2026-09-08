@@ -37,7 +37,7 @@ pub const FIXTURE_KINDS: &[(&str, FixtureKind)] = &[
 /// Fixtures whose shapes no visitor hand-builds yet, tagged with the emitter
 /// area that will take them. An entry is deleted when its visitors land, so the
 /// array is empty once every block, element and view has a hand-written visitor.
-pub const SKIPPED_FIXTURES: &[(&str, &str)] = &[("slack_home_view.json", "views")];
+pub const SKIPPED_FIXTURES: &[(&str, &str)] = &[];
 
 pub fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../src/models/blocks/fixtures")

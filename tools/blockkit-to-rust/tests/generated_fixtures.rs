@@ -4,7 +4,7 @@
 //! that the result serializes to the value the crate parsed from the fixture.
 //! A test that fails to compile is an emitter bug in the open.
 
-use blockkit_to_rust::testkit::{assert_same, parse_block, parse_blocks, Normalize};
+use blockkit_to_rust::testkit::{as_home_view, assert_same, parse_block, parse_blocks, Normalize};
 
 #[rustfmt::skip]
 #[test]
@@ -157,6 +157,42 @@ fn slack_conversations_select_with_filter_exact() -> Result<(), Box<dyn std::err
 
     const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_conversations_select_with_filter.json");
     assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_home_view_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let view: SlackView = SlackView::Home(
+        SlackHomeView::new(slack_blocks![
+            SlackRichTextBlock::new(slack_blocks![SlackRichTextSection::new(slack_blocks!["hi!"])])
+                .with_block_id("test-block-id".into()),
+        ])
+        .with_callback_id("test-callback-id".into()),
+    );
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_home_view.json");
+    assert_same(&view, &as_home_view(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_home_view_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let view: SlackView = SlackView::Home(
+        SlackHomeView::new(slack_blocks![
+            SlackRichTextBlock::new(slack_blocks![SlackRichTextSection::new(slack_blocks!["hi!"])])
+                .with_block_id("test-block-id".into()),
+        ])
+        .with_callback_id("test-callback-id".into()),
+    );
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_home_view.json");
+    assert_same(&view, &as_home_view(FIXTURE)?, Normalize::Exact)?;
     Ok(())
 }
 
