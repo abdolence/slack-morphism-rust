@@ -18,14 +18,18 @@ pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut 
         SlackSectionBlockElement::Button(e) => emit_slack_block_button_element(e, ctx),
         SlackSectionBlockElement::StaticSelect(e) => emit_slack_block_static_select_element(e, ctx),
         SlackSectionBlockElement::MultiStaticSelect(e) => {
-            stub(e, "multi static select element", ctx)
+            emit_slack_block_multi_static_select_element(e, ctx)
         }
-        SlackSectionBlockElement::ExternalSelect(e) => stub(e, "external select element", ctx),
+        SlackSectionBlockElement::ExternalSelect(e) => {
+            emit_slack_block_external_select_element(e, ctx)
+        }
         SlackSectionBlockElement::MultiExternalSelect(e) => {
-            stub(e, "multi external select element", ctx)
+            emit_slack_block_multi_external_select_element(e, ctx)
         }
-        SlackSectionBlockElement::UsersSelect(e) => stub(e, "users select element", ctx),
-        SlackSectionBlockElement::MultiUsersSelect(e) => stub(e, "multi users select element", ctx),
+        SlackSectionBlockElement::UsersSelect(e) => emit_slack_block_users_select_element(e, ctx),
+        SlackSectionBlockElement::MultiUsersSelect(e) => {
+            emit_slack_block_multi_users_select_element(e, ctx)
+        }
         SlackSectionBlockElement::ConversationsSelect(e) => {
             stub(e, "conversations select element", ctx)
         }
@@ -63,8 +67,10 @@ pub fn emit_slack_action_block_element(v: &SlackActionBlockElement, ctx: &mut Ct
         SlackActionBlockElement::RadioButtons(e) => stub(e, "radio buttons element", ctx),
         SlackActionBlockElement::Checkboxes(e) => stub(e, "checkboxes element", ctx),
         SlackActionBlockElement::StaticSelect(e) => emit_slack_block_static_select_element(e, ctx),
-        SlackActionBlockElement::ExternalSelect(e) => stub(e, "external select element", ctx),
-        SlackActionBlockElement::UsersSelect(e) => stub(e, "users select element", ctx),
+        SlackActionBlockElement::ExternalSelect(e) => {
+            emit_slack_block_external_select_element(e, ctx)
+        }
+        SlackActionBlockElement::UsersSelect(e) => emit_slack_block_users_select_element(e, ctx),
         SlackActionBlockElement::ConversationsSelect(e) => {
             stub(e, "conversations select element", ctx)
         }
@@ -90,13 +96,19 @@ pub fn emit_slack_context_block_element(v: &SlackContextBlockElement, ctx: &mut 
 pub fn emit_slack_input_block_element(v: &SlackInputBlockElement, ctx: &mut Ctx) -> Expr {
     match v {
         SlackInputBlockElement::StaticSelect(e) => emit_slack_block_static_select_element(e, ctx),
-        SlackInputBlockElement::MultiStaticSelect(e) => stub(e, "multi static select element", ctx),
-        SlackInputBlockElement::ExternalSelect(e) => stub(e, "external select element", ctx),
-        SlackInputBlockElement::MultiExternalSelect(e) => {
-            stub(e, "multi external select element", ctx)
+        SlackInputBlockElement::MultiStaticSelect(e) => {
+            emit_slack_block_multi_static_select_element(e, ctx)
         }
-        SlackInputBlockElement::UsersSelect(e) => stub(e, "users select element", ctx),
-        SlackInputBlockElement::MultiUsersSelect(e) => stub(e, "multi users select element", ctx),
+        SlackInputBlockElement::ExternalSelect(e) => {
+            emit_slack_block_external_select_element(e, ctx)
+        }
+        SlackInputBlockElement::MultiExternalSelect(e) => {
+            emit_slack_block_multi_external_select_element(e, ctx)
+        }
+        SlackInputBlockElement::UsersSelect(e) => emit_slack_block_users_select_element(e, ctx),
+        SlackInputBlockElement::MultiUsersSelect(e) => {
+            emit_slack_block_multi_users_select_element(e, ctx)
+        }
         SlackInputBlockElement::ConversationsSelect(e) => {
             stub(e, "conversations select element", ctx)
         }
@@ -330,35 +342,213 @@ pub fn emit_slack_block_multi_static_select_element(
     v: &SlackBlockMultiStaticSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "multi static select element", ctx)
+    let SlackBlockMultiStaticSelectElement {
+        action_id,
+        placeholder,
+        options,
+        option_groups,
+        initial_options,
+        confirm,
+        max_selected_items,
+        focus_on_load,
+    } = v;
+    let mut call = Call::new("SlackBlockMultiStaticSelectElement::new")
+        .arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = options {
+        call = call.set(
+            "with_options",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(|o| emit_slack_block_choice_item(o, ctx, leaf::plain_text_only))
+                    .collect(),
+            },
+        );
+    }
+    if let Some(x) = option_groups {
+        call = call.set(
+            "with_option_groups",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(|g| emit_slack_block_option_group(g, ctx, leaf::plain_text_only))
+                    .collect(),
+            },
+        );
+    }
+    if let Some(x) = initial_options {
+        call = call.set(
+            "with_initial_options",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(|o| emit_slack_block_choice_item(o, ctx, leaf::plain_text_only))
+                    .collect(),
+            },
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = max_selected_items {
+        call = call.set("with_max_selected_items", leaf::u64_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_external_select_element(
     v: &SlackBlockExternalSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "external select element", ctx)
+    let SlackBlockExternalSelectElement {
+        action_id,
+        placeholder,
+        initial_option,
+        confirm,
+        focus_on_load,
+        min_query_length,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockExternalSelectElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_option {
+        call = call.set(
+            "with_initial_option",
+            emit_slack_block_choice_item(x, ctx, leaf::plain_text_only),
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = min_query_length {
+        call = call.set("with_min_query_length", leaf::u64_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_multi_external_select_element(
     v: &SlackBlockMultiExternalSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "multi external select element", ctx)
+    let SlackBlockMultiExternalSelectElement {
+        action_id,
+        placeholder,
+        initial_options,
+        confirm,
+        max_selected_items,
+        focus_on_load,
+        min_query_length,
+    } = v;
+    let mut call = Call::new("SlackBlockMultiExternalSelectElement::new")
+        .arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_options {
+        call = call.set(
+            "with_initial_options",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x
+                    .iter()
+                    .map(|o| emit_slack_block_choice_item(o, ctx, leaf::plain_text_only))
+                    .collect(),
+            },
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = max_selected_items {
+        call = call.set("with_max_selected_items", leaf::u64_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    if let Some(x) = min_query_length {
+        call = call.set("with_min_query_length", leaf::u64_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_users_select_element(
     v: &SlackBlockUsersSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "users select element", ctx)
+    let SlackBlockUsersSelectElement {
+        action_id,
+        placeholder,
+        initial_user,
+        confirm,
+        focus_on_load,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockUsersSelectElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_user {
+        call = call.set("with_initial_user", leaf::value_str(x));
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_multi_users_select_element(
     v: &SlackBlockMultiUsersSelectElement,
     ctx: &mut Ctx,
 ) -> Expr {
-    stub(v, "multi users select element", ctx)
+    let SlackBlockMultiUsersSelectElement {
+        action_id,
+        placeholder,
+        initial_users,
+        confirm,
+        max_selected_items,
+        focus_on_load,
+    } = v;
+    let mut call =
+        Call::new("SlackBlockMultiUsersSelectElement::new").arg(leaf::value_str(action_id.value()));
+    if let Some(x) = placeholder {
+        call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
+    }
+    if let Some(x) = initial_users {
+        call = call.set(
+            "with_initial_users",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x.iter().map(|u| leaf::value_str(u)).collect(),
+            },
+        );
+    }
+    if let Some(x) = confirm {
+        call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
+    }
+    if let Some(x) = max_selected_items {
+        call = call.set("with_max_selected_items", leaf::u64_lit(*x));
+    }
+    if let Some(x) = focus_on_load {
+        call = call.set("with_focus_on_load", leaf::bool_lit(*x));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_conversation_filter(
@@ -530,6 +720,27 @@ SlackActionsBlock::new(slack_blocks![
             out,
             "SlackBlockButtonElement::new(\"a\".into(), pt!(\"T\")).with_value(\"v\".into())\
              .with_style(SlackBlockButtonStyle::Danger)"
+        );
+    }
+
+    #[test]
+    fn a_multi_static_select_emits_option_groups_as_a_vec() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let element: SlackInputBlockElement = serde_json::from_value(json!({
+            "type": "multi_static_select", "action_id": "a", "max_selected_items": 3,
+            "option_groups": [{
+                "label": { "type": "plain_text", "text": "G" },
+                "options": [{ "text": { "type": "plain_text", "text": "O" }, "value": "o" }]
+            }]
+        }))
+        .expect("parses");
+        assert_eq!(
+            emit_slack_input_block_element(&element, &mut ctx).flat(),
+            "SlackBlockMultiStaticSelectElement::new(\"a\".into())\
+             .with_option_groups(vec![SlackBlockOptionGroup::new(pt!(\"G\"), \
+             vec![SlackBlockChoiceItem::new(pt!(\"O\"), \"o\".into())])])\
+             .with_max_selected_items(3)"
         );
     }
 
