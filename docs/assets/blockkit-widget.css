@@ -1,0 +1,99 @@
+/* Uses only mdbook's per-theme custom properties, so the widget follows the
+   reader's theme without any JavaScript of its own. */
+
+.blockkit-widget {
+  margin: 1.5rem 0;
+}
+
+.blockkit-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.blockkit-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--mono-font, monospace);
+  font-size: 0.9em;
+  line-height: 1.4;
+  padding: 0.6rem;
+  color: var(--searchbar-fg);
+  background-color: var(--searchbar-bg);
+  border: 1px solid var(--searchbar-border-color);
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.blockkit-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.6rem 0;
+}
+
+.blockkit-convert {
+  padding: 0.4rem 1rem;
+  color: var(--fg);
+  background-color: var(--quote-bg);
+  border: 1px solid var(--quote-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.blockkit-convert:hover:not(:disabled) {
+  background-color: var(--theme-hover);
+}
+
+.blockkit-convert:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.blockkit-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9em;
+}
+
+.blockkit-output-wrap {
+  position: relative;
+}
+
+.blockkit-copy {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8em;
+  color: var(--fg);
+  background-color: var(--quote-bg);
+  border: 1px solid var(--quote-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.blockkit-error {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--quote-border);
+  background-color: var(--quote-bg);
+  color: var(--fg);
+}
+
+.blockkit-error:empty {
+  display: none;
+}
+
+.blockkit-warnings {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  font-size: 0.9em;
+  color: var(--icons);
+}
+
+.blockkit-warnings:empty {
+  display: none;
+}

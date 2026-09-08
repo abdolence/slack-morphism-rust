@@ -22,3 +22,15 @@ jobs:
       - run: cargo clippy --all-features -- -Dwarnings && cargo test --all-features
       - run: cargo check --no-default-features --features hyper
       - run: cargo check --no-default-features --features axum
+  blockkit-to-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+      - run: cargo fmt --manifest-path tools/blockkit-to-rust/Cargo.toml -- --check
+      - run: cargo clippy --manifest-path tools/blockkit-to-rust/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path tools/blockkit-to-rust/Cargo.toml
+      - run: cargo check --manifest-path tools/blockkit-to-rust/Cargo.toml --lib --target wasm32-unknown-unknown

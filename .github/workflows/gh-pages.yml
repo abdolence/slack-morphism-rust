@@ -18,6 +18,13 @@ jobs:
         uses: peaceiris/actions-mdbook@v2
         with:
           mdbook-version: 'latest'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install wasm-pack
+        run: curl -sSfL https://github.com/wasm-bindgen/wasm-pack/releases/download/v0.15.0/wasm-pack-v0.15.0-x86_64-unknown-linux-musl.tar.gz | sudo tar xz --strip-components=1 -C /usr/local/bin --wildcards '*/wasm-pack'
+      - name: Build converter
+        run: wasm-pack build tools/blockkit-to-rust --release --target web --no-typescript --no-pack --out-dir ../../docs/src/blockkit --out-name blockkit_to_rust
       - run: cd docs && mdbook build
       - name: Copy CNAME
         run: cp CNAME docs/output
