@@ -9,6 +9,42 @@ type expects, without writing `.into()` on every item by hand.
 Everything below is real, compiling code. Run it yourself from
 `examples/blocks_showcase.rs`, or copy any snippet directly.
 
+## From JSON to Rust
+
+Take a very simple block, as Slack's Block Kit Builder shows it:
+
+```json
+{
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "A message *with some bold text* and _some italicized text_."
+      }
+    }
+  ]
+}
+```
+
+The same block in type-safe Rust is one struct per JSON object, with the
+`type` tag implied by the struct, and `md!` standing in for the `mrkdwn`
+text object:
+
+```rust,noplaypen
+use slack_morphism::prelude::*;
+
+let blocks: Vec<SlackBlock> = slack_blocks![
+    SlackSectionBlock::new()
+        .with_text(md!("A message *with some bold text* and _some italicized text_.")),
+];
+```
+
+Every block, element and composition object follows this pattern: a JSON
+object becomes `SlackXxx::new(required fields)`, each optional key becomes a
+`.with_key(..)` call, and a JSON array of blocks or elements becomes a
+`slack_blocks![..]` list.
+
 ## Quick start
 
 The smallest possible message is a single section block with some markdown
