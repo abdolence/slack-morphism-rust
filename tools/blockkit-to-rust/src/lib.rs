@@ -137,7 +137,10 @@ pub fn convert(source: &str, options: &Options) -> Result<Output, ConvertError> 
         (input::InputShape::Blocks(items), _) => {
             ("Vec<SlackBlock>", emit_block_list(items, &mut ctx))
         }
-        (input::InputShape::Block(item), _) => ("SlackBlock", emit_one_block(item, 0, &mut ctx)),
+        (input::InputShape::Block(item), _) => (
+            "SlackBlock",
+            writer::Expr::suffixed(emit_one_block(item, 0, &mut ctx), ".into()"),
+        ),
         (input::InputShape::View(item), _) => ("SlackView", emit_one_view(item, &mut ctx)),
     };
 
@@ -189,7 +192,7 @@ fn emit_one_block(item: &serde_json::Value, index: usize, ctx: &mut Ctx) -> writ
             });
             writer::Expr::Commented {
                 comment: format!("// {path}: not converted: {message}"),
-                inner: Box::new(raw::not_yet_emitted(item, ctx)),
+                inner: Box::new(raw::not_yet_emitted_as(item, ctx, "SlackBlock")),
             }
         }
     }
@@ -290,6 +293,30 @@ mod tests {
         );
         assert!(out.warnings.is_empty());
         assert!(out.errors.is_empty());
+    }
+
+    #[test]
+    fn single_block_binding_converts_into_slack_block() {
+        let out = convert(r#"{ "type": "divider" }"#, &Options::default()).expect("converts");
+        assert_eq!(
+            out.code,
+            "use slack_morphism::prelude::*;\n\
+             \n\
+             let block: SlackBlock = SlackDividerBlock::new().into();\n"
+        );
+    }
+
+    #[test]
+    fn single_unknown_block_falls_back_with_a_typed_from_value() {
+        let out = convert(r#"{ "type": "nope" }"#, &Options::default()).expect("converts");
+        assert!(
+            out.code
+                .contains("serde_json::from_value::<SlackBlock>(json!("),
+            "fallback must name its target type so `.into()` can infer:\n{}",
+            out.code
+        );
+        assert!(out.code.contains(")?.into();\n"), "{}", out.code);
+        assert_eq!(out.errors.len(), 1);
     }
 
     #[test]

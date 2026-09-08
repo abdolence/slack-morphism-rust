@@ -51,6 +51,19 @@ pub fn not_yet_emitted(v: &Value, ctx: &mut Ctx) -> Expr {
     )
 }
 
+/// Same fallback with the target named in a turbofish, for positions where the
+/// type would otherwise be unconstrained: a `slack_blocks!` item or anything
+/// followed by `.into()`, where an untyped `from_value` is E0283.
+pub fn not_yet_emitted_as(v: &Value, ctx: &mut Ctx, target: &str) -> Expr {
+    ctx.needs_result = true;
+    Expr::suffixed(
+        Call::new(&format!("serde_json::from_value::<{target}>"))
+            .arg(json_macro(v, ctx))
+            .into(),
+        "?",
+    )
+}
+
 /// The whole document under `EmitStyle::RawFromValue`.
 pub fn raw_from_value(v: &Value, ctx: &mut Ctx) -> Expr {
     not_yet_emitted(v, ctx)
