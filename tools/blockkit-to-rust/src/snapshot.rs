@@ -86,7 +86,11 @@ pub fn render_generated_fixtures() -> Result<String, ConvertError> {
     if covered.iter().any(|(_, k)| *k == FixtureKind::HomeView) {
         helpers.push("as_home_view");
     }
-    helpers.sort_unstable();
+    // rustfmt reorders a `use` list itself, snake_case names alphabetically
+    // before PascalCase ones; matching that order here up front is what
+    // keeps a freshly generated file identical after `cargo fmt` runs on it.
+    helpers
+        .sort_unstable_by_key(|name| (name.chars().next().is_some_and(char::is_uppercase), *name));
 
     let mut out = format!(
         "{HEADER_DOC}\nuse blockkit_to_rust::testkit::{{{}}};\n",
