@@ -52,8 +52,13 @@ pub fn emit_slack_section_block_element(v: &SlackSectionBlockElement, ctx: &mut 
         SlackSectionBlockElement::UrlInput(e) => emit_slack_block_url_input_element(e, ctx),
         SlackSectionBlockElement::RadioButtons(e) => emit_slack_block_radio_buttons_element(e, ctx),
         SlackSectionBlockElement::Checkboxes(e) => emit_slack_block_checkboxes_element(e, ctx),
+        // `SlackBlockWorkflowButtonElement` has no `From` impl into this enum
+        // (unlike every other element struct), so the variant is built by
+        // name rather than left to the caller's `.into()`.
         SlackSectionBlockElement::WorkflowButton(e) => {
-            workflow::emit_slack_block_workflow_button_element(e, ctx)
+            Call::new("SlackSectionBlockElement::WorkflowButton")
+                .arg(workflow::emit_slack_block_workflow_button_element(e, ctx))
+                .into()
         }
     }
 }
@@ -85,8 +90,11 @@ pub fn emit_slack_action_block_element(v: &SlackActionBlockElement, ctx: &mut Ct
         SlackActionBlockElement::ChannelsSelect(e) => {
             emit_slack_block_channels_select_element(e, ctx)
         }
+        // Same missing-`From`-impl caveat as the section variant above.
         SlackActionBlockElement::WorkflowButton(e) => {
-            workflow::emit_slack_block_workflow_button_element(e, ctx)
+            Call::new("SlackActionBlockElement::WorkflowButton")
+                .arg(workflow::emit_slack_block_workflow_button_element(e, ctx))
+                .into()
         }
     }
 }
