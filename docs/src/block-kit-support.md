@@ -416,8 +416,9 @@ Builder message (`{"blocks": [...]}`), a bare block array, a single block, or
 a modal or home view; anything the crate cannot model is reported as an
 error rather than guessed at.
 
-<div id="blockkit-to-rust" data-assets="blockkit/">Open this page on the
-documentation site to use the converter.</div>
+<div id="blockkit-to-rust" data-assets="blockkit/">The converter runs on the
+<a href="https://slack-rust.abdolence.dev/block-kit-support.html">documentation
+site</a>; open this page there to use it.</div>
 
 The same conversion is available as a command-line tool:
 
