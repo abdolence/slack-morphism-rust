@@ -1,4 +1,4 @@
-//! `SlackBlock` and the block structs P1 owns.
+//! `SlackBlock` and the core block structs.
 
 use slack_morphism::prelude::*;
 

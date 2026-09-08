@@ -38,9 +38,9 @@ pub fn json_macro(v: &Value, ctx: &mut Ctx) -> Expr {
     Call::new("json!").arg(json_value(v, ctx)).into()
 }
 
-/// Spec 5.5 case 2: the crate parses it, this package does not hand-build it
-/// yet. The emitted call is the one the converter itself just made, so it
-/// always compiles and always round-trips.
+/// Fallback for a value the crate parses but no visitor hand-builds yet: emit
+/// the `from_value` call the converter itself just made, so the snippet always
+/// compiles and always round-trips.
 pub fn not_yet_emitted(v: &Value, ctx: &mut Ctx) -> Expr {
     ctx.needs_result = true;
     Expr::suffixed(
