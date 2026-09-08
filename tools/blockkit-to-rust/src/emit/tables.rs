@@ -2,7 +2,7 @@
 
 use slack_morphism::prelude::*;
 
-use crate::emit::{rich_text, stub};
+use crate::emit::{blocks, elements, rich_text};
 use crate::leaf;
 use crate::writer::{Call, Expr, ListKind};
 use crate::Ctx;
@@ -203,16 +203,196 @@ pub fn emit_slack_alert_block(v: &SlackAlertBlock, ctx: &mut Ctx) -> Expr {
     call.into()
 }
 
+/// Read back only through `SlackCardBlock.hero_image`/`.icon` (a single-value
+/// position) and `.actions` (a list position); the caller adds whichever
+/// conversion the position needs, so no arm here adds its own.
+pub fn emit_slack_card_image_element(v: &SlackCardImageElement, ctx: &mut Ctx) -> Expr {
+    match v {
+        SlackCardImageElement::Image(e) => elements::emit_slack_block_image_element(e, ctx),
+    }
+}
+
+pub fn emit_slack_card_action_block_element(
+    v: &SlackCardActionBlockElement,
+    ctx: &mut Ctx,
+) -> Expr {
+    match v {
+        SlackCardActionBlockElement::Button(e) => elements::emit_slack_block_button_element(e, ctx),
+    }
+}
+
+/// `SlackCardBlock` declares every field as `Option`, so `new()` takes nothing.
 pub fn emit_slack_card_block(v: &SlackCardBlock, ctx: &mut Ctx) -> Expr {
-    stub(v, "card block", ctx)
+    let SlackCardBlock {
+        block_id,
+        title,
+        subtitle,
+        body,
+        hero_image,
+        icon,
+        actions,
+    } = v;
+    let mut call = Call::new("SlackCardBlock::new");
+    if let Some(x) = block_id {
+        call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    if let Some(x) = title {
+        call = call.set("with_title", leaf::block_text(x, ctx));
+    }
+    if let Some(x) = subtitle {
+        call = call.set("with_subtitle", leaf::block_text(x, ctx));
+    }
+    if let Some(x) = body {
+        call = call.set("with_body", leaf::block_text(x, ctx));
+    }
+    if let Some(x) = hero_image {
+        call = call.set(
+            "with_hero_image",
+            Expr::suffixed(emit_slack_card_image_element(x, ctx), ".into()"),
+        );
+    }
+    if let Some(x) = icon {
+        call = call.set(
+            "with_icon",
+            Expr::suffixed(emit_slack_card_image_element(x, ctx), ".into()"),
+        );
+    }
+    if let Some(x) = actions {
+        call = call.set(
+            "with_actions",
+            Expr::List {
+                kind: ListKind::SlackBlocks,
+                items: x
+                    .iter()
+                    .map(|a| emit_slack_card_action_block_element(a, ctx))
+                    .collect(),
+            },
+        );
+    }
+    call.into()
 }
 
 pub fn emit_slack_carousel_block(v: &SlackCarouselBlock, ctx: &mut Ctx) -> Expr {
-    stub(v, "carousel block", ctx)
+    let SlackCarouselBlock { block_id, elements } = v;
+    let mut call = Call::new("SlackCarouselBlock::new").arg(Expr::List {
+        kind: ListKind::SlackBlocks,
+        items: elements
+            .iter()
+            .map(|e| blocks::emit_slack_block(e, ctx))
+            .collect(),
+    });
+    if let Some(x) = block_id {
+        call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    call.into()
+}
+
+pub fn emit_slack_feedback_button_item(v: &SlackFeedbackButtonItem, ctx: &mut Ctx) -> Expr {
+    let SlackFeedbackButtonItem {
+        action_id,
+        value,
+        text,
+        confirm,
+    } = v;
+    let mut call = Call::new("SlackFeedbackButtonItem::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(leaf::value_str(value))
+        .arg(leaf::plain_text_only(text, ctx));
+    if let Some(x) = confirm {
+        call = call.set(
+            "with_confirm",
+            elements::emit_slack_block_confirm_item(x, ctx),
+        );
+    }
+    call.into()
+}
+
+pub fn emit_slack_block_feedback_buttons_element(
+    v: &SlackBlockFeedbackButtonsElement,
+    ctx: &mut Ctx,
+) -> Expr {
+    let SlackBlockFeedbackButtonsElement {
+        action_id,
+        positive,
+        negative,
+    } = v;
+    Call::new("SlackBlockFeedbackButtonsElement::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(emit_slack_feedback_button_item(positive, ctx))
+        .arg(emit_slack_feedback_button_item(negative, ctx))
+        .into()
+}
+
+pub fn emit_slack_block_icon_button_element(
+    v: &SlackBlockIconButtonElement,
+    ctx: &mut Ctx,
+) -> Expr {
+    let SlackBlockIconButtonElement {
+        action_id,
+        icon,
+        text,
+        value,
+        confirm,
+        accessibility_label,
+        visible_to_user_ids,
+    } = v;
+    let mut call = Call::new("SlackBlockIconButtonElement::new")
+        .arg(leaf::value_str(action_id.value()))
+        .arg(leaf::value_str(icon))
+        .arg(leaf::plain_text_only(text, ctx));
+    if let Some(x) = value {
+        call = call.set("with_value", leaf::value_str(x));
+    }
+    if let Some(x) = confirm {
+        call = call.set(
+            "with_confirm",
+            elements::emit_slack_block_confirm_item(x, ctx),
+        );
+    }
+    if let Some(x) = accessibility_label {
+        call = call.set("with_accessibility_label", leaf::value_str(x.value()));
+    }
+    if let Some(x) = visible_to_user_ids {
+        call = call.set(
+            "with_visible_to_user_ids",
+            Expr::List {
+                kind: ListKind::Vec,
+                items: x.iter().map(|u| leaf::value_str(u.value())).collect(),
+            },
+        );
+    }
+    call.into()
+}
+
+/// Every arm is spelled out: a new `SlackContextActionBlockElement` variant
+/// must fail to compile here rather than fall into a silent default.
+pub fn emit_slack_context_action_block_element(
+    v: &SlackContextActionBlockElement,
+    ctx: &mut Ctx,
+) -> Expr {
+    match v {
+        SlackContextActionBlockElement::FeedbackButtons(e) => {
+            emit_slack_block_feedback_buttons_element(e, ctx)
+        }
+        SlackContextActionBlockElement::IconButton(e) => {
+            emit_slack_block_icon_button_element(e, ctx)
+        }
+    }
 }
 
 pub fn emit_slack_context_actions_block(v: &SlackContextActionsBlock, ctx: &mut Ctx) -> Expr {
-    stub(v, "context actions block", ctx)
+    let SlackContextActionsBlock { block_id, elements } = v;
+    let mut call = Call::new("SlackContextActionsBlock::new").arg(Expr::List {
+        kind: ListKind::SlackBlocks,
+        items: elements
+            .iter()
+            .map(|e| emit_slack_context_action_block_element(e, ctx))
+            .collect(),
+    });
+    if let Some(x) = block_id {
+        call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    call.into()
 }
 
 #[cfg(test)]
@@ -259,6 +439,20 @@ SlackTableBlock::new(vec![
         for payload in [
             include_str!("../../../../src/models/blocks/fixtures/slack_task_card_block.json"),
             include_str!("../../../../src/models/blocks/fixtures/slack_alert_block.json"),
+        ] {
+            let block: SlackBlock = serde_json::from_str(payload).expect("fixture parses");
+            let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).flat();
+            assert!(!out.contains("serde_json::from_value"), "{out}");
+        }
+    }
+
+    #[test]
+    fn the_card_and_context_actions_fixtures_emit_builders() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        for payload in [
+            include_str!("../../../../src/models/blocks/fixtures/slack_card_block.json"),
+            include_str!("../../../../src/models/blocks/fixtures/slack_context_actions_block.json"),
         ] {
             let block: SlackBlock = serde_json::from_str(payload).expect("fixture parses");
             let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).flat();
