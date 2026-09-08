@@ -124,9 +124,14 @@ pub fn emit_slack_url_source_element(v: &SlackUrlSourceElement, ctx: &mut Ctx) -
         .into()
 }
 
+/// `sources` is a plain `vec![]` (`SlackTaskCardSource` has no `From<&str>`
+/// for the macro to convert bare items through), so the `.into()` each item
+/// needs lives here rather than at the one call site.
 pub fn emit_slack_task_card_source(v: &SlackTaskCardSource, ctx: &mut Ctx) -> Expr {
     match v {
-        SlackTaskCardSource::Url(e) => emit_slack_url_source_element(e, ctx),
+        SlackTaskCardSource::Url(e) => {
+            Expr::suffixed(emit_slack_url_source_element(e, ctx), ".into()")
+        }
     }
 }
 
@@ -152,13 +157,19 @@ pub fn emit_slack_task_card_block(v: &SlackTaskCardBlock, ctx: &mut Ctx) -> Expr
     if let Some(x) = details {
         call = call.set(
             "with_details",
-            rich_text::emit_slack_rich_text_inline_content(x, ctx),
+            Expr::suffixed(
+                rich_text::emit_slack_rich_text_inline_content(x, ctx),
+                ".into()",
+            ),
         );
     }
     if let Some(x) = output {
         call = call.set(
             "with_output",
-            rich_text::emit_slack_rich_text_inline_content(x, ctx),
+            Expr::suffixed(
+                rich_text::emit_slack_rich_text_inline_content(x, ctx),
+                ".into()",
+            ),
         );
     }
     if let Some(x) = sources {
