@@ -21,12 +21,15 @@
 
   function loadConverter(base) {
     if (!modulePromise) {
-      modulePromise = import(base + "blockkit_to_rust.js").then(function (mod) {
-        return mod
-          .default({ module_or_path: base + "blockkit_to_rust_bg.wasm" })
-          .then(function () {
-            return mod;
-          });
+      // path_to_root can be "", which makes base a bare specifier
+      // ("blockkit/..."); dynamic import() only accepts relative or
+      // absolute URLs, so resolve against the document before importing.
+      var moduleUrl = new URL(base + "blockkit_to_rust.js", document.baseURI).href;
+      var wasmUrl = new URL(base + "blockkit_to_rust_bg.wasm", document.baseURI).href;
+      modulePromise = import(moduleUrl).then(function (mod) {
+        return mod.default({ module_or_path: wasmUrl }).then(function () {
+          return mod;
+        });
       });
     }
     return modulePromise;
@@ -117,9 +120,11 @@
 
     if (!envelope.ok) {
       ui.code.textContent = "";
+      // message already carries the path (see ConvertError's Display impl);
+      // e.path is redundant here and re-adding it would print it twice.
       ui.error.textContent = envelope.errors
         .map(function (e) {
-          return e.path ? e.path + ": " + e.message : e.message;
+          return e.message;
         })
         .join("\n");
       return;
@@ -139,7 +144,7 @@
       ui.error.textContent =
         envelope.errors
           .map(function (e) {
-            return e.path + ": " + e.message;
+            return e.message;
           })
           .join("\n") + " — open an issue if this block should be supported.";
     }
