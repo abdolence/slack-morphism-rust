@@ -52,7 +52,7 @@ impl SlackEventSignatureVerifier {
                 SlackEventWrongSignatureErrorInit {
                     body_len: body.len(),
                     ts: ts.into(),
-                    received_hash: hash.into(),
+                    received_hash_prefix: hash.chars().take(11).collect(),
                 }
                 .into(),
             ))
@@ -181,20 +181,23 @@ impl Error for SlackEventAbsentSignatureError {}
 /// The expected signature for the request is deliberately not carried by this
 /// error: any `Debug`/`Display` of it (as a default listener error handler
 /// does) would hand out a valid signature for the same request body and
-/// timestamp.
+/// timestamp. The received signature is kept only as a short prefix for the
+/// same reason: when the local signing secret is misconfigured, the request
+/// Slack sent is correctly signed, so the full received value is itself a
+/// valid credential for this body and timestamp and must not reach the logs.
 #[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackEventWrongSignatureError {
     pub body_len: usize,
     pub ts: String,
-    pub received_hash: String,
+    pub received_hash_prefix: String,
 }
 
 impl Display for SlackEventWrongSignatureError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Slack API signature validation error: Body len: {}, received ts: {}, received hash: {}",
-            self.body_len, self.ts, self.received_hash
+            "Slack API signature validation error: Body len: {}, received ts: {}, received hash prefix: {}...",
+            self.body_len, self.ts, self.received_hash_prefix
         )
     }
 }
@@ -320,6 +323,38 @@ mod test {
         assert!(!format!("{:?}", inner).contains(&correct_hash));
         assert!(!format!("{}", err).contains(&correct_hash));
         assert!(!format!("{:?}", err).contains(&correct_hash));
+    }
+
+    #[test]
+    fn wrong_signature_error_does_not_reveal_received_signature() {
+        use sha2::Digest;
+
+        let key_str_correct: String = hex::encode(Sha256::digest("correct-key"));
+        let key_str_malicious: String = hex::encode(Sha256::digest("malicious-key"));
+
+        let verifier_correct = SlackEventSignatureVerifier::new(&key_str_correct.into());
+        let verifier_malicious = SlackEventSignatureVerifier::new(&key_str_malicious.into());
+
+        const TEST_BODY: &str = "test-body";
+        let test_ts = current_unix_seconds().to_string();
+
+        let received_hash = verifier_malicious.sign(TEST_BODY, &test_ts).unwrap();
+        let err = verifier_correct
+            .verify(&received_hash, TEST_BODY, &test_ts)
+            .unwrap_err();
+
+        let inner = match &err {
+            SlackEventSignatureVerifierError::WrongSignatureError(inner) => inner,
+            other => panic!("unexpected error, {}", other),
+        };
+
+        let expected_prefix: String = received_hash.chars().take(11).collect();
+
+        assert!(!format!("{}", inner).contains(&received_hash));
+        assert!(!format!("{:?}", inner).contains(&received_hash));
+        assert!(!format!("{}", err).contains(&received_hash));
+        assert!(!format!("{:?}", err).contains(&received_hash));
+        assert!(format!("{}", inner).contains(&expected_prefix));
     }
 
     #[test]
