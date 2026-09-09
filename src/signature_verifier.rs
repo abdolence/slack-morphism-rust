@@ -53,7 +53,6 @@ impl SlackEventSignatureVerifier {
                     body_len: body.len(),
                     ts: ts.into(),
                     received_hash: hash.into(),
-                    generated_hash: hash_to_check,
                 }
                 .into(),
             ))
@@ -179,23 +178,23 @@ impl Display for SlackEventAbsentSignatureError {
 
 impl Error for SlackEventAbsentSignatureError {}
 
+/// The expected signature for the request is deliberately not carried by this
+/// error: any `Debug`/`Display` of it (as a default listener error handler
+/// does) would hand out a valid signature for the same request body and
+/// timestamp.
 #[derive(Debug, PartialEq, Eq, Clone, Builder)]
 pub struct SlackEventWrongSignatureError {
     pub body_len: usize,
     pub ts: String,
     pub received_hash: String,
-    pub generated_hash: String,
 }
 
 impl Display for SlackEventWrongSignatureError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Slack API signature validation error: Body len: {}, received ts: {}, received hash: {}, generated hash: {}",
-            self.body_len,
-            self.ts,
-            self.received_hash,
-            self.generated_hash
+            "Slack API signature validation error: Body len: {}, received ts: {}, received hash: {}",
+            self.body_len, self.ts, self.received_hash
         )
     }
 }
@@ -293,6 +292,34 @@ mod test {
             SlackEventSignatureVerifierError::WrongSignatureError(_) => {}
             _ => panic!("unexpected error, {}", err),
         }
+    }
+
+    #[test]
+    fn wrong_signature_error_does_not_reveal_expected_signature() {
+        use sha2::Digest;
+
+        let key_str: String = hex::encode(Sha256::digest("test-key"));
+        let verifier = SlackEventSignatureVerifier::new(&key_str.into());
+
+        const TEST_BODY: &str = "test-body";
+        let test_ts = current_unix_seconds().to_string();
+
+        let correct_hash = verifier.sign(TEST_BODY, &test_ts).unwrap();
+        let wrong_hash = "v0=0000000000000000000000000000000000000000000000000000000000000000";
+
+        let err = verifier
+            .verify(wrong_hash, TEST_BODY, &test_ts)
+            .unwrap_err();
+
+        let inner = match &err {
+            SlackEventSignatureVerifierError::WrongSignatureError(inner) => inner,
+            other => panic!("unexpected error, {}", other),
+        };
+
+        assert!(!format!("{}", inner).contains(&correct_hash));
+        assert!(!format!("{:?}", inner).contains(&correct_hash));
+        assert!(!format!("{}", err).contains(&correct_hash));
+        assert!(!format!("{:?}", err).contains(&correct_hash));
     }
 
     #[test]
