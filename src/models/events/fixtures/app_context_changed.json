@@ -1,0 +1,28 @@
+{
+  "token": "XXYYZZ",
+  "team_id": "T123ABC456",
+  "api_app_id": "A123ABC456",
+  "event": {
+    "type": "app_context_changed",
+    "context": {
+      "entities": [
+        {
+          "type": "slack#/types/channel_id",
+          "value": "C01234ABDCE",
+          "team_id": "T0ABCDE6543"
+        }
+      ]
+    }
+  },
+  "type": "event_callback",
+  "authorizations": [
+    {
+      "team_id": "T123ABC456",
+      "user_id": "U123ABC456",
+      "is_bot": false,
+      "is_enterprise_install": false
+    }
+  ],
+  "event_id": "Ev123ABC456",
+  "event_time": 123456789
+}
