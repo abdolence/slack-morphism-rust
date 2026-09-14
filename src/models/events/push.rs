@@ -78,6 +78,13 @@ pub enum SlackEventCallbackBody {
     UserStatusChanged(SlackUserStatusChangedEvent),
     AssistantThreadStarted(SlackAssistantThreadStartedEvent),
     AssistantThreadContextChanged(SlackAssistantThreadContextChangedEvent),
+    AgentSessionStopped(SlackAgentSessionStoppedEvent),
+    AgentSessionTitleChanged(SlackAgentSessionTitleChangedEvent),
+    AppContextChanged(SlackAppContextChangedEvent),
+    /// Any event type not modelled above. Keeps the envelope deserialisable
+    /// (and therefore acknowledgeable) when Slack introduces new event types.
+    #[serde(other)]
+    Unknown,
 }
 
 #[skip_serializing_none]
@@ -421,6 +428,43 @@ pub struct SlackAssistantThreadContextChangedEvent {
     pub assistant_thread: SlackAssistantThread,
 }
 
+/// https://docs.slack.dev/reference/events/agent_session_stopped
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAgentSessionStoppedEvent {
+    pub channel: SlackChannelId,
+    pub thread_ts: Option<SlackTs>,
+    pub streaming_message_ts: Option<Vec<SlackTs>>,
+    pub user: Option<SlackUserId>,
+    pub event_ts: Option<SlackTs>,
+}
+
+/// https://docs.slack.dev/reference/events/agent_session_title_changed
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAgentSessionTitleChangedEvent {
+    pub channel: SlackChannelId,
+    pub thread_ts: Option<SlackTs>,
+    pub title: String,
+    pub previous_title: Option<String>,
+    pub user: Option<SlackUserId>,
+    pub event_ts: Option<SlackTs>,
+}
+
+/// https://docs.slack.dev/reference/events/app_context_changed
+///
+/// The payload shape is loosely documented, so anything beyond the common
+/// fields is kept verbatim in `extra`.
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackAppContextChangedEvent {
+    pub channel: Option<SlackChannelId>,
+    pub user: Option<SlackUserId>,
+    pub event_ts: Option<SlackTs>,
+    #[serde(flatten)]
+    pub extra: serde_json::Value,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -517,5 +561,31 @@ mod test {
             }
             _ => panic!("Unexpected event type"),
         }
+    }
+
+    #[test]
+    fn test_slack_event_agent_session_stopped() {
+        let payload = include_str!("./fixtures/agent_session_stopped.json");
+        let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();
+        match event.event {
+            SlackEventCallbackBody::AgentSessionStopped(SlackAgentSessionStoppedEvent {
+                channel,
+                thread_ts,
+                streaming_message_ts,
+                ..
+            }) => {
+                assert_eq!(channel, "CXXXXXXXXXX".into());
+                assert_eq!(thread_ts, Some("1757000000.000100".into()));
+                assert_eq!(streaming_message_ts, Some(vec!["1757000001.000200".into()]));
+            }
+            _ => panic!("Unexpected event type"),
+        }
+    }
+
+    #[test]
+    fn test_slack_event_unknown_type() {
+        let event: SlackEventCallbackBody =
+            serde_json::from_str(r#"{"type":"some_future_event","x":1}"#).unwrap();
+        assert_eq!(event, SlackEventCallbackBody::Unknown);
     }
 }

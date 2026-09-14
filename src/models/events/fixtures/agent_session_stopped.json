@@ -1,0 +1,27 @@
+{
+  "token": "XXXXXXXXXXXXXXXXXXXXXXXX",
+  "team_id": "TXXXXXXXXXX",
+  "api_app_id": "AXXXXXXXXXX",
+  "event": {
+    "type": "agent_session_stopped",
+    "channel": "CXXXXXXXXXX",
+    "thread_ts": "1757000000.000100",
+    "streaming_message_ts": ["1757000001.000200"],
+    "user": "UXXXXXXXXXX",
+    "event_ts": "1757000002.000300"
+  },
+  "type": "event_callback",
+  "event_id": "EXXXXXXXXXXX",
+  "event_time": 1757000002,
+  "authorizations": [
+    {
+      "enterprise_id": null,
+      "team_id": "TXXXXXXXXXX",
+      "user_id": "UXXXXXXXXXX",
+      "is_bot": true,
+      "is_enterprise_install": false
+    }
+  ],
+  "is_ext_shared_channel": false,
+  "event_context": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+}
