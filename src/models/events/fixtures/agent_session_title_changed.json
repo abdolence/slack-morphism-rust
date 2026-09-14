@@ -1,0 +1,29 @@
+{
+  "token": "XXXXXXXXXXXXXXXXXXXXXXXX",
+  "team_id": "TXXXXXXXXXX",
+  "api_app_id": "AXXXXXXXXXX",
+  "event": {
+    "type": "agent_session_title_changed",
+    "channel": "C0123ABC456",
+    "event_ts": "1783536983.783769",
+    "previous_title": "Scuba diving research",
+    "team_id": "T0123ABC456",
+    "thread_ts": "1782234671.392669",
+    "title": "Bora Bora trip prep",
+    "user": "U123ABC456"
+  },
+  "type": "event_callback",
+  "event_id": "EXXXXXXXXXXX",
+  "event_time": 1783536983,
+  "authorizations": [
+    {
+      "enterprise_id": null,
+      "team_id": "T0123ABC456",
+      "user_id": "U123ABC456",
+      "is_bot": true,
+      "is_enterprise_install": false
+    }
+  ],
+  "is_ext_shared_channel": false,
+  "event_context": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+}

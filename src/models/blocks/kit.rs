@@ -1639,6 +1639,8 @@ pub struct SlackTaskCardBlock {
     pub title: String,
     pub block_id: Option<SlackBlockId>,
     pub status: Option<SlackTaskCardStatus>,
+    pub icon: Option<SlackTaskCardIcon>,
+    pub hide_title: Option<bool>,
     #[serde(rename = "details")]
     pub details: Option<SlackRichTextInlineContent>,
     #[serde(rename = "output")]
@@ -1659,6 +1661,14 @@ pub enum SlackTaskCardStatus {
     InProgress,
     Complete,
     Error,
+}
+
+/// Icon shown on a task card, serialised as `{"type":"icon","name":"<icon name>"}`.
+/// `name` is an icon name, not a URL.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+#[serde(tag = "type", rename = "icon")]
+pub struct SlackTaskCardIcon {
+    pub name: String,
 }
 
 /**
@@ -2137,6 +2147,21 @@ mod test {
         let serialized = serde_json::to_string(&block)?;
         let block2: SlackBlock = serde_json::from_str(&serialized)?;
         assert_eq!(block, block2);
+        Ok(())
+    }
+
+    #[test]
+    fn test_slack_task_card_block_serializes_icon_and_hide_title(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let task_card = SlackTaskCardBlock::new(SlackTaskId("task_1".into()), "Title".into())
+            .with_icon(SlackTaskCardIcon::new("check".into()))
+            .with_hide_title(true);
+        let json = serde_json::to_value(&task_card)?;
+        assert_eq!(
+            json["icon"],
+            serde_json::json!({"type": "icon", "name": "check"})
+        );
+        assert_eq!(json["hide_title"], serde_json::json!(true));
         Ok(())
     }
 

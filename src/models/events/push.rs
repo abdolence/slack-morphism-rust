@@ -47,8 +47,8 @@ pub struct SlackPushEventCallback {
     pub authorizations: Option<Vec<SlackEventAuthorization>>,
 }
 
-/// Known event types deserialise with strict errors; any other `type` becomes
-/// `Unknown`, keeping the envelope deserialisable (and therefore acknowledgeable).
+/// A type this crate does not model, or a known type whose payload does not match
+/// the modelled shape, falls through to `Unknown` with the raw JSON preserved.
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -84,9 +84,9 @@ pub enum SlackEventCallbackBody {
     AgentSessionStopped(SlackAgentSessionStoppedEvent),
     AgentSessionTitleChanged(SlackAgentSessionTitleChangedEvent),
     AppContextChanged(SlackAppContextChangedEvent),
-    /// Any event type not modelled above.
-    #[serde(other)]
-    Unknown,
+    /// Any event type not modelled above, carried verbatim so callers can log it.
+    #[serde(untagged)]
+    Unknown(serde_json::Value),
 }
 
 #[skip_serializing_none]
@@ -477,7 +477,7 @@ pub struct SlackAppContext {
 pub struct SlackAppContextEntity {
     /// e.g. `slack#/types/channel_id`
     #[serde(rename = "type")]
-    pub entity_type: String,
+    pub entity_type: SlackAppContextEntityType,
     pub value: String,
     pub team_id: Option<SlackTeamId>,
 }
@@ -608,7 +608,7 @@ mod test {
                 assert_eq!(
                     context.entities,
                     Some(vec![SlackAppContextEntity {
-                        entity_type: "slack#/types/channel_id".into(),
+                        entity_type: "slack#/types/channel_id".to_string().into(),
                         value: "C01234ABDCE".into(),
                         team_id: Some("T0ABCDE6543".into()),
                     }])
@@ -629,16 +629,39 @@ mod test {
 
     #[test]
     fn test_slack_event_unknown_type() {
-        let event: SlackEventCallbackBody =
-            serde_json::from_str(r#"{"type":"some_future_event","x":1}"#).unwrap();
-        assert_eq!(event, SlackEventCallbackBody::Unknown);
+        let payload = serde_json::json!({"type":"some_future_event","x":1});
+        let event: SlackEventCallbackBody = serde_json::from_value(payload.clone()).unwrap();
+        assert_eq!(event, SlackEventCallbackBody::Unknown(payload.clone()));
+        assert_eq!(serde_json::to_value(&event).unwrap(), payload);
     }
 
     #[test]
-    fn test_slack_event_malformed_known_type_errors() {
-        assert!(serde_json::from_str::<SlackEventCallbackBody>(
-            r#"{"type":"app_context_changed","context":"nope"}"#
-        )
-        .is_err());
+    fn test_slack_event_malformed_known_type_is_unknown() {
+        let payload = serde_json::json!({"type":"app_context_changed","context":"nope"});
+        let event: SlackEventCallbackBody = serde_json::from_value(payload.clone()).unwrap();
+        assert_eq!(event, SlackEventCallbackBody::Unknown(payload));
+    }
+
+    #[test]
+    fn test_slack_event_agent_session_title_changed() {
+        let payload = include_str!("./fixtures/agent_session_title_changed.json");
+        let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();
+        match event.event {
+            SlackEventCallbackBody::AgentSessionTitleChanged(
+                SlackAgentSessionTitleChangedEvent {
+                    channel,
+                    title,
+                    previous_title,
+                    team_id,
+                    ..
+                },
+            ) => {
+                assert_eq!(channel, "C0123ABC456".into());
+                assert_eq!(title, "Bora Bora trip prep".to_string());
+                assert_eq!(previous_title, Some("Scuba diving research".to_string()));
+                assert_eq!(team_id, Some("T0123ABC456".into()));
+            }
+            _ => panic!("Unexpected event type"),
+        }
     }
 }
