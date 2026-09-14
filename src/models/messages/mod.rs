@@ -32,6 +32,9 @@ pub struct SlackMessageMetadata {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageContent {
     pub text: Option<String>,
+    /// Standard markdown rendered by Slack; not combinable with `text`/`blocks`; ≤ 12 000 chars.
+    /// https://docs.slack.dev/messaging/formatting-message-text#markdown-text
+    pub markdown_text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
     pub attachments: Option<Vec<SlackMessageAttachment>>,
     pub upload: Option<bool>,
