@@ -1,10 +1,12 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+mod agents;
 mod apps;
 mod assistant;
 mod auth;
 mod bots;
 mod chat;
+mod chat_stream;
 mod conversations;
 mod emoji;
 mod files;
@@ -19,11 +21,13 @@ mod users;
 mod views;
 mod webhook;
 
+pub use agents::*;
 pub use apps::*;
 pub use assistant::*;
 pub use auth::*;
 pub use bots::*;
 pub use chat::*;
+pub use chat_stream::*;
 pub use conversations::*;
 pub use emoji::*;
 pub use files::*;
