@@ -85,11 +85,7 @@ where
         message_body: String,
     ) -> Option<String> {
         if let Some(clients_manager) = self.clients_manager.upgrade() {
-            match serde_json::from_str::<SlackSocketModeEvent>(message_body.as_str()).map_err(|e| {
-                SlackClientProtocolError::new(e)
-                    .with_json_body(message_body)
-                    .into()
-            }) {
+            match serde_json::from_str::<SlackSocketModeEvent>(message_body.as_str()) {
                 Ok(sm_event) => match sm_event {
                     SlackSocketModeEvent::Hello(event) => {
                         self.callbacks
@@ -244,13 +240,20 @@ where
                         }
                     }
                 },
-                Err(err) => {
+                Err(e) => {
+                    // Take the ack from a borrow before the body moves into the error.
+                    let ack =
+                        SlackSocketModeEventCommonAcknowledge::try_from(message_body.as_str()).ok();
                     self.listener_environment.error_handler.clone()(
-                        err,
+                        SlackClientProtocolError::new(e)
+                            .with_json_body(message_body)
+                            .into(),
                         self.listener_environment.client.clone(),
                         self.listener_environment.user_state.clone(),
                     );
-                    None
+                    // The payload never parses better on retry, so acknowledge it here rather than
+                    // let Slack redeliver it; the error handler above already received the body.
+                    ack.and_then(|ack| self.ack_frame(&ack))
                 }
             }
         } else {
