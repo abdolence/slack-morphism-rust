@@ -254,7 +254,8 @@ where
                     // The payload never parses better on retry, so acknowledge it here
                     // rather than let Slack redeliver it; the error handler above
                     // already received the body for diagnostics.
-                    return SlackSocketModeEventCommonAcknowledge::from_raw_frame(&raw_frame)
+                    return SlackSocketModeEventCommonAcknowledge::try_from(raw_frame.as_str())
+                        .ok()
                         .and_then(|ack| self.ack_frame(&ack));
                 }
             }
