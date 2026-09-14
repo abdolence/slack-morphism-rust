@@ -5,6 +5,7 @@
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 use crate::models::*;
 use crate::ratectl::*;
@@ -56,8 +57,8 @@ pub struct SlackApiAgentsSessionsSetStatusRequest {
     pub thread_ts: Option<SlackTs>,
     pub title: Option<String>,
     pub initiator_user_id: Option<SlackUserId>,
-    pub icon_emoji: Option<String>,
-    pub icon_url: Option<String>,
+    pub icon_emoji: Option<SlackEmoji>,
+    pub icon_url: Option<Url>,
     pub username: Option<String>,
 }
 
@@ -88,14 +89,34 @@ pub struct SlackApiAgentsSessionsRenameResponse {
 
 /// Agent session status for `agents.sessions.setStatus` and `chat.stopStream`'s `session_status`.
 /// https://docs.slack.dev/reference/methods/agents.sessions.setStatus#arg_status
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SlackAgentSessionStatus {
     Active,
     Processing,
     Suspended,
     Closed,
-    /// A value this crate does not model yet, so a new status does not fail the response.
-    #[serde(other)]
-    Other,
+    /// A value this crate does not model yet, carried verbatim so a new status
+    /// does not fail the response.
+    #[serde(untagged)]
+    Other(String),
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_api_agents_session_status_round_trip() {
+        let known: SlackAgentSessionStatus = serde_json::from_str(r#""processing""#).unwrap();
+        assert_eq!(known, SlackAgentSessionStatus::Processing);
+        assert_eq!(serde_json::to_string(&known).unwrap(), r#""processing""#);
+
+        let other: SlackAgentSessionStatus = serde_json::from_str(r#""something_new""#).unwrap();
+        assert_eq!(
+            other,
+            SlackAgentSessionStatus::Other("something_new".into())
+        );
+        assert_eq!(serde_json::to_string(&other).unwrap(), r#""something_new""#);
+    }
 }

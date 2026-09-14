@@ -141,6 +141,8 @@ pub fn emit_slack_task_card_block(v: &SlackTaskCardBlock, ctx: &mut Ctx) -> Expr
         title,
         block_id,
         status,
+        icon,
+        hide_title,
         details,
         output,
         sources,
@@ -153,6 +155,17 @@ pub fn emit_slack_task_card_block(v: &SlackTaskCardBlock, ctx: &mut Ctx) -> Expr
     }
     if let Some(x) = status {
         call = call.set("with_status", emit_slack_task_card_status(x));
+    }
+    if let Some(x) = icon {
+        call = call.set(
+            "with_icon",
+            Call::new("SlackTaskCardIcon::new")
+                .arg(leaf::value_str(&x.name))
+                .into(),
+        );
+    }
+    if let Some(x) = hide_title {
+        call = call.set("with_hide_title", leaf::bool_lit(*x));
     }
     if let Some(x) = details {
         call = call.set(
@@ -455,6 +468,26 @@ SlackTableBlock::new(vec![
             let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).flat();
             assert!(!out.contains("serde_json::from_value"), "{out}");
         }
+    }
+
+    #[test]
+    fn task_card_icon_and_hide_title_emit_builder_setters() {
+        let options = Options::default();
+        let mut ctx = Ctx::new(&options);
+        let block: SlackBlock = serde_json::from_value(json!({
+            "type": "task_card",
+            "task_id": "t1",
+            "title": "Build",
+            "icon": { "type": "icon", "name": "check" },
+            "hide_title": true
+        }))
+        .expect("parses");
+        let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).flat();
+        assert!(
+            out.contains("with_icon(SlackTaskCardIcon::new(\"check\".into()))"),
+            "{out}"
+        );
+        assert!(out.contains("with_hide_title(true)"), "{out}");
     }
 
     #[test]

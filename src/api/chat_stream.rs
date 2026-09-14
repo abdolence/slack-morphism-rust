@@ -5,9 +5,10 @@
 use rsb_derive::Builder;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use url::Url;
 
 use crate::api::SlackAgentSessionStatus;
-use crate::models::blocks::SlackBlock;
+use crate::models::blocks::*;
 use crate::models::*;
 use crate::ratectl::*;
 use crate::SlackClientSession;
@@ -64,8 +65,8 @@ pub struct SlackApiChatStartStreamRequest {
     pub markdown_text: Option<String>,
     pub chunks: Option<Vec<SlackStreamChunk>>,
     pub task_display_mode: Option<SlackStreamTaskDisplayMode>,
-    pub icon_emoji: Option<String>,
-    pub icon_url: Option<String>,
+    pub icon_emoji: Option<SlackEmoji>,
+    pub icon_url: Option<Url>,
     pub username: Option<String>,
 }
 
@@ -88,8 +89,8 @@ pub struct SlackApiChatAppendStreamRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatAppendStreamResponse {
-    pub channel: Option<SlackChannelId>,
-    pub ts: Option<SlackTs>,
+    pub channel: SlackChannelId,
+    pub ts: SlackTs,
 }
 
 #[skip_serializing_none]
@@ -97,18 +98,17 @@ pub struct SlackApiChatAppendStreamResponse {
 pub struct SlackApiChatStopStreamRequest {
     pub channel: SlackChannelId,
     pub ts: SlackTs,
-    pub markdown_text: Option<String>,
+    #[serde(flatten)]
+    pub content: SlackMessageContent,
     pub chunks: Option<Vec<SlackStreamChunk>>,
-    pub blocks: Option<Vec<SlackBlock>>,
-    pub metadata: Option<SlackMessageMetadata>,
     pub session_status: Option<SlackAgentSessionStatus>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatStopStreamResponse {
-    pub channel: Option<SlackChannelId>,
-    pub ts: Option<SlackTs>,
+    pub channel: SlackChannelId,
+    pub ts: SlackTs,
     pub message: Option<SlackMessage>,
 }
 
@@ -122,14 +122,15 @@ pub enum SlackStreamChunk {
         text: String,
     },
     TaskUpdate {
-        id: String,
+        id: SlackTaskId,
         title: String,
         hide_title: Option<bool>,
-        icon: Option<SlackStreamTaskIcon>,
-        status: SlackStreamTaskStatus,
+        icon: Option<SlackTaskCardIcon>,
+        status: SlackTaskCardStatus,
         details: Option<String>,
         output: Option<String>,
-        sources: Option<Vec<SlackStreamSource>>,
+        /// Slack rejects a source without `text`.
+        sources: Option<Vec<SlackTaskCardSource>>,
     },
     PlanUpdate {
         title: String,
@@ -139,65 +140,13 @@ pub enum SlackStreamChunk {
     },
 }
 
-/// Status of a `task_update` chunk.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SlackStreamTaskStatus {
-    /// Accepted by the API schema although absent from the docs.
-    Pending,
-    InProgress,
-    Complete,
-    Error,
-}
-
 /// How task updates are rendered in a streamed message.
 /// https://docs.slack.dev/reference/methods/chat.startStream#arg_task_display_mode
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SlackStreamTaskDisplayMode {
     Timeline,
     Plan,
-}
-
-/// Icon shown next to a `task_update` chunk, serialised as `{"type":"icon","name":"<icon name>"}`.
-///
-/// `name` is an icon name (e.g. `check`), not a URL: the docs example with a URL in `name`
-/// is rejected by the API, as are `type: image` / `type: emoji`.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize, Builder)]
-#[serde(from = "SlackStreamTaskIconRepr", into = "SlackStreamTaskIconRepr")]
-pub struct SlackStreamTaskIcon {
-    pub name: String,
-}
-
-/// Wire shape of `SlackStreamTaskIcon`; `type` is always `icon`.
-#[derive(Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-enum SlackStreamTaskIconRepr {
-    Icon { name: String },
-}
-
-impl From<SlackStreamTaskIconRepr> for SlackStreamTaskIcon {
-    fn from(SlackStreamTaskIconRepr::Icon { name }: SlackStreamTaskIconRepr) -> Self {
-        Self { name }
-    }
-}
-
-impl From<SlackStreamTaskIcon> for SlackStreamTaskIconRepr {
-    fn from(icon: SlackStreamTaskIcon) -> Self {
-        Self::Icon { name: icon.name }
-    }
-}
-
-/// A source reference attached to a `task_update` chunk.
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackStreamSource {
-    /// Open set (`url`, `file`, ...): the API accepts arbitrary strings here.
-    #[serde(rename = "type")]
-    pub source_type: String,
-    pub url: String,
-    /// Required: the API rejects a source without `text`.
-    pub text: String,
 }
 
 #[cfg(test)]
@@ -205,7 +154,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_task_update_chunk_round_trip() {
+    fn test_slack_api_chat_stream_task_update_chunk_round_trip() {
         let json = serde_json::json!({
             "type": "task_update",
             "id": "t1",
@@ -213,7 +162,7 @@ mod test {
             "hide_title": true,
             "icon": { "type": "icon", "name": "check" },
             "status": "in_progress",
-            "sources": [{ "type": "url", "url": "https://example.com", "text": "Example" }]
+            "sources": [{ "type": "url", "url": "https://example.com/", "text": "Example" }]
         });
         let chunk: SlackStreamChunk = serde_json::from_value(json.clone()).unwrap();
         assert_eq!(
@@ -222,24 +171,16 @@ mod test {
                 id: "t1".into(),
                 title: "Searching".into(),
                 hide_title: Some(true),
-                icon: Some(SlackStreamTaskIcon::new("check".into())),
-                status: SlackStreamTaskStatus::InProgress,
+                icon: Some(SlackTaskCardIcon::new("check".into())),
+                status: SlackTaskCardStatus::InProgress,
                 details: None,
                 output: None,
-                sources: Some(vec![SlackStreamSource::new(
-                    "url".into(),
-                    "https://example.com".into(),
+                sources: Some(vec![SlackTaskCardSource::Url(SlackUrlSourceElement::new(
+                    Url::parse("https://example.com").unwrap(),
                     "Example".into()
-                )]),
+                ))]),
             }
         );
         assert_eq!(serde_json::to_value(&chunk).unwrap(), json);
-    }
-
-    #[test]
-    fn test_task_icon_rejects_non_icon_type() {
-        assert!(
-            serde_json::from_str::<SlackStreamTaskIcon>(r#"{"type":"image","name":"x"}"#).is_err()
-        );
     }
 }
