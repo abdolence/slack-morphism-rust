@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2c094ba2.js";
+            window.path_to_searchindex_js = "searchindex-fe6cec4a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-132cf9d3.js"></script>
@@ -326,6 +326,7 @@ fn test_error_handler(
 https://api.slack.com/apis/connections/socket-implement#acknowledge</li>
 <li>Increase visibility and observability in general when errors happen in your app and from Slack/library.</li>
 </ul>
+<p>A frame whose body the library cannot parse (an unrecognised event type, or a known type with an unexpected payload) is passed to this error handler and then acknowledged on your behalf, so Slack does not keep redelivering it.</p>
 
                     </main>
 
