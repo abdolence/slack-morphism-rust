@@ -109,6 +109,7 @@ pub struct SlackApiChatStopStreamRequest {
 pub struct SlackApiChatStopStreamResponse {
     pub channel: Option<SlackChannelId>,
     pub ts: Option<SlackTs>,
+    pub message: Option<SlackMessage>,
 }
 
 /// A streamed content chunk for `chat.startStream` / `chat.appendStream` / `chat.stopStream`.
@@ -142,7 +143,7 @@ pub enum SlackStreamChunk {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SlackStreamTaskStatus {
-    /// Accepted by the API schema although absent from the docs (verified 2026-09-14).
+    /// Accepted by the API schema although absent from the docs.
     Pending,
     InProgress,
     Complete,
@@ -161,7 +162,7 @@ pub enum SlackStreamTaskDisplayMode {
 /// Icon shown next to a `task_update` chunk, serialised as `{"type":"icon","name":"<icon name>"}`.
 ///
 /// `name` is an icon name (e.g. `check`), not a URL: the docs example with a URL in `name`
-/// is rejected by the API, as are `type: image` / `type: emoji` (verified 2026-09-14).
+/// is rejected by the API, as are `type: image` / `type: emoji`.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize, Builder)]
 #[serde(from = "SlackStreamTaskIconRepr", into = "SlackStreamTaskIconRepr")]
 pub struct SlackStreamTaskIcon {
@@ -195,7 +196,7 @@ pub struct SlackStreamSource {
     #[serde(rename = "type")]
     pub source_type: String,
     pub url: String,
-    /// Required: the API rejects a source without `text` (verified 2026-09-14).
+    /// Required: the API rejects a source without `text`.
     pub text: String,
 }
 

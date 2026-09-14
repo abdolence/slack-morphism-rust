@@ -64,8 +64,8 @@ pub struct SlackApiAgentsSessionsSetStatusRequest {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAgentsSessionsSetStatusResponse {
-    pub status: Option<String>,
-    pub agent_status: Option<String>,
+    pub status: Option<SlackAgentSessionStatus>,
+    pub agent_status: Option<SlackAgentSessionStatus>,
     pub title: Option<String>,
 }
 
@@ -73,7 +73,7 @@ pub struct SlackApiAgentsSessionsSetStatusResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiAgentsSessionsRenameRequest {
     /// Required together with `thread_ts` for thread sessions in DMs/channels;
-    /// must be omitted for session channels (verified 2026-09-14).
+    /// must be omitted for session channels.
     pub channel_id: Option<SlackChannelId>,
     /// See `channel_id`.
     pub thread_ts: Option<SlackTs>,
@@ -82,7 +82,9 @@ pub struct SlackApiAgentsSessionsRenameRequest {
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackApiAgentsSessionsRenameResponse {}
+pub struct SlackApiAgentsSessionsRenameResponse {
+    pub title: Option<String>,
+}
 
 /// Agent session status for `agents.sessions.setStatus` and `chat.stopStream`'s `session_status`.
 /// https://docs.slack.dev/reference/methods/agents.sessions.setStatus#arg_status
@@ -93,4 +95,7 @@ pub enum SlackAgentSessionStatus {
     Processing,
     Suspended,
     Closed,
+    /// A value this crate does not model yet, so a new status does not fail the response.
+    #[serde(other)]
+    Other,
 }

@@ -47,11 +47,11 @@ pub struct SlackPushEventCallback {
     pub authorizations: Option<Vec<SlackEventAuthorization>>,
 }
 
-/// Deserialised with strict errors for the event types listed in
-/// `KNOWN_EVENT_TYPES`; any other `type` becomes `Unknown` carrying the raw payload.
+/// Known event types deserialise with strict errors; any other `type` becomes
+/// `Unknown`, keeping the envelope deserialisable (and therefore acknowledgeable).
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case", remote = "Self")]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum SlackEventCallbackBody {
     Message(SlackMessageEvent),
     AppHomeOpened(SlackAppHomeOpenedEvent),
@@ -84,71 +84,9 @@ pub enum SlackEventCallbackBody {
     AgentSessionStopped(SlackAgentSessionStoppedEvent),
     AgentSessionTitleChanged(SlackAgentSessionTitleChangedEvent),
     AppContextChanged(SlackAppContextChangedEvent),
-    /// Any event type not modelled above, carried verbatim so callers can log it.
-    /// Keeps the envelope deserialisable (and therefore acknowledgeable) when Slack
-    /// introduces new event types.
-    #[serde(skip)]
-    Unknown(serde_json::Value),
-}
-
-/// `type` tags handled by the modelled variants of `SlackEventCallbackBody`.
-/// Must be kept in sync with the enum above.
-const KNOWN_EVENT_TYPES: &[&str] = &[
-    "message",
-    "app_home_opened",
-    "app_mention",
-    "app_uninstalled",
-    "link_shared",
-    "emoji_changed",
-    "member_joined_channel",
-    "member_left_channel",
-    "channel_created",
-    "channel_deleted",
-    "channel_archive",
-    "channel_rename",
-    "channel_unarchive",
-    "team_join",
-    "file_created",
-    "file_change",
-    "file_deleted",
-    "file_shared",
-    "file_unshared",
-    "file_public",
-    "reaction_added",
-    "reaction_removed",
-    "star_added",
-    "star_removed",
-    "user_change",
-    "user_status_changed",
-    "assistant_thread_started",
-    "assistant_thread_context_changed",
-    "agent_session_stopped",
-    "agent_session_title_changed",
-    "app_context_changed",
-];
-
-impl Serialize for SlackEventCallbackBody {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        match self {
-            Self::Unknown(value) => value.serialize(serializer),
-            _ => Self::serialize(self, serializer),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for SlackEventCallbackBody {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = serde_json::Value::deserialize(deserializer)?;
-        let known = value
-            .get("type")
-            .and_then(serde_json::Value::as_str)
-            .is_some_and(|t| KNOWN_EVENT_TYPES.contains(&t));
-        if known {
-            Self::deserialize(value).map_err(serde::de::Error::custom)
-        } else {
-            Ok(Self::Unknown(value))
-        }
-    }
+    /// Any event type not modelled above.
+    #[serde(other)]
+    Unknown,
 }
 
 #[skip_serializing_none]
@@ -512,13 +450,16 @@ pub struct SlackAgentSessionTitleChangedEvent {
     pub title: String,
     pub previous_title: Option<String>,
     pub user: Option<SlackUserId>,
+    pub team_id: Option<SlackTeamId>,
+    /// Present for org-level installs.
+    pub enterprise_id: Option<SlackEnterpriseId>,
     pub event_ts: Option<SlackTs>,
 }
 
 /// https://docs.slack.dev/reference/events/app_context_changed
 ///
 /// The payload is `{"context": {"entities": [...]}}` or `{"context": {}}`;
-/// there is no `channel`, `user` or `event_ts` (verified 2026-09-14).
+/// there is no `channel`, `user` or `event_ts`.
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackAppContextChangedEvent {
@@ -687,11 +628,10 @@ mod test {
     }
 
     #[test]
-    fn test_slack_event_unknown_type_keeps_payload() {
-        let payload = serde_json::json!({"type":"some_future_event","x":1});
-        let event: SlackEventCallbackBody = serde_json::from_value(payload.clone()).unwrap();
-        assert_eq!(event, SlackEventCallbackBody::Unknown(payload.clone()));
-        assert_eq!(serde_json::to_value(&event).unwrap(), payload);
+    fn test_slack_event_unknown_type() {
+        let event: SlackEventCallbackBody =
+            serde_json::from_str(r#"{"type":"some_future_event","x":1}"#).unwrap();
+        assert_eq!(event, SlackEventCallbackBody::Unknown);
     }
 
     #[test]
