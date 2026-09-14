@@ -71,6 +71,26 @@ pub struct SlackSocketModeEventCommonAcknowledge {
     pub envelope_id: SlackSocketModeEnvelopeId,
 }
 
+impl SlackSocketModeEventCommonAcknowledge {
+    /// Builds an acknowledgement for a frame the listener could not otherwise parse
+    /// (an unrecognised `type`, or a known `type` whose payload does not match its
+    /// model), so Slack does not redeliver it. Only the `envelope_id` field is read;
+    /// every other field, and any non-object shape, is ignored. Frames that carry no
+    /// envelope id (`hello`, `disconnect`) or are not JSON at all yield `None`, since
+    /// there is nothing to acknowledge.
+    pub fn from_raw_frame(frame: &str) -> Option<Self> {
+        #[derive(Deserialize)]
+        struct EnvelopeIdProbe {
+            envelope_id: Option<SlackSocketModeEnvelopeId>,
+        }
+
+        serde_json::from_str::<EnvelopeIdProbe>(frame)
+            .ok()
+            .and_then(|probe| probe.envelope_id)
+            .map(Self::new)
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackSocketModeInteractiveEvent {
@@ -175,6 +195,36 @@ mod test {
         assert_eq!(
             serde_json::to_string(&ack).unwrap(),
             r#"{"envelope_id":"57d6a792-4d35-4d0b-b6aa-3361493e1caf"}"#
+        );
+    }
+
+    #[test]
+    fn test_ack_from_raw_frame_with_envelope_id() {
+        let frame = r#"{"type":"something_new","envelope_id":"57d6a792-4d35-4d0b-b6aa-3361493e1caf","payload":{"x":1}}"#;
+
+        assert_eq!(
+            SlackSocketModeEventCommonAcknowledge::from_raw_frame(frame),
+            Some(SlackSocketModeEventCommonAcknowledge::new(
+                SlackSocketModeEnvelopeId("57d6a792-4d35-4d0b-b6aa-3361493e1caf".into())
+            ))
+        );
+    }
+
+    #[test]
+    fn test_ack_from_raw_frame_without_envelope_id() {
+        let frame = r#"{"type":"hello","num_connections":1}"#;
+
+        assert_eq!(
+            SlackSocketModeEventCommonAcknowledge::from_raw_frame(frame),
+            None
+        );
+    }
+
+    #[test]
+    fn test_ack_from_raw_frame_non_json() {
+        assert_eq!(
+            SlackSocketModeEventCommonAcknowledge::from_raw_frame("not json"),
+            None
         );
     }
 }

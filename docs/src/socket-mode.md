@@ -174,3 +174,5 @@ The implementation allows you:
 - Return positive ack using http::StatusCode result / implement complex logic related to it.
   https://api.slack.com/apis/connections/socket-implement#acknowledge
 - Increase visibility and observability in general when errors happen in your app and from Slack/library.
+
+A frame whose body the library cannot parse (an unrecognised event type, or a known type with an unexpected payload) is passed to this error handler and then acknowledged on your behalf, so Slack does not keep redelivering it.

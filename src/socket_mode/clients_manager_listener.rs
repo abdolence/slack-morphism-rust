@@ -85,6 +85,7 @@ where
         message_body: String,
     ) -> Option<String> {
         if let Some(clients_manager) = self.clients_manager.upgrade() {
+            let raw_frame = message_body.clone();
             match serde_json::from_str::<SlackSocketModeEvent>(message_body.as_str()).map_err(|e| {
                 SlackClientProtocolError::new(e)
                     .with_json_body(message_body)
@@ -250,7 +251,11 @@ where
                         self.listener_environment.client.clone(),
                         self.listener_environment.user_state.clone(),
                     );
-                    None
+                    // The payload never parses better on retry, so acknowledge it here
+                    // rather than let Slack redeliver it; the error handler above
+                    // already received the body for diagnostics.
+                    return SlackSocketModeEventCommonAcknowledge::from_raw_frame(&raw_frame)
+                        .and_then(|ack| self.ack_frame(&ack));
                 }
             }
         } else {
