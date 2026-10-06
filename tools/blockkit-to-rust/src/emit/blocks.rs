@@ -35,6 +35,12 @@ pub fn emit_slack_block(v: &SlackBlock, ctx: &mut Ctx) -> Expr {
         SlackBlock::Event(value) => Call::new("SlackBlock::Event")
             .arg(raw::json_macro(value, ctx))
             .into(),
+        // No hand-built visitor yet; `emit::stub` keeps the snippet compiling
+        // and round-tripping until one lands in `tables.rs`.
+        SlackBlock::Container(_)
+        | SlackBlock::Plan(_)
+        | SlackBlock::DataTable(_)
+        | SlackBlock::DataVisualization(_) => super::stub(v, "block", "SlackBlock", ctx),
         // Reached for an unknown `type` and for a known `type` whose body did
         // not match the model (`SlackBlock::Unknown` is an untagged fallback).
         SlackBlock::Unknown(value) => {

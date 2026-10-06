@@ -1,0 +1,24 @@
+{
+  "type": "data_visualization",
+  "title": "My Favorite Pies by Percentage of Tastiness",
+  "chart": {
+    "type": "bar",
+    "series": [
+      {
+        "name": "Pies",
+        "data": [
+          { "label": "Strawberry Rhubarb", "value": 85 },
+          { "label": "Pumpkin", "value": 70 },
+          { "label": "Lemon Meringue", "value": 72 },
+          { "label": "Blueberry", "value": 90 },
+          { "label": "Key Lime", "value": 56 }
+        ]
+      }
+    ],
+    "axis_config": {
+      "categories": ["Strawberry Rhubarb", "Pumpkin", "Lemon Meringue", "Blueberry", "Key Lime"],
+      "x_label": "Pies",
+      "y_label": "Percentage of Tastiness"
+    }
+  }
+}

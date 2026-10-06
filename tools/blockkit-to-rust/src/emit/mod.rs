@@ -9,12 +9,12 @@ use crate::writer::Expr;
 use crate::{ConvertError, Ctx};
 
 /// Re-serializes a typed value so a stub visitor can hand it to
-/// `raw::not_yet_emitted`. Serialization of a value the crate itself just
-/// produced cannot fail; if it somehow does, the caller gets an error item
-/// rather than a panic.
-pub fn stub<T: serde::Serialize>(v: &T, kind: &str, ctx: &mut Ctx) -> Expr {
+/// `raw::not_yet_emitted_as` with `target` in the turbofish. Serialization of
+/// a value the crate itself just produced cannot fail; if it somehow does, the
+/// caller gets an error item rather than a panic.
+pub fn stub<T: serde::Serialize>(v: &T, kind: &str, target: &str, ctx: &mut Ctx) -> Expr {
     match serde_json::to_value(v) {
-        Ok(value) => crate::raw::not_yet_emitted(&value, ctx),
+        Ok(value) => crate::raw::not_yet_emitted_as(&value, ctx, target),
         Err(e) => {
             ctx.errors.push(ConvertError::Item {
                 path: ctx.path.clone(),
@@ -40,8 +40,17 @@ mod tests {
         // `stub` itself rather than depending on any particular struct staying
         // unimplemented as the rest of the emitter grows.
         let value = SlackViewSubmissionClearResponse::new();
-        let out = stub(&value, "test value", &mut ctx).flat();
-        assert!(out.starts_with("serde_json::from_value(json!("), "{out}");
+        let out = stub(
+            &value,
+            "test value",
+            "SlackViewSubmissionClearResponse",
+            &mut ctx,
+        )
+        .flat();
+        assert!(
+            out.starts_with("serde_json::from_value::<SlackViewSubmissionClearResponse>(json!("),
+            "{out}"
+        );
         assert!(ctx.errors.is_empty());
         assert!(ctx.needs_json && ctx.needs_result);
     }
