@@ -1,0 +1,7 @@
+{
+  "canvas_id": "F0166DCSTS7",
+  "criteria": {
+    "section_types": ["h1", "h2"],
+    "contains_text": "Grocery List"
+  }
+}

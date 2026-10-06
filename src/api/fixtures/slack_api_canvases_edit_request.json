@@ -1,0 +1,13 @@
+{
+  "canvas_id": "F0166DCSTS7",
+  "changes": [
+    {
+      "operation": "insert_after",
+      "section_id": "temp:C:VXX8e648e6984e441c6aa8c61173",
+      "document_content": {
+        "type": "markdown",
+        "markdown": "- [ ] asparagus\n- [ ] coffee\n"
+      }
+    }
+  ]
+}
