@@ -35,6 +35,20 @@ pub fn emit_slack_block(v: &SlackBlock, ctx: &mut Ctx) -> Expr {
         SlackBlock::Event(value) => Call::new("SlackBlock::Event")
             .arg(raw::json_macro(value, ctx))
             .into(),
+        // Reached for an unknown `type` and for a known `type` whose body did
+        // not match the model (`SlackBlock::Unknown` is an untagged fallback).
+        SlackBlock::Unknown(value) => {
+            ctx.warnings.push(crate::Warning {
+                path: ctx.path.clone(),
+                message: format!(
+                    "block type {} is unknown or malformed: emitted as SlackBlock::Unknown",
+                    value["type"]
+                ),
+            });
+            Call::new("SlackBlock::Unknown")
+                .arg(raw::json_macro(value, ctx))
+                .into()
+        }
     }
 }
 

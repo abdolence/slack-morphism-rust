@@ -31,8 +31,8 @@ pub fn json_value(v: &Value, ctx: &mut Ctx) -> Expr {
     }
 }
 
-/// `json!(<body>)`, for `SlackBlock::Event`, `SlackBlock::ShareShortcut` and
-/// `SlackRichTextInlineElement::Unknown`.
+/// `json!(<body>)`, for `SlackBlock::Event`, `SlackBlock::ShareShortcut`,
+/// `SlackBlock::Unknown` and `SlackRichTextInlineElement::Unknown`.
 pub fn json_macro(v: &Value, ctx: &mut Ctx) -> Expr {
     ctx.needs_json = true;
     Call::new("json!").arg(json_value(v, ctx)).into()

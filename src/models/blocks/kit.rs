@@ -17,6 +17,10 @@ pub struct SlackTaskId(pub String);
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
 pub struct SlackAccessibilityLabel(pub String);
 
+/// Blocks are internally tagged by `type`. A block whose `type` the crate does
+/// not model — or whose body does not match its known `type` — lands in
+/// [`SlackBlock::Unknown`] with its raw JSON instead of failing the whole
+/// `Vec<SlackBlock>`. `Unknown` must stay the last variant.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackBlock {
@@ -58,6 +62,8 @@ pub enum SlackBlock {
     ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
     Event(serde_json::Value),
+    #[serde(untagged)]
+    Unknown(serde_json::Value),
 }
 
 #[skip_serializing_none]
@@ -2577,6 +2583,35 @@ mod test {
             .into();
 
         assert_eq!(serde_json::to_value(&block)?, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn unknown_block_type_round_trips_verbatim() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = serde_json::json!([
+            { "type": "some_future_block", "x": 1 },
+            { "type": "divider", "block_id": "d1" }
+        ]);
+        let blocks: Vec<SlackBlock> = serde_json::from_value(payload.clone())?;
+        match &blocks[0] {
+            SlackBlock::Unknown(value) => assert_eq!(value, &payload[0]),
+            other => panic!("Expected Unknown block, got {other:?}"),
+        }
+        assert_eq!(
+            blocks[1],
+            SlackBlock::Divider(SlackDividerBlock::new().with_block_id("d1".into()))
+        );
+        assert_eq!(serde_json::to_value(&blocks)?, payload);
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_known_block_type_falls_back_to_unknown() -> Result<(), Box<dyn std::error::Error>>
+    {
+        // `header` requires `text`; serde tries the untagged fallback once the typed body fails.
+        let payload = serde_json::json!({ "type": "header" });
+        let block: SlackBlock = serde_json::from_value(payload.clone())?;
+        assert_eq!(block, SlackBlock::Unknown(payload));
         Ok(())
     }
 }
