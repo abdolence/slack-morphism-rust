@@ -179,9 +179,29 @@ pub type AnyStdResult<T> = std::result::Result<T, BoxError>;
 pub struct SlackEnvelopeMessage {
     pub ok: bool,
     pub error: Option<String>,
-    // Slack may return validation errors in `errors` field with `ok: false` for some methods (such as `apps.manifest.validate`.
+    /// Validation methods (`apps.manifest.validate`, `blocks.validate`) return
+    /// `ok: false` with structured objects here; non-string entries are kept
+    /// as their JSON text so the envelope still parses and the full body stays
+    /// available in `SlackClientApiError::http_response_body`.
+    #[serde(default, deserialize_with = "deserialize_envelope_errors")]
     pub errors: Option<Vec<String>>,
     pub warnings: Option<Vec<String>>,
+}
+
+fn deserialize_envelope_errors<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let values: Option<Vec<serde_json::Value>> = Option::deserialize(deserializer)?;
+    Ok(values.map(|values| {
+        values
+            .into_iter()
+            .map(|value| match value {
+                serde_json::Value::String(s) => s,
+                other => other.to_string(),
+            })
+            .collect()
+    }))
 }
 
 lazy_static! {
