@@ -95,6 +95,9 @@ impl From<SlackSectionBlock> for SlackBlock {
 pub struct SlackHeaderBlock {
     pub block_id: Option<SlackBlockId>,
     pub text: SlackBlockPlainTextOnly,
+    /// Heading level `1`–`4` (H1–H4); Slack renders the default size when absent.
+    /// <https://docs.slack.dev/reference/block-kit/blocks/header-block>
+    pub level: Option<u8>,
 }
 
 impl From<SlackHeaderBlock> for SlackBlock {
@@ -2988,6 +2991,24 @@ mod test {
         assert!(matches!(blocks[0], SlackBlock::Plan(_)));
         assert!(matches!(blocks[1], SlackBlock::Unknown(_)));
         assert_eq!(serde_json::to_value(&chunk)?, payload);
+        Ok(())
+    }
+
+    #[test]
+    fn header_block_keeps_its_level() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = serde_json::json!({
+            "type": "header",
+            "text": { "type": "plain_text", "text": "Budget", "emoji": true },
+            "level": 2
+        });
+        let block: SlackBlock = serde_json::from_value(payload.clone())?;
+        let SlackBlock::Header(header) = &block else {
+            panic!("Expected a header block, got {block:?}");
+        };
+        assert_eq!(header.level, Some(2));
+        assert_eq!(serde_json::to_value(&block)?, payload);
+        let plain: SlackBlock = SlackHeaderBlock::new(crate::pt!("Budget")).into();
+        assert!(serde_json::to_value(&plain)?.get("level").is_none());
         Ok(())
     }
 }

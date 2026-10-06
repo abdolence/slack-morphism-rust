@@ -102,10 +102,17 @@ pub fn emit_slack_section_block(v: &SlackSectionBlock, ctx: &mut Ctx) -> Expr {
 /// `SlackHeaderBlock` declares `block_id` before `text`, but only `text` is
 /// required, so `new()` takes `text` alone.
 pub fn emit_slack_header_block(v: &SlackHeaderBlock, ctx: &mut Ctx) -> Expr {
-    let SlackHeaderBlock { block_id, text } = v;
+    let SlackHeaderBlock {
+        block_id,
+        text,
+        level,
+    } = v;
     let mut call = Call::new("SlackHeaderBlock::new").arg(leaf::plain_text_only(text, ctx));
     if let Some(x) = block_id {
         call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    if let Some(x) = level {
+        call = call.set("with_level", leaf::u64_lit(u64::from(*x)));
     }
     call.into()
 }
