@@ -99,6 +99,13 @@ pub struct SlackEnterpriseSubteamId(pub String);
 pub struct SlackAppId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackCanvasId(pub String);
+
+/// A section inside a canvas, e.g. `temp:C:eBa219af721c664422cb90a52fac`.
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+pub struct SlackCanvasSectionId(pub String);
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
 pub struct SlackChannelId(pub String);
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]

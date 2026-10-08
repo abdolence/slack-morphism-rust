@@ -17,6 +17,16 @@ pub struct SlackTaskId(pub String);
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
 pub struct SlackAccessibilityLabel(pub String);
 
+/// Header block heading level: 1–4 = H1–H4.
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Serialize, Deserialize, ValueStruct,
+)]
+pub struct SlackHeaderLevel(pub u8);
+
+/// Blocks are internally tagged by `type`. A block whose `type` the crate does
+/// not model — or whose body does not match its known `type` — lands in
+/// [`SlackBlock::Unknown`] with its raw JSON instead of failing the whole
+/// `Vec<SlackBlock>`. `Unknown` must stay the last variant.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SlackBlock {
@@ -54,10 +64,20 @@ pub enum SlackBlock {
     Carousel(SlackCarouselBlock),
     #[serde(rename = "context_actions")]
     ContextActions(SlackContextActionsBlock),
+    #[serde(rename = "container")]
+    Container(SlackContainerBlock),
+    #[serde(rename = "plan")]
+    Plan(SlackPlanBlock),
+    #[serde(rename = "data_table")]
+    DataTable(SlackDataTableBlock),
+    #[serde(rename = "data_visualization")]
+    DataVisualization(SlackDataVisualizationBlock),
     #[serde(rename = "share_shortcut")]
     ShareShortcut(serde_json::Value),
     #[serde(rename = "event")]
     Event(serde_json::Value),
+    #[serde(untagged)]
+    Unknown(serde_json::Value),
 }
 
 #[skip_serializing_none]
@@ -81,6 +101,9 @@ impl From<SlackSectionBlock> for SlackBlock {
 pub struct SlackHeaderBlock {
     pub block_id: Option<SlackBlockId>,
     pub text: SlackBlockPlainTextOnly,
+    /// 1–4 = H1–H4; Slack renders the default size when absent.
+    /// <https://docs.slack.dev/reference/block-kit/blocks/header-block>
+    pub level: Option<SlackHeaderLevel>,
 }
 
 impl From<SlackHeaderBlock> for SlackBlock {
@@ -1867,6 +1890,243 @@ impl From<SlackContextActionsBlock> for SlackBlock {
     }
 }
 
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/container-block
+ *
+ * One of `title` / `rich_text_title` is required; `rich_text_title` wins when
+ * both are set. `child_blocks` holds at most 10 blocks. The docs list
+ * `actions, context, divider, file, header, image, input, rich_text, section,
+ * table, video` as supported children while the live validator accepts
+ * `divider, image, section, contact_card, callout, canvas_table, actions,
+ * video, header, context, table, layout`; neither set is enforced here.
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackContainerBlock {
+    pub block_id: Option<SlackBlockId>,
+    pub title: Option<SlackBlockPlainTextOnly>,
+    pub rich_text_title: Option<SlackRichTextInlineContent>,
+    pub subtitle: Option<SlackBlockText>,
+    pub child_blocks: Vec<SlackBlock>,
+    pub width: Option<SlackContainerWidth>,
+    pub icon: Option<SlackCardImageElement>,
+    pub is_collapsible: Option<bool>,
+    pub default_collapsed: Option<bool>,
+    pub has_header_divider: Option<bool>,
+}
+
+impl From<SlackContainerBlock> for SlackBlock {
+    fn from(block: SlackContainerBlock) -> Self {
+        SlackBlock::Container(block)
+    }
+}
+
+/// `narrow`, `standard` (default) and `wide` are platform-constrained widths;
+/// `full` fills the available space.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackContainerWidth {
+    Narrow,
+    Standard,
+    Wide,
+    Full,
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/plan-block
+ *
+ * `tasks` holds up to 50 task-card objects without a `type` tag
+ * (`SlackTaskCardBlock` serialises without one); every `task_id` in a plan
+ * must be unique.
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackPlanBlock {
+    pub title: String,
+    pub tasks: Vec<SlackTaskCardBlock>,
+    pub block_id: Option<SlackBlockId>,
+}
+
+impl From<SlackPlanBlock> for SlackBlock {
+    fn from(block: SlackPlanBlock) -> Self {
+        SlackBlock::Plan(block)
+    }
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/data-table-block
+ *
+ * The first row is the header and may not hold `rich_text` cells. 2–201 rows,
+ * 1–20 columns, every row the same length; `page_size` is 1–100 (default 5).
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackDataTableBlock {
+    pub caption: String,
+    pub rows: Vec<Vec<SlackDataTableCell>>,
+    pub block_id: Option<SlackBlockId>,
+    pub page_size: Option<u32>,
+    pub row_header_column_index: Option<u32>,
+}
+
+impl From<SlackDataTableBlock> for SlackBlock {
+    fn from(block: SlackDataTableBlock) -> Self {
+        SlackBlock::DataTable(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackDataTableCell {
+    #[serde(rename = "raw_text")]
+    RawText(SlackTableRawTextCell),
+    #[serde(rename = "raw_number")]
+    RawNumber(SlackDataTableRawNumberCell),
+    #[serde(rename = "rich_text")]
+    RichText(SlackTableRichTextCell),
+    #[serde(rename = "action_cell")]
+    ActionCell(SlackDataTableActionCell),
+    #[serde(untagged)]
+    Unknown(serde_json::Value),
+}
+
+/// A bare string becomes a raw-text cell.
+impl From<&str> for SlackDataTableCell {
+    fn from(value: &str) -> Self {
+        SlackDataTableCell::RawText(SlackTableRawTextCell::new(value.to_string()))
+    }
+}
+
+impl From<String> for SlackDataTableCell {
+    fn from(value: String) -> Self {
+        SlackDataTableCell::RawText(SlackTableRawTextCell::new(value))
+    }
+}
+
+impl From<SlackTableRawTextCell> for SlackDataTableCell {
+    fn from(cell: SlackTableRawTextCell) -> Self {
+        SlackDataTableCell::RawText(cell)
+    }
+}
+
+impl From<SlackDataTableRawNumberCell> for SlackDataTableCell {
+    fn from(cell: SlackDataTableRawNumberCell) -> Self {
+        SlackDataTableCell::RawNumber(cell)
+    }
+}
+
+impl From<SlackTableRichTextCell> for SlackDataTableCell {
+    fn from(cell: SlackTableRichTextCell) -> Self {
+        SlackDataTableCell::RichText(cell)
+    }
+}
+
+impl From<SlackDataTableActionCell> for SlackDataTableCell {
+    fn from(cell: SlackDataTableActionCell) -> Self {
+        SlackDataTableCell::ActionCell(cell)
+    }
+}
+
+/// `value` sorts the column numerically when every cell in it is a
+/// `raw_number`; `text` is what is displayed.
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackDataTableRawNumberCell {
+    pub value: serde_json::Number,
+    pub text: String,
+}
+
+/// A button in a cell; `fallback` is a `raw_text` or `raw_number` cell shown
+/// by clients that do not support action cells.
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackDataTableActionCell {
+    pub element: SlackDataTableActionElement,
+    pub fallback: Option<Box<SlackDataTableCell>>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum SlackDataTableActionElement {
+    #[serde(rename = "button")]
+    Button(SlackBlockButtonElement),
+}
+
+impl From<SlackBlockButtonElement> for SlackDataTableActionElement {
+    fn from(element: SlackBlockButtonElement) -> Self {
+        SlackDataTableActionElement::Button(element)
+    }
+}
+
+/**
+ * https://docs.slack.dev/reference/block-kit/blocks/data-visualization-block
+ *
+ * `title` is at most 50 characters; a message may hold at most two of these.
+ */
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackDataVisualizationBlock {
+    pub title: String,
+    pub chart: SlackChart,
+    pub block_id: Option<SlackBlockId>,
+}
+
+impl From<SlackDataVisualizationBlock> for SlackBlock {
+    fn from(block: SlackDataVisualizationBlock) -> Self {
+        SlackBlock::DataVisualization(block)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SlackChart {
+    Pie(SlackPieChart),
+    Bar(SlackSeriesChart),
+    Area(SlackSeriesChart),
+    Line(SlackSeriesChart),
+}
+
+/// 1–12 segments; each renders as `value / sum(values)`.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackPieChart {
+    pub segments: Vec<SlackChartSegment>,
+}
+
+/// Shared by `bar`, `area` and `line`: 1–12 series, each with exactly one data
+/// point per entry of `axis_config.categories`, and unique series names.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackSeriesChart {
+    pub series: Vec<SlackChartDataSeries>,
+    pub axis_config: SlackChartAxisConfig,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChartSegment {
+    pub label: String,
+    pub value: serde_json::Number,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChartDataSeries {
+    pub name: String,
+    pub data: Vec<SlackChartDataPoint>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChartDataPoint {
+    pub label: String,
+    pub value: serde_json::Number,
+}
+
+/// `categories` defines the valid data-point labels and their x-axis order.
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackChartAxisConfig {
+    pub categories: Vec<String>,
+    pub x_label: Option<String>,
+    pub y_label: Option<String>,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -2577,6 +2837,184 @@ mod test {
             .into();
 
         assert_eq!(serde_json::to_value(&block)?, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn unknown_block_type_round_trips_verbatim() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = serde_json::json!([
+            { "type": "some_future_block", "x": 1 },
+            { "type": "divider", "block_id": "d1" }
+        ]);
+        let blocks: Vec<SlackBlock> = serde_json::from_value(payload.clone())?;
+        match &blocks[0] {
+            SlackBlock::Unknown(value) => assert_eq!(value, &payload[0]),
+            other => panic!("Expected Unknown block, got {other:?}"),
+        }
+        assert_eq!(
+            blocks[1],
+            SlackBlock::Divider(SlackDividerBlock::new().with_block_id("d1".into()))
+        );
+        assert_eq!(serde_json::to_value(&blocks)?, payload);
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_known_block_type_falls_back_to_unknown() -> Result<(), Box<dyn std::error::Error>>
+    {
+        // `header` requires `text`; serde tries the untagged fallback once the typed body fails.
+        let payload = serde_json::json!({ "type": "header" });
+        let block: SlackBlock = serde_json::from_value(payload.clone())?;
+        assert_eq!(block, SlackBlock::Unknown(payload));
+        Ok(())
+    }
+
+    /// Deserialises a fixture to `SlackBlock`, re-serialises it and returns the
+    /// typed block alongside the equality of both JSON values.
+    fn round_trip(payload: &str) -> Result<SlackBlock, Box<dyn std::error::Error>> {
+        let expected: serde_json::Value = serde_json::from_str(payload)?;
+        let block: SlackBlock = serde_json::from_str(payload)?;
+        assert_eq!(serde_json::to_value(&block)?, expected);
+        Ok(block)
+    }
+
+    #[test]
+    fn container_block_fixture_round_trips() -> Result<(), Box<dyn std::error::Error>> {
+        let block = round_trip(include_str!("./fixtures/slack_container_block.json"))?;
+        let SlackBlock::Container(container) = block else {
+            panic!("Expected a Container block, got {block:?}");
+        };
+        assert_eq!(container.is_collapsible, Some(true));
+        assert_eq!(container.child_blocks.len(), 6);
+        assert!(matches!(container.child_blocks[0], SlackBlock::Section(_)));
+        assert!(matches!(container.child_blocks[5], SlackBlock::Actions(_)));
+        Ok(())
+    }
+
+    #[test]
+    fn plan_block_fixture_round_trips() -> Result<(), Box<dyn std::error::Error>> {
+        let block = round_trip(include_str!("./fixtures/slack_plan_block.json"))?;
+        let SlackBlock::Plan(plan) = block else {
+            panic!("Expected a Plan block, got {block:?}");
+        };
+        assert_eq!(plan.title, "Thinking completed");
+        assert_eq!(plan.tasks.len(), 3);
+        assert_eq!(plan.tasks[1].status, Some(SlackTaskCardStatus::Pending));
+        assert!(plan.tasks[2].output.is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn data_table_block_fixture_round_trips() -> Result<(), Box<dyn std::error::Error>> {
+        let block = round_trip(include_str!("./fixtures/slack_data_table_block.json"))?;
+        let SlackBlock::DataTable(table) = block else {
+            panic!("Expected a DataTable block, got {block:?}");
+        };
+        assert_eq!(table.caption, "A Fabulous Table");
+        assert_eq!(table.rows.len(), 4);
+        assert_eq!(table.rows[0][0], "Name".into());
+        assert!(matches!(table.rows[1][2], SlackDataTableCell::RichText(_)));
+        Ok(())
+    }
+
+    #[test]
+    fn data_table_number_and_action_cells_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+        // `action_cell` example from the docs page plus a `raw_number` and a future cell kind.
+        let payload = serde_json::json!([
+            { "type": "raw_number", "value": 1.5, "text": "1.5" },
+            {
+                "type": "action_cell",
+                "element": {
+                    "type": "button",
+                    "text": { "type": "plain_text", "text": "Mark done" },
+                    "action_id": "mark_done",
+                    "value": "task_123"
+                },
+                "fallback": { "type": "raw_text", "text": "Open" }
+            },
+            { "type": "sparkline", "points": [1, 2] }
+        ]);
+        let cells: Vec<SlackDataTableCell> = serde_json::from_value(payload.clone())?;
+        assert!(matches!(cells[0], SlackDataTableCell::RawNumber(_)));
+        let SlackDataTableCell::ActionCell(action) = &cells[1] else {
+            panic!("Expected an ActionCell, got {:?}", cells[1]);
+        };
+        assert_eq!(action.fallback.as_deref(), Some(&"Open".into()));
+        assert!(matches!(cells[2], SlackDataTableCell::Unknown(_)));
+        assert_eq!(serde_json::to_value(&cells)?, payload);
+        Ok(())
+    }
+
+    #[test]
+    fn data_visualization_pie_fixture_round_trips() -> Result<(), Box<dyn std::error::Error>> {
+        let block = round_trip(include_str!(
+            "./fixtures/slack_data_visualization_pie_block.json"
+        ))?;
+        let SlackBlock::DataVisualization(viz) = block else {
+            panic!("Expected a DataVisualization block, got {block:?}");
+        };
+        let SlackChart::Pie(pie) = viz.chart else {
+            panic!("Expected a pie chart, got {:?}", viz.chart);
+        };
+        assert_eq!(pie.segments.len(), 4);
+        assert_eq!(pie.segments[0].value, 45.into());
+        Ok(())
+    }
+
+    #[test]
+    fn data_visualization_bar_fixture_round_trips() -> Result<(), Box<dyn std::error::Error>> {
+        let block = round_trip(include_str!(
+            "./fixtures/slack_data_visualization_bar_block.json"
+        ))?;
+        let SlackBlock::DataVisualization(viz) = block else {
+            panic!("Expected a DataVisualization block, got {block:?}");
+        };
+        let SlackChart::Bar(bar) = viz.chart else {
+            panic!("Expected a bar chart, got {:?}", viz.chart);
+        };
+        assert_eq!(bar.series[0].data.len(), 5);
+        assert_eq!(bar.axis_config.categories.len(), 5);
+        assert_eq!(
+            bar.axis_config.y_label.as_deref(),
+            Some("Percentage of Tastiness")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn stream_chunk_blocks_carries_new_block_types() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = serde_json::json!({
+            "type": "blocks",
+            "blocks": [
+                { "type": "plan", "title": "Plan", "tasks": [] },
+                { "type": "some_future_block", "x": 1 }
+            ]
+        });
+        let chunk: crate::api::SlackStreamChunk = serde_json::from_value(payload.clone())?;
+        let crate::api::SlackStreamChunk::Blocks { blocks } = &chunk else {
+            panic!("Expected a Blocks chunk, got {chunk:?}");
+        };
+        assert!(matches!(blocks[0], SlackBlock::Plan(_)));
+        assert!(matches!(blocks[1], SlackBlock::Unknown(_)));
+        assert_eq!(serde_json::to_value(&chunk)?, payload);
+        Ok(())
+    }
+
+    #[test]
+    fn header_block_keeps_its_level() -> Result<(), Box<dyn std::error::Error>> {
+        let payload = serde_json::json!({
+            "type": "header",
+            "text": { "type": "plain_text", "text": "Budget", "emoji": true },
+            "level": 2
+        });
+        let block: SlackBlock = serde_json::from_value(payload.clone())?;
+        let SlackBlock::Header(header) = &block else {
+            panic!("Expected a header block, got {block:?}");
+        };
+        assert_eq!(header.level, Some(SlackHeaderLevel(2)));
+        assert_eq!(serde_json::to_value(&block)?, payload);
+        let plain: SlackBlock = SlackHeaderBlock::new(crate::pt!("Budget")).into();
+        assert!(serde_json::to_value(&plain)?.get("level").is_none());
         Ok(())
     }
 }

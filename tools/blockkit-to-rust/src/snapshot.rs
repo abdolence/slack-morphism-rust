@@ -21,13 +21,24 @@ pub enum FixtureKind {
 pub const FIXTURE_KINDS: &[(&str, FixtureKind)] = &[
     ("slack_alert_block.json", FixtureKind::Block),
     ("slack_card_block.json", FixtureKind::Block),
+    ("slack_container_block.json", FixtureKind::Block),
     ("slack_context_actions_block.json", FixtureKind::Block),
     (
         "slack_conversations_select_with_filter.json",
         FixtureKind::Block,
     ),
+    ("slack_data_table_block.json", FixtureKind::Block),
+    (
+        "slack_data_visualization_bar_block.json",
+        FixtureKind::Block,
+    ),
+    (
+        "slack_data_visualization_pie_block.json",
+        FixtureKind::Block,
+    ),
     ("slack_home_view.json", FixtureKind::HomeView),
     ("slack_image_blocks.json", FixtureKind::Message),
+    ("slack_plan_block.json", FixtureKind::Block),
     ("slack_rich_text_block.json", FixtureKind::Block),
     ("slack_table_block.json", FixtureKind::Block),
     ("slack_task_card_block.json", FixtureKind::Block),
@@ -37,7 +48,13 @@ pub const FIXTURE_KINDS: &[(&str, FixtureKind)] = &[
 /// Fixtures whose shapes no visitor hand-builds yet, tagged with the emitter
 /// area that will take them. An entry is deleted when its visitors land, so the
 /// array is empty once every block, element and view has a hand-written visitor.
-pub const SKIPPED_FIXTURES: &[(&str, &str)] = &[];
+pub const SKIPPED_FIXTURES: &[(&str, &str)] = &[
+    ("slack_container_block.json", "tables"),
+    ("slack_data_table_block.json", "tables"),
+    ("slack_data_visualization_bar_block.json", "tables"),
+    ("slack_data_visualization_pie_block.json", "tables"),
+    ("slack_plan_block.json", "tables"),
+];
 
 pub fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../src/models/blocks/fixtures")
@@ -172,7 +189,7 @@ mod tests {
             .collect();
         known.sort();
         assert_eq!(on_disk, known, "add the new fixture to FIXTURE_KINDS");
-        assert_eq!(on_disk.len(), 10);
+        assert_eq!(on_disk.len(), 15);
     }
 
     #[test]

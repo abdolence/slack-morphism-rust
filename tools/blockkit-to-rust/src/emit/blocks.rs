@@ -35,6 +35,26 @@ pub fn emit_slack_block(v: &SlackBlock, ctx: &mut Ctx) -> Expr {
         SlackBlock::Event(value) => Call::new("SlackBlock::Event")
             .arg(raw::json_macro(value, ctx))
             .into(),
+        // No hand-built visitor yet; `emit::stub` keeps the snippet compiling
+        // and round-tripping until one lands in `tables.rs`.
+        SlackBlock::Container(_)
+        | SlackBlock::Plan(_)
+        | SlackBlock::DataTable(_)
+        | SlackBlock::DataVisualization(_) => super::stub(v, "block", "SlackBlock", ctx),
+        // Reached for an unknown `type` and for a known `type` whose body did
+        // not match the model (`SlackBlock::Unknown` is an untagged fallback).
+        SlackBlock::Unknown(value) => {
+            ctx.warnings.push(crate::Warning {
+                path: ctx.path.clone(),
+                message: format!(
+                    "block type {} is unknown or malformed: emitted as SlackBlock::Unknown",
+                    value["type"]
+                ),
+            });
+            Call::new("SlackBlock::Unknown")
+                .arg(raw::json_macro(value, ctx))
+                .into()
+        }
     }
 }
 
@@ -82,10 +102,22 @@ pub fn emit_slack_section_block(v: &SlackSectionBlock, ctx: &mut Ctx) -> Expr {
 /// `SlackHeaderBlock` declares `block_id` before `text`, but only `text` is
 /// required, so `new()` takes `text` alone.
 pub fn emit_slack_header_block(v: &SlackHeaderBlock, ctx: &mut Ctx) -> Expr {
-    let SlackHeaderBlock { block_id, text } = v;
+    let SlackHeaderBlock {
+        block_id,
+        text,
+        level,
+    } = v;
     let mut call = Call::new("SlackHeaderBlock::new").arg(leaf::plain_text_only(text, ctx));
     if let Some(x) = block_id {
         call = call.set("with_block_id", leaf::value_str(x.value()));
+    }
+    if let Some(x) = level {
+        call = call.set(
+            "with_level",
+            Call::new("SlackHeaderLevel")
+                .arg(leaf::u64_lit(u64::from(*x.value())))
+                .into(),
+        );
     }
     call.into()
 }
@@ -326,6 +358,18 @@ mod tests {
         assert_eq!(
             emit(json!({ "type": "file", "external_id": "F1", "source": "remote" })),
             "SlackFileBlock::new(\"F1\".into()).with_source(\"remote\".into())"
+        );
+    }
+
+    #[test]
+    fn header_level_emits_the_newtype() {
+        assert_eq!(
+            emit(json!({
+                "type": "header",
+                "text": { "type": "plain_text", "text": "Budget" },
+                "level": 2
+            })),
+            "SlackHeaderBlock::new(pt!(\"Budget\")).with_level(SlackHeaderLevel(2))"
         );
     }
 

@@ -179,9 +179,27 @@ pub type AnyStdResult<T> = std::result::Result<T, BoxError>;
 pub struct SlackEnvelopeMessage {
     pub ok: bool,
     pub error: Option<String>,
-    // Slack may return validation errors in `errors` field with `ok: false` for some methods (such as `apps.manifest.validate`.
-    pub errors: Option<Vec<String>>,
+    /// Validation methods (`apps.manifest.validate`, `blocks.validate`) return
+    /// `ok: false` with structured objects here, so the entries are kept raw;
+    /// see [`SlackEnvelopeMessage::errors_as_strings`] for a flat view.
+    pub errors: Option<Vec<serde_json::Value>>,
     pub warnings: Option<Vec<String>>,
+}
+
+impl SlackEnvelopeMessage {
+    /// `errors` flattened for logging: strings verbatim, anything else as its
+    /// JSON text.
+    pub fn errors_as_strings(&self) -> Option<Vec<String>> {
+        self.errors.as_ref().map(|errors| {
+            errors
+                .iter()
+                .map(|value| match value {
+                    serde_json::Value::String(s) => s.clone(),
+                    other => other.to_string(),
+                })
+                .collect()
+        })
+    }
 }
 
 lazy_static! {

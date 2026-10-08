@@ -311,38 +311,40 @@ mod tests {
     }
 
     #[test]
-    fn single_unknown_block_falls_back_with_a_typed_from_value() {
+    fn single_unknown_block_type_emits_slack_block_unknown() {
         let out = convert(r#"{ "type": "nope" }"#, &Options::default()).expect("converts");
-        assert!(
-            out.code
-                .contains("serde_json::from_value::<SlackBlock>(json!("),
-            "fallback must name its target type so `.into()` can infer:\n{}",
-            out.code
+        assert_eq!(
+            out.code,
+            "use slack_morphism::prelude::*;\n\
+             use serde_json::json;\n\
+             \n\
+             let block: SlackBlock = SlackBlock::Unknown(json!({ \"type\": \"nope\" })).into();\n"
         );
-        assert!(out.code.contains(")?.into();\n"), "{}", out.code);
-        assert_eq!(out.errors.len(), 1);
+        assert!(out.errors.is_empty());
+        assert_eq!(
+            out.warnings,
+            vec![Warning {
+                path: "blocks[0]".into(),
+                message:
+                    "block type \"nope\" is unknown or malformed: emitted as SlackBlock::Unknown"
+                        .into(),
+            }]
+        );
     }
 
     #[test]
-    fn unknown_block_type_reports_path_and_keeps_other_blocks() {
+    fn malformed_block_warns_with_path_and_keeps_other_blocks() {
         let out = convert(
-            r#"[{ "type": "divider" }, { "type": "nope" }, { "type": "divider" }]"#,
+            r#"[{ "type": "divider" }, { "type": "header" }, { "type": "divider" }]"#,
             &Options::default(),
         )
         .expect("converts");
-        assert_eq!(out.errors.len(), 1);
-        assert_eq!(
-            out.errors[0],
-            ConvertError::Item {
-                path: "blocks[1]".into(),
-                message: "unknown variant `nope`, expected one of `section`, `header`, \
-                          `divider`, `image`, `actions`, `context`, `input`, `file`, `video`, \
-                          `markdown`, `rich_text`, `table`, `task_card`, `alert`, `card`, \
-                          `carousel`, `context_actions`, `share_shortcut`, `event`"
-                    .into(),
-            }
-        );
-        assert!(out.code.contains("// blocks[1]: not converted:"));
+        assert!(out.errors.is_empty());
+        assert_eq!(out.warnings.len(), 1);
+        assert_eq!(out.warnings[0].path, "blocks[1]");
+        assert!(out
+            .code
+            .contains("SlackBlock::Unknown(json!({ \"type\": \"header\" }))"));
         assert_eq!(out.code.matches("SlackDividerBlock::new()").count(), 2);
     }
 
