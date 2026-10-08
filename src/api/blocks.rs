@@ -100,12 +100,24 @@ pub enum SlackApiBlocksValidateErrorKind {
 pub struct SlackApiBlocksValidateError {
     /// JSON pointer to the invalid element, e.g. `/blocks/0/child_blocks/0/type`.
     pub pointer: String,
-    /// e.g. `failed_constraint`.
-    pub code: String,
+    pub code: SlackApiBlocksValidateErrorCode,
     pub message: String,
     /// Shape depends on `code`, e.g. `{"type":"enum","expected":[...],"got":"..."}`.
     pub constraint: Option<serde_json::Value>,
     pub field: Option<String>,
+}
+
+/// Per-item error code in `SlackApiBlocksValidateResponse.errors`. The docs
+/// list only `failed_constraint`; `missing_field` is observed live.
+/// https://docs.slack.dev/reference/methods/blocks.validate#validation-errors
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackApiBlocksValidateErrorCode {
+    FailedConstraint,
+    MissingField,
+    /// A value this crate does not model yet, carried verbatim.
+    #[serde(untagged)]
+    Other(String),
 }
 
 #[cfg(test)]
@@ -141,6 +153,10 @@ mod test {
         );
         let errors = response.errors.as_ref().unwrap();
         assert_eq!(errors[0].pointer, "/blocks/0/child_blocks/0/type");
+        assert_eq!(
+            errors[0].code,
+            SlackApiBlocksValidateErrorCode::FailedConstraint
+        );
         assert_eq!(errors[0].constraint.as_ref().unwrap()["got"], "markdown");
         assert_eq!(errors[0].field, None);
         assert_eq!(
@@ -150,6 +166,17 @@ mod test {
 
         let ok: SlackApiBlocksValidateResponse = serde_json::from_str(r#"{"ok":true}"#).unwrap();
         assert!(ok.ok && ok.errors.is_none());
+
+        let other_code: SlackApiBlocksValidateErrorCode =
+            serde_json::from_str(r#""something_new""#).unwrap();
+        assert_eq!(
+            other_code,
+            SlackApiBlocksValidateErrorCode::Other("something_new".into())
+        );
+        assert_eq!(
+            serde_json::to_string(&other_code).unwrap(),
+            r#""something_new""#
+        );
 
         let other: SlackApiBlocksValidateErrorKind =
             serde_json::from_str(r#""something_new""#).unwrap();
