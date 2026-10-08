@@ -17,6 +17,12 @@ pub struct SlackTaskId(pub String);
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize, ValueStruct)]
 pub struct SlackAccessibilityLabel(pub String);
 
+/// Header block heading level: 1–4 = H1–H4.
+#[derive(
+    Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Serialize, Deserialize, ValueStruct,
+)]
+pub struct SlackHeaderLevel(pub u8);
+
 /// Blocks are internally tagged by `type`. A block whose `type` the crate does
 /// not model — or whose body does not match its known `type` — lands in
 /// [`SlackBlock::Unknown`] with its raw JSON instead of failing the whole
@@ -95,9 +101,9 @@ impl From<SlackSectionBlock> for SlackBlock {
 pub struct SlackHeaderBlock {
     pub block_id: Option<SlackBlockId>,
     pub text: SlackBlockPlainTextOnly,
-    /// Heading level `1`–`4` (H1–H4); Slack renders the default size when absent.
+    /// 1–4 = H1–H4; Slack renders the default size when absent.
     /// <https://docs.slack.dev/reference/block-kit/blocks/header-block>
-    pub level: Option<u8>,
+    pub level: Option<SlackHeaderLevel>,
 }
 
 impl From<SlackHeaderBlock> for SlackBlock {
@@ -3005,7 +3011,7 @@ mod test {
         let SlackBlock::Header(header) = &block else {
             panic!("Expected a header block, got {block:?}");
         };
-        assert_eq!(header.level, Some(2));
+        assert_eq!(header.level, Some(SlackHeaderLevel(2)));
         assert_eq!(serde_json::to_value(&block)?, payload);
         let plain: SlackBlock = SlackHeaderBlock::new(crate::pt!("Budget")).into();
         assert!(serde_json::to_value(&plain)?.get("level").is_none());

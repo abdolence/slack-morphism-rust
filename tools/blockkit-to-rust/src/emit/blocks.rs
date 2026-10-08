@@ -112,7 +112,12 @@ pub fn emit_slack_header_block(v: &SlackHeaderBlock, ctx: &mut Ctx) -> Expr {
         call = call.set("with_block_id", leaf::value_str(x.value()));
     }
     if let Some(x) = level {
-        call = call.set("with_level", leaf::u64_lit(u64::from(*x)));
+        call = call.set(
+            "with_level",
+            Call::new("SlackHeaderLevel")
+                .arg(leaf::u64_lit(u64::from(*x.value())))
+                .into(),
+        );
     }
     call.into()
 }
@@ -353,6 +358,18 @@ mod tests {
         assert_eq!(
             emit(json!({ "type": "file", "external_id": "F1", "source": "remote" })),
             "SlackFileBlock::new(\"F1\".into()).with_source(\"remote\".into())"
+        );
+    }
+
+    #[test]
+    fn header_level_emits_the_newtype() {
+        assert_eq!(
+            emit(json!({
+                "type": "header",
+                "text": { "type": "plain_text", "text": "Budget" },
+                "level": 2
+            })),
+            "SlackHeaderBlock::new(pt!(\"Budget\")).with_level(SlackHeaderLevel(2))"
         );
     }
 
