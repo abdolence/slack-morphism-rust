@@ -143,7 +143,11 @@ mod test {
 
         let envelope: crate::SlackEnvelopeMessage = serde_json::from_str(payload).unwrap();
         assert_eq!(envelope.error.as_deref(), Some("invalid_message"));
-        assert!(envelope.errors.unwrap()[0].contains("failed_constraint"));
+        assert_eq!(
+            envelope.errors.as_ref().unwrap()[0]["code"],
+            "failed_constraint"
+        );
+        assert!(envelope.errors_as_strings().unwrap()[0].contains("\"failed_constraint\""));
 
         let response: SlackApiBlocksValidateResponse = serde_json::from_str(payload).unwrap();
         assert!(!response.ok);

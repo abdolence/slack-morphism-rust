@@ -144,6 +144,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                 let slack_message: SlackEnvelopeMessage =
                     serde_json::from_str(http_body_str.as_str())
                         .map_err(|err| map_serde_error(err, Some(http_body_str.as_str())))?;
+                let errors = slack_message.errors_as_strings();
                 match slack_message.error {
                     None => {
                         let decoded_body = serde_json::from_str(http_body_str.as_str())
@@ -152,7 +153,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                     }
                     Some(slack_error) => Err(SlackClientError::ApiError(
                         SlackClientApiError::new(slack_error)
-                            .opt_errors(slack_message.errors)
+                            .opt_errors(errors)
                             .opt_warnings(slack_message.warnings)
                             .with_http_response_body(http_body_str),
                     )),
