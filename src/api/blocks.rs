@@ -77,9 +77,22 @@ pub struct SlackApiBlocksValidateRequest {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiBlocksValidateResponse {
     pub ok: bool,
-    /// `invalid_blocks` / `invalid_message` / `invalid_view` when `ok` is false.
-    pub error: Option<String>,
+    /// Set when `ok` is false.
+    pub error: Option<SlackApiBlocksValidateErrorKind>,
     pub errors: Option<Vec<SlackApiBlocksValidateError>>,
+}
+
+/// Which payload failed validation.
+/// https://docs.slack.dev/reference/methods/blocks.validate#errors
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlackApiBlocksValidateErrorKind {
+    InvalidBlocks,
+    InvalidMessage,
+    InvalidView,
+    /// A value this crate does not model yet, carried verbatim.
+    #[serde(untagged)]
+    Other(String),
 }
 
 #[skip_serializing_none]
@@ -122,6 +135,10 @@ mod test {
 
         let response: SlackApiBlocksValidateResponse = serde_json::from_str(payload).unwrap();
         assert!(!response.ok);
+        assert_eq!(
+            response.error,
+            Some(SlackApiBlocksValidateErrorKind::InvalidMessage)
+        );
         let errors = response.errors.as_ref().unwrap();
         assert_eq!(errors[0].pointer, "/blocks/0/child_blocks/0/type");
         assert_eq!(errors[0].constraint.as_ref().unwrap()["got"], "markdown");
@@ -133,5 +150,13 @@ mod test {
 
         let ok: SlackApiBlocksValidateResponse = serde_json::from_str(r#"{"ok":true}"#).unwrap();
         assert!(ok.ok && ok.errors.is_none());
+
+        let other: SlackApiBlocksValidateErrorKind =
+            serde_json::from_str(r#""something_new""#).unwrap();
+        assert_eq!(
+            other,
+            SlackApiBlocksValidateErrorKind::Other("something_new".into())
+        );
+        assert_eq!(serde_json::to_string(&other).unwrap(), r#""something_new""#);
     }
 }
