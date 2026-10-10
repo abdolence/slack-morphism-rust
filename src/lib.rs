@@ -74,9 +74,10 @@
 //!         .with_text(md!("Deployed *{}* to {}", "api", "us-east-1"))
 //!         .with_fields(vec![md!("*Duration:*\n42s"), md!("*Result:*\nsuccess")]),
 //!     SlackActionsBlock::new(slack_blocks![
-//!         SlackBlockButtonElement::new("rollback".into(), pt!("Rollback"))
+//!         SlackBlockButtonElement::new(pt!("Rollback"))
+//!             .with_action_id("rollback".into())
 //!             .with_style(SlackBlockButtonStyle::Danger),
-//!         SlackBlockButtonElement::new("details".into(), pt!("View details")),
+//!         SlackBlockButtonElement::new(pt!("View details")).with_action_id("details".into()),
 //!     ]),
 //!     SlackRichTextBlock::new(vec![SlackRichTextSection::new(vec![
 //!         "Triggered by ".into(),

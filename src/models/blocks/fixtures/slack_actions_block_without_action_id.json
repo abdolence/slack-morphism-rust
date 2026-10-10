@@ -1,0 +1,24 @@
+{
+  "type": "actions",
+  "elements": [
+    {
+      "type": "button",
+      "text": {
+        "type": "plain_text",
+        "text": "Farmhouse",
+        "emoji": true
+      },
+      "value": "click_me_123"
+    },
+    {
+      "type": "button",
+      "text": {
+        "type": "plain_text",
+        "text": "Kin Khao",
+        "emoji": true
+      },
+      "value": "click_me_123",
+      "url": "https://google.com/"
+    }
+  ]
+}

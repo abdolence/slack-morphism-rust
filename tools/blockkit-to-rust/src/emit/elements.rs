@@ -190,9 +190,10 @@ pub fn emit_slack_block_button_element(v: &SlackBlockButtonElement, ctx: &mut Ct
         confirm,
         accessibility_label,
     } = v;
-    let mut call = Call::new("SlackBlockButtonElement::new")
-        .arg(leaf::value_str(action_id.value()))
-        .arg(leaf::plain_text_only(text, ctx));
+    let mut call = Call::new("SlackBlockButtonElement::new").arg(leaf::plain_text_only(text, ctx));
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = url {
         call = call.set("with_url", leaf::url_expr(x, ctx));
     }
@@ -292,8 +293,10 @@ pub fn emit_slack_block_static_select_element(
         confirm,
         focus_on_load,
     } = v;
-    let mut call =
-        Call::new("SlackBlockStaticSelectElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockStaticSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -378,8 +381,10 @@ pub fn emit_slack_block_multi_static_select_element(
         max_selected_items,
         focus_on_load,
     } = v;
-    let mut call = Call::new("SlackBlockMultiStaticSelectElement::new")
-        .arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockMultiStaticSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -443,8 +448,10 @@ pub fn emit_slack_block_external_select_element(
         focus_on_load,
         min_query_length,
     } = v;
-    let mut call =
-        Call::new("SlackBlockExternalSelectElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockExternalSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -479,8 +486,10 @@ pub fn emit_slack_block_multi_external_select_element(
         focus_on_load,
         min_query_length,
     } = v;
-    let mut call = Call::new("SlackBlockMultiExternalSelectElement::new")
-        .arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockMultiExternalSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -522,8 +531,10 @@ pub fn emit_slack_block_users_select_element(
         confirm,
         focus_on_load,
     } = v;
-    let mut call =
-        Call::new("SlackBlockUsersSelectElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockUsersSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -551,8 +562,10 @@ pub fn emit_slack_block_multi_users_select_element(
         max_selected_items,
         focus_on_load,
     } = v;
-    let mut call =
-        Call::new("SlackBlockMultiUsersSelectElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockMultiUsersSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -622,8 +635,10 @@ pub fn emit_slack_block_conversations_select_element(
         focus_on_load,
         filter,
     } = v;
-    let mut call = Call::new("SlackBlockConversationsSelectElement::new")
-        .arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockConversationsSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -662,8 +677,10 @@ pub fn emit_slack_block_multi_conversations_select_element(
         focus_on_load,
         filter,
     } = v;
-    let mut call = Call::new("SlackBlockMultiConversationsSelectElement::new")
-        .arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockMultiConversationsSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -706,8 +723,10 @@ pub fn emit_slack_block_channels_select_element(
         response_url_enabled,
         focus_on_load,
     } = v;
-    let mut call =
-        Call::new("SlackBlockChannelsSelectElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockChannelsSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -738,8 +757,10 @@ pub fn emit_slack_block_multi_channels_select_element(
         max_selected_items,
         focus_on_load,
     } = v;
-    let mut call = Call::new("SlackBlockMultiChannelsSelectElement::new")
-        .arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockMultiChannelsSelectElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -770,15 +791,16 @@ pub fn emit_slack_block_overflow_element(v: &SlackBlockOverflowElement, ctx: &mu
         options,
         confirm,
     } = v;
-    let mut call = Call::new("SlackBlockOverflowElement::new")
-        .arg(leaf::value_str(action_id.value()))
-        .arg(Expr::List {
-            kind: ListKind::Vec,
-            items: options
-                .iter()
-                .map(|o| emit_slack_block_choice_item(o, ctx, leaf::plain_text_only))
-                .collect(),
-        });
+    let mut call = Call::new("SlackBlockOverflowElement::new").arg(Expr::List {
+        kind: ListKind::Vec,
+        items: options
+            .iter()
+            .map(|o| emit_slack_block_choice_item(o, ctx, leaf::plain_text_only))
+            .collect(),
+    });
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = confirm {
         call = call.set("with_confirm", emit_slack_block_confirm_item(x, ctx));
     }
@@ -796,8 +818,10 @@ pub fn emit_slack_block_date_picker_element(
         confirm,
         focus_on_load,
     } = v;
-    let mut call =
-        Call::new("SlackBlockDatePickerElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockDatePickerElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -825,8 +849,10 @@ pub fn emit_slack_block_time_picker_element(
         placeholder,
         timezone,
     } = v;
-    let mut call =
-        Call::new("SlackBlockTimePickerElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockTimePickerElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = initial_time {
         call = call.set("with_initial_time", leaf::value_str(x));
     }
@@ -855,8 +881,10 @@ pub fn emit_slack_block_date_time_picker_element(
         confirm,
         focus_on_load,
     } = v;
-    let mut call =
-        Call::new("SlackBlockDateTimePickerElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockDateTimePickerElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = initial_date_time {
         call = call.set("with_initial_date_time", leaf::datetime_expr(x, ctx));
     }
@@ -898,8 +926,10 @@ pub fn emit_slack_block_plain_text_input_element(
         focus_on_load,
         dispatch_action_config,
     } = v;
-    let mut call =
-        Call::new("SlackBlockPlainTextInputElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockPlainTextInputElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -940,9 +970,11 @@ pub fn emit_slack_block_number_input_element(
         min_value,
         max_value,
     } = v;
-    let mut call = Call::new("SlackBlockNumberInputElement::new")
-        .arg(leaf::value_str(action_id.value()))
-        .arg(leaf::bool_lit(*is_decimal_allowed));
+    let mut call =
+        Call::new("SlackBlockNumberInputElement::new").arg(leaf::bool_lit(*is_decimal_allowed));
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = focus_on_load {
         call = call.set("with_focus_on_load", leaf::bool_lit(*x));
     }
@@ -967,8 +999,10 @@ pub fn emit_slack_block_url_input_element(v: &SlackBlockUrlInputElement, ctx: &m
         placeholder,
         initial_value,
     } = v;
-    let mut call =
-        Call::new("SlackBlockUrlInputElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockUrlInputElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = placeholder {
         call = call.set("with_placeholder", leaf::plain_text_only(x, ctx));
     }
@@ -988,8 +1022,10 @@ pub fn emit_slack_block_email_input_element(
         placeholder,
         initial_value,
     } = v;
-    let mut call =
-        Call::new("SlackBlockEmailInputElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockEmailInputElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = focus_on_load {
         call = call.set("with_focus_on_load", leaf::bool_lit(*x));
     }
@@ -1013,15 +1049,16 @@ pub fn emit_slack_block_radio_buttons_element(
         confirm,
         focus_on_load,
     } = v;
-    let mut call = Call::new("SlackBlockRadioButtonsElement::new")
-        .arg(leaf::value_str(action_id.value()))
-        .arg(Expr::List {
-            kind: ListKind::Vec,
-            items: options
-                .iter()
-                .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
-                .collect(),
-        });
+    let mut call = Call::new("SlackBlockRadioButtonsElement::new").arg(Expr::List {
+        kind: ListKind::Vec,
+        items: options
+            .iter()
+            .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
+            .collect(),
+    });
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = initial_option {
         call = call.set(
             "with_initial_option",
@@ -1045,15 +1082,16 @@ pub fn emit_slack_block_checkboxes_element(v: &SlackBlockCheckboxesElement, ctx:
         confirm,
         focus_on_load,
     } = v;
-    let mut call = Call::new("SlackBlockCheckboxesElement::new")
-        .arg(leaf::value_str(action_id.value()))
-        .arg(Expr::List {
-            kind: ListKind::Vec,
-            items: options
-                .iter()
-                .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
-                .collect(),
-        });
+    let mut call = Call::new("SlackBlockCheckboxesElement::new").arg(Expr::List {
+        kind: ListKind::Vec,
+        items: options
+            .iter()
+            .map(|o| emit_slack_block_choice_item(o, ctx, leaf::block_text))
+            .collect(),
+    });
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = initial_options {
         call = call.set(
             "with_initial_options",
@@ -1108,8 +1146,10 @@ pub fn emit_slack_block_file_input_element(v: &SlackBlockFileInputElement, _ctx:
         filetypes,
         max_files,
     } = v;
-    let mut call =
-        Call::new("SlackBlockFileInputElement::new").arg(leaf::value_str(action_id.value()));
+    let mut call = Call::new("SlackBlockFileInputElement::new");
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = filetypes {
         call = call.set(
             "with_filetypes",
@@ -1153,10 +1193,12 @@ mod tests {
         let out = crate::emit::blocks::emit_slack_block(&block, &mut ctx).render(&mut w);
         let expected = "\
 SlackActionsBlock::new(slack_blocks![
-        SlackBlockButtonElement::new(\"approve\".into(), pt!(\"Approve\"))
+        SlackBlockButtonElement::new(pt!(\"Approve\"))
+            .with_action_id(\"approve\".into())
             .with_value(\"approve\".into())
             .with_style(SlackBlockButtonStyle::Primary),
-        SlackBlockStaticSelectElement::new(\"region\".into())
+        SlackBlockStaticSelectElement::new()
+            .with_action_id(\"region\".into())
             .with_placeholder(pt!(\"Choose a region\"))
             .with_options(vec![
                 SlackBlockChoiceItem::new(pt!(\"US East\"), \"us-east-1\".into()),
@@ -1181,8 +1223,8 @@ SlackActionsBlock::new(slack_blocks![
         let out = emit_slack_action_block_element(&element, &mut ctx).flat();
         assert_eq!(
             out,
-            "SlackBlockButtonElement::new(\"a\".into(), pt!(\"T\")).with_value(\"v\".into())\
-             .with_style(SlackBlockButtonStyle::Danger)"
+            "SlackBlockButtonElement::new(pt!(\"T\")).with_action_id(\"a\".into())\
+             .with_value(\"v\".into()).with_style(SlackBlockButtonStyle::Danger)"
         );
     }
 
@@ -1200,7 +1242,7 @@ SlackActionsBlock::new(slack_blocks![
         .expect("parses");
         assert_eq!(
             emit_slack_input_block_element(&element, &mut ctx).flat(),
-            "SlackBlockMultiStaticSelectElement::new(\"a\".into())\
+            "SlackBlockMultiStaticSelectElement::new().with_action_id(\"a\".into())\
              .with_option_groups(vec![SlackBlockOptionGroup::new(pt!(\"G\"), \
              vec![SlackBlockChoiceItem::new(pt!(\"O\"), \"o\".into())])])\
              .with_max_selected_items(3)"
@@ -1251,7 +1293,7 @@ SlackActionsBlock::new(slack_blocks![
         .expect("parses");
         assert_eq!(
             emit_slack_action_block_element(&element, &mut ctx).flat(),
-            "SlackBlockDateTimePickerElement::new(\"a\".into())\
+            "SlackBlockDateTimePickerElement::new().with_action_id(\"a\".into())\
              .with_initial_date_time(SlackDateTime(\"2020-01-01T00:42:42Z\".parse()?))"
         );
         assert!(ctx.needs_result);
@@ -1268,7 +1310,8 @@ SlackActionsBlock::new(slack_blocks![
         .expect("parses");
         assert_eq!(
             emit_slack_input_block_element(&element, &mut ctx).flat(),
-            "SlackBlockNumberInputElement::new(\"a\".into(), false).with_max_value(\"10\".into())"
+            "SlackBlockNumberInputElement::new(false).with_action_id(\"a\".into())\
+             .with_max_value(\"10\".into())"
         );
     }
 }

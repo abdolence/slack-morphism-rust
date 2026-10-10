@@ -19,6 +19,10 @@ pub enum FixtureKind {
 /// Every file in the corpus and how to read it. A fixture added without a
 /// line here fails `every_fixture_on_disk_is_classified`.
 pub const FIXTURE_KINDS: &[(&str, FixtureKind)] = &[
+    (
+        "slack_actions_block_without_action_id.json",
+        FixtureKind::Block,
+    ),
     ("slack_alert_block.json", FixtureKind::Block),
     ("slack_card_block.json", FixtureKind::Block),
     ("slack_container_block.json", FixtureKind::Block),
@@ -189,7 +193,7 @@ mod tests {
             .collect();
         known.sort();
         assert_eq!(on_disk, known, "add the new fixture to FIXTURE_KINDS");
-        assert_eq!(on_disk.len(), 15);
+        assert_eq!(on_disk.len(), 16);
     }
 
     #[test]

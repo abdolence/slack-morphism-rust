@@ -340,11 +340,13 @@ pub fn emit_slack_block_feedback_buttons_element(
         positive,
         negative,
     } = v;
-    Call::new("SlackBlockFeedbackButtonsElement::new")
-        .arg(leaf::value_str(action_id.value()))
+    let mut call = Call::new("SlackBlockFeedbackButtonsElement::new")
         .arg(emit_slack_feedback_button_item(positive, ctx))
-        .arg(emit_slack_feedback_button_item(negative, ctx))
-        .into()
+        .arg(emit_slack_feedback_button_item(negative, ctx));
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
+    call.into()
 }
 
 pub fn emit_slack_block_icon_button_element(
@@ -361,9 +363,11 @@ pub fn emit_slack_block_icon_button_element(
         visible_to_user_ids,
     } = v;
     let mut call = Call::new("SlackBlockIconButtonElement::new")
-        .arg(leaf::value_str(action_id.value()))
         .arg(leaf::value_str(icon))
         .arg(leaf::plain_text_only(text, ctx));
+    if let Some(x) = action_id {
+        call = call.set("with_action_id", leaf::value_str(x.value()));
+    }
     if let Some(x) = value {
         call = call.set("with_value", leaf::value_str(x));
     }

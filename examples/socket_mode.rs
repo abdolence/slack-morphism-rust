@@ -75,15 +75,20 @@ async fn test_command_events_function(
             user_info_resp.user.team_id
         )),
         SlackActionsBlock::new(slack_blocks![
-            SlackBlockButtonElement::new("my-simple-action-button".into(), pt!("Action button"))
+            SlackBlockButtonElement::new(pt!("Action button"))
+                .with_action_id("my-simple-action-button".into())
                 .with_style(SlackBlockButtonStyle::Primary)
                 .with_accessibility_label(SlackAccessibilityLabel(
                     "Perform the main action".into()
                 )),
-            SlackBlockStaticSelectElement::new("my-simple-static-menu".into()).with_options(vec![
-                SlackBlockChoiceItem::new(pt!("my-option1"), "my-option1-value".to_string())
-            ]),
-            SlackBlockExternalSelectElement::new("my-external-select-action".into())
+            SlackBlockStaticSelectElement::new()
+                .with_action_id("my-simple-static-menu".into())
+                .with_options(vec![SlackBlockChoiceItem::new(
+                    pt!("my-option1"),
+                    "my-option1-value".to_string()
+                )]),
+            SlackBlockExternalSelectElement::new()
+                .with_action_id("my-external-select-action".into())
                 .with_placeholder(pt!("Start typing to search"))
                 .with_min_query_length(1),
         ]),
@@ -91,10 +96,10 @@ async fn test_command_events_function(
             .with_title(md!("Library status"))
             .with_body(md!("slack-morphism is up and running.")),
         SlackContextActionsBlock::new(vec![SlackBlockIconButtonElement::new(
-            "delete_card".into(),
             "trash".into(),
             pt!("Delete")
         )
+        .with_action_id("delete_card".into())
         .with_value("delete_item".into())
         .with_accessibility_label(SlackAccessibilityLabel("Delete this item".into()))
         .into()]),

@@ -8,6 +8,51 @@ use blockkit_to_rust::testkit::{as_home_view, assert_same, parse_block, parse_bl
 
 #[rustfmt::skip]
 #[test]
+fn slack_actions_block_without_action_id_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackActionsBlock::new(slack_blocks![
+        SlackBlockButtonElement::new(pt!("Farmhouse")).with_value("click_me_123".into()),
+        SlackBlockButtonElement::new(pt!("Kin Khao"))
+            .with_url(Url::parse("https://google.com/")?)
+            .with_value("click_me_123".into()),
+    ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_actions_block_without_action_id.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_actions_block_without_action_id_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+    use url::Url;
+
+    // `url` must be a dependency of your crate; slack-morphism uses url 2.
+    // This snippet uses `?`, so place it in a function returning `Result`.
+    let block: SlackBlock = SlackActionsBlock::new(slack_blocks![
+        SlackBlockButtonElement::new(
+            SlackBlockPlainText::new("Farmhouse".into()).with_emoji(true).into(),
+        )
+        .with_value("click_me_123".into()),
+        SlackBlockButtonElement::new(
+            SlackBlockPlainText::new("Kin Khao".into()).with_emoji(true).into(),
+        )
+        .with_url(Url::parse("https://google.com/")?)
+        .with_value("click_me_123".into()),
+    ]).into();
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_actions_block_without_action_id.json");
+    assert_same(&block, &parse_block(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
 fn slack_alert_block_default() -> Result<(), Box<dyn std::error::Error>> {
     use slack_morphism::prelude::*;
 
@@ -52,7 +97,8 @@ fn slack_card_block_default() -> Result<(), Box<dyn std::error::Error>> {
             "hero image".into(),
         ).into())
         .with_actions(slack_blocks![
-            SlackBlockButtonElement::new("card_action_1".into(), pt!("Open"))
+            SlackBlockButtonElement::new(pt!("Open"))
+                .with_action_id("card_action_1".into())
                 .with_value("open".into())
                 .with_style(SlackBlockButtonStyle::Primary),
         ]).into();
@@ -80,7 +126,8 @@ fn slack_card_block_exact() -> Result<(), Box<dyn std::error::Error>> {
             "hero image".into(),
         ).into())
         .with_actions(slack_blocks![
-            SlackBlockButtonElement::new("card_action_1".into(), pt!("Open"))
+            SlackBlockButtonElement::new(pt!("Open"))
+                .with_action_id("card_action_1".into())
                 .with_value("open".into())
                 .with_style(SlackBlockButtonStyle::Primary),
         ]).into();
@@ -96,7 +143,8 @@ fn slack_context_actions_block_default() -> Result<(), Box<dyn std::error::Error
     use slack_morphism::prelude::*;
 
     let block: SlackBlock = SlackContextActionsBlock::new(slack_blocks![
-        SlackBlockIconButtonElement::new("delete_action".into(), "trash".into(), pt!("Delete"))
+        SlackBlockIconButtonElement::new("trash".into(), pt!("Delete"))
+            .with_action_id("delete_action".into())
             .with_value("delete_item".into()),
     ])
     .with_block_id("context_actions_1".into()).into();
@@ -112,7 +160,8 @@ fn slack_context_actions_block_exact() -> Result<(), Box<dyn std::error::Error>>
     use slack_morphism::prelude::*;
 
     let block: SlackBlock = SlackContextActionsBlock::new(slack_blocks![
-        SlackBlockIconButtonElement::new("delete_action".into(), "trash".into(), pt!("Delete"))
+        SlackBlockIconButtonElement::new("trash".into(), pt!("Delete"))
+            .with_action_id("delete_action".into())
             .with_value("delete_item".into()),
     ])
     .with_block_id("context_actions_1".into()).into();
@@ -129,7 +178,8 @@ fn slack_conversations_select_with_filter_default() -> Result<(), Box<dyn std::e
 
     let block: SlackBlock = SlackSectionBlock::new()
         .with_text(pt!("Pick a channel"))
-        .with_accessory(SlackBlockConversationsSelectElement::new("channel_select".into())
+        .with_accessory(SlackBlockConversationsSelectElement::new()
+            .with_action_id("channel_select".into())
             .with_placeholder(pt!("Select a channel"))
             .with_filter(SlackBlockConversationFilter::new()
                 .with_include(vec![SlackConversationFilterInclude::Public, SlackConversationFilterInclude::Private])
@@ -148,7 +198,8 @@ fn slack_conversations_select_with_filter_exact() -> Result<(), Box<dyn std::err
 
     let block: SlackBlock = SlackSectionBlock::new()
         .with_text(pt!("Pick a channel"))
-        .with_accessory(SlackBlockConversationsSelectElement::new("channel_select".into())
+        .with_accessory(SlackBlockConversationsSelectElement::new()
+            .with_action_id("channel_select".into())
             .with_placeholder(pt!("Select a channel"))
             .with_filter(SlackBlockConversationFilter::new()
                 .with_include(vec![SlackConversationFilterInclude::Public, SlackConversationFilterInclude::Private])

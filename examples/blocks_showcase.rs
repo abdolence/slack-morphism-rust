@@ -12,7 +12,8 @@ fn catalogue_blocks(show_alert: bool) -> Vec<SlackBlock> {
             .with_text(md!("A single message demonstrating every block family."))
             .with_fields(vec![md!("*Status*\nReady"), md!("*Owner*\nslack-morphism"),])
             .with_accessory(
-                SlackBlockButtonElement::new("showcase-more-info".into(), pt!("More info"))
+                SlackBlockButtonElement::new(pt!("More info"))
+                    .with_action_id("showcase-more-info".into())
                     .into()
             ),
         SlackImageBlock::new(
@@ -23,8 +24,9 @@ fn catalogue_blocks(show_alert: bool) -> Vec<SlackBlock> {
         ),
         SlackContextBlock::new(vec![md!("Rendered by the `blocks_showcase` example")]),
         SlackActionsBlock::new(slack_blocks![
-            SlackBlockButtonElement::new("showcase-button".into(), pt!("Click me")),
-            SlackBlockStaticSelectElement::new("showcase-select".into())
+            SlackBlockButtonElement::new(pt!("Click me")).with_action_id("showcase-button".into()),
+            SlackBlockStaticSelectElement::new()
+                .with_action_id("showcase-select".into())
                 .with_placeholder(pt!("Pick one"))
                 .with_options(vec![
                     SlackBlockChoiceItem::new(pt!("Option A"), "a".into()),
@@ -79,13 +81,15 @@ fn feedback_modal() -> SlackView {
             slack_blocks![
                 SlackInputBlock::new(
                     pt!("What went well?"),
-                    SlackBlockPlainTextInputElement::new("feedback-good".into())
+                    SlackBlockPlainTextInputElement::new()
+                        .with_action_id("feedback-good".into())
                         .with_multiline(true)
                         .into(),
                 ),
                 SlackInputBlock::new(
                     pt!("Priority"),
-                    SlackBlockStaticSelectElement::new("feedback-priority".into())
+                    SlackBlockStaticSelectElement::new()
+                        .with_action_id("feedback-priority".into())
                         .with_options(vec![
                             SlackBlockChoiceItem::new(pt!("Low"), "low".into()),
                             SlackBlockChoiceItem::new(pt!("High"), "high".into()),
@@ -94,13 +98,11 @@ fn feedback_modal() -> SlackView {
                 ),
                 SlackInputBlock::new(
                     pt!("Notify"),
-                    SlackBlockCheckboxesElement::new(
-                        "feedback-notify".into(),
-                        vec![SlackBlockChoiceItem::new(
-                            pt!("Email me when this is triaged"),
-                            "notify".into()
-                        )]
-                    )
+                    SlackBlockCheckboxesElement::new(vec![SlackBlockChoiceItem::new(
+                        pt!("Email me when this is triaged"),
+                        "notify".into()
+                    )])
+                    .with_action_id("feedback-notify".into())
                     .into(),
                 ),
             ],
