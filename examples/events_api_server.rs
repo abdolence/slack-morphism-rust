@@ -108,7 +108,8 @@ async fn test_command_events_function(
             .with_blocks(slack_blocks![SlackSectionBlock::new()
                 .with_text(md!("Working on it. Anything related?"))
                 .with_accessory(
-                    SlackBlockExternalSelectElement::new("my-external-select-action".into())
+                    SlackBlockExternalSelectElement::new()
+                        .with_action_id("my-external-select-action".into())
                         .with_placeholder(pt!("Start typing to search"))
                         .with_min_query_length(1)
                         .into()

@@ -333,6 +333,27 @@ mod tests {
     }
 
     #[test]
+    fn buttons_without_action_id_convert_to_typed_builders() {
+        let out = convert(
+            include_str!(
+                "../../../src/models/blocks/fixtures/slack_actions_block_without_action_id.json"
+            ),
+            &Options::default(),
+        )
+        .expect("converts");
+        assert!(out.warnings.is_empty(), "{:?}", out.warnings);
+        assert!(out.errors.is_empty(), "{:?}", out.errors);
+        assert!(out.code.contains("SlackActionsBlock::new("), "{}", out.code);
+        assert!(
+            out.code
+                .contains("SlackBlockButtonElement::new(pt!(\"Farmhouse\"))"),
+            "{}",
+            out.code
+        );
+        assert!(!out.code.contains("with_action_id"), "{}", out.code);
+    }
+
+    #[test]
     fn malformed_block_warns_with_path_and_keeps_other_blocks() {
         let out = convert(
             r#"[{ "type": "divider" }, { "type": "header" }, { "type": "divider" }]"#,

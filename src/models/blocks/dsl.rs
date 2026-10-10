@@ -290,11 +290,9 @@ mod tests {
 
     #[test]
     fn action_block_elements_from_bare_button() {
-        let elements: Vec<SlackActionBlockElement> =
-            crate::slack_blocks![SlackBlockButtonElement::new(
-                "btn-1".into(),
-                crate::pt!("Click")
-            ),];
+        let elements: Vec<SlackActionBlockElement> = crate::slack_blocks![
+            SlackBlockButtonElement::new(crate::pt!("Click")).with_action_id("btn-1".into()),
+        ];
         assert_eq!(elements.len(), 1);
         let action_block = SlackActionsBlock::new(elements);
         let json = serde_json::to_value(&action_block).unwrap();

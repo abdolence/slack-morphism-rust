@@ -372,7 +372,7 @@ pub enum SlackBlockButtonStyle {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockButtonElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub text: SlackBlockPlainTextOnly,
     pub url: Option<Url>,
     pub value: Option<String>,
@@ -422,7 +422,7 @@ pub struct SlackBlockOptionGroup<T: Into<SlackBlockText>> {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockStaticSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub options: Option<Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>>,
     pub option_groups: Option<Vec<SlackBlockOptionGroup<SlackBlockPlainTextOnly>>>,
@@ -452,7 +452,7 @@ impl From<SlackBlockStaticSelectElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiStaticSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub options: Option<Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>>,
     pub option_groups: Option<Vec<SlackBlockOptionGroup<SlackBlockPlainTextOnly>>>,
@@ -477,7 +477,7 @@ impl From<SlackBlockMultiStaticSelectElement> for SlackInputBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockExternalSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -506,7 +506,7 @@ impl From<SlackBlockExternalSelectElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiExternalSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_options: Option<Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -530,7 +530,7 @@ impl From<SlackBlockMultiExternalSelectElement> for SlackInputBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockUsersSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_user: Option<String>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -558,7 +558,7 @@ impl From<SlackBlockUsersSelectElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiUsersSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_users: Option<Vec<String>>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -601,7 +601,7 @@ pub struct SlackBlockConversationFilter {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockConversationsSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_conversation: Option<SlackConversationId>,
     pub default_to_current_conversation: Option<bool>,
@@ -632,7 +632,7 @@ impl From<SlackBlockConversationsSelectElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiConversationsSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_conversations: Option<Vec<SlackConversationId>>,
     pub default_to_current_conversation: Option<bool>,
@@ -657,7 +657,7 @@ impl From<SlackBlockMultiConversationsSelectElement> for SlackInputBlockElement 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockChannelsSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_channel: Option<SlackChannelId>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -686,7 +686,7 @@ impl From<SlackBlockChannelsSelectElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockMultiChannelsSelectElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_channels: Option<Vec<SlackChannelId>>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -709,7 +709,7 @@ impl From<SlackBlockMultiChannelsSelectElement> for SlackInputBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockOverflowElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub options: Vec<SlackBlockChoiceItem<SlackBlockPlainTextOnly>>,
     pub confirm: Option<SlackBlockConfirmItem>,
 }
@@ -729,7 +729,7 @@ impl From<SlackBlockOverflowElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockDatePickerElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_date: Option<String>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -757,7 +757,7 @@ impl From<SlackBlockDatePickerElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockTimePickerElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub initial_time: Option<String>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub focus_on_load: Option<bool>,
@@ -786,7 +786,7 @@ impl From<SlackBlockTimePickerElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockDateTimePickerElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub initial_date_time: Option<SlackDateTime>,
     pub confirm: Option<SlackBlockConfirmItem>,
     pub focus_on_load: Option<bool>,
@@ -823,7 +823,7 @@ pub struct SlackDispatchActionConfig {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockPlainTextInputElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_value: Option<String>,
     pub multiline: Option<bool>,
@@ -854,7 +854,7 @@ impl From<SlackBlockPlainTextInputElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockNumberInputElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub is_decimal_allowed: bool,
     pub focus_on_load: Option<bool>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
@@ -884,7 +884,7 @@ impl From<SlackBlockNumberInputElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockUrlInputElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_value: Option<String>,
 }
@@ -910,7 +910,7 @@ impl From<SlackBlockUrlInputElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockEmailInputElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub focus_on_load: Option<bool>,
     pub placeholder: Option<SlackBlockPlainTextOnly>,
     pub initial_value: Option<EmailAddress>,
@@ -925,7 +925,7 @@ impl From<SlackBlockEmailInputElement> for SlackInputBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockRadioButtonsElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
     pub initial_option: Option<SlackBlockChoiceItem<SlackBlockText>>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -953,7 +953,7 @@ impl From<SlackBlockRadioButtonsElement> for SlackActionBlockElement {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockCheckboxesElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub options: Vec<SlackBlockChoiceItem<SlackBlockText>>,
     pub initial_options: Option<Vec<SlackBlockChoiceItem<SlackBlockText>>>,
     pub confirm: Option<SlackBlockConfirmItem>,
@@ -1722,7 +1722,7 @@ impl From<SlackUrlSourceElement> for SlackTaskCardSource {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockFileInputElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub filetypes: Option<Vec<String>>,
     pub max_files: Option<u64>,
 }
@@ -1830,24 +1830,23 @@ impl From<SlackCarouselBlock> for SlackBlock {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFeedbackButtonItem {
-    pub action_id: SlackActionId,
-    pub value: String,
     pub text: SlackBlockPlainTextOnly,
-    pub confirm: Option<SlackBlockConfirmItem>,
+    pub value: String,
+    pub accessibility_label: Option<SlackAccessibilityLabel>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockFeedbackButtonsElement {
-    pub action_id: SlackActionId,
-    pub positive: SlackFeedbackButtonItem,
-    pub negative: SlackFeedbackButtonItem,
+    pub action_id: Option<SlackActionId>,
+    pub positive_button: SlackFeedbackButtonItem,
+    pub negative_button: SlackFeedbackButtonItem,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockIconButtonElement {
-    pub action_id: SlackActionId,
+    pub action_id: Option<SlackActionId>,
     pub icon: String,
     pub text: SlackBlockPlainTextOnly,
     pub value: Option<String>,
@@ -2176,7 +2175,8 @@ mod test {
 
     #[test]
     fn test_conversation_filter_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
-        let elem = SlackBlockConversationsSelectElement::new(SlackActionId("test_action".into()))
+        let elem = SlackBlockConversationsSelectElement::new()
+            .with_action_id(SlackActionId("test_action".into()))
             .with_filter(
                 SlackBlockConversationFilter::new()
                     .with_include(vec![SlackConversationFilterInclude::Public])
@@ -2191,16 +2191,16 @@ mod test {
 
     #[test]
     fn test_multi_conversations_select_filter() -> Result<(), Box<dyn std::error::Error>> {
-        let elem =
-            SlackBlockMultiConversationsSelectElement::new(SlackActionId("multi_action".into()))
-                .with_filter(
-                    SlackBlockConversationFilter::new()
-                        .with_include(vec![
-                            SlackConversationFilterInclude::Public,
-                            SlackConversationFilterInclude::Private,
-                        ])
-                        .with_exclude_bot_users(true),
-                );
+        let elem = SlackBlockMultiConversationsSelectElement::new()
+            .with_action_id(SlackActionId("multi_action".into()))
+            .with_filter(
+                SlackBlockConversationFilter::new()
+                    .with_include(vec![
+                        SlackConversationFilterInclude::Public,
+                        SlackConversationFilterInclude::Private,
+                    ])
+                    .with_exclude_bot_users(true),
+            );
 
         let json = serde_json::to_string(&elem)?;
         let parsed: SlackBlockMultiConversationsSelectElement = serde_json::from_str(&json)?;
@@ -2210,7 +2210,8 @@ mod test {
 
     #[test]
     fn test_conversation_filter_none_omitted() -> Result<(), Box<dyn std::error::Error>> {
-        let elem = SlackBlockConversationsSelectElement::new(SlackActionId("no_filter".into()));
+        let elem = SlackBlockConversationsSelectElement::new()
+            .with_action_id(SlackActionId("no_filter".into()));
 
         let json = serde_json::to_value(&elem)?;
         assert!(json.get("filter").is_none());
@@ -2876,6 +2877,40 @@ mod test {
         let block: SlackBlock = serde_json::from_str(payload)?;
         assert_eq!(serde_json::to_value(&block)?, expected);
         Ok(block)
+    }
+
+    #[test]
+    fn buttons_without_action_id_stay_a_typed_actions_block(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let block = round_trip(include_str!(
+            "./fixtures/slack_actions_block_without_action_id.json"
+        ))?;
+        let SlackBlock::Actions(actions) = block else {
+            panic!("Expected an Actions block, got {block:?}");
+        };
+        assert_eq!(actions.elements.len(), 2);
+        assert!(actions
+            .elements
+            .iter()
+            .all(|element| matches!(element, SlackActionBlockElement::Button(_))));
+        Ok(())
+    }
+
+    #[test]
+    fn slack_feedback_buttons_example_is_a_typed_context_actions_block(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let message: serde_json::Value = serde_json::from_str(include_str!(
+            "./fixtures/slack_feedback_buttons_message.json"
+        ))?;
+        let block = round_trip(&message["blocks"][0].to_string())?;
+        let SlackBlock::ContextActions(context_actions) = block else {
+            panic!("Expected a ContextActions block, got {block:?}");
+        };
+        assert!(matches!(
+            context_actions.elements.as_slice(),
+            [SlackContextActionBlockElement::FeedbackButtons(_)]
+        ));
+        Ok(())
     }
 
     #[test]

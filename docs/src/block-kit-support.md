@@ -160,7 +160,9 @@ let section = SlackSectionBlock::new()
     .with_text(md!("*Deploy status*: all systems green"))
     .with_fields(vec![md!("*Region:*\nus-east-1"), md!("*Duration:*\n42s")])
     .with_accessory(
-        SlackBlockButtonElement::new("view-details".into(), pt!("Details")).into(),
+        SlackBlockButtonElement::new(pt!("Details"))
+            .with_action_id("view-details".into())
+            .into(),
     );
 
 let block: SlackBlock = section.into();
@@ -174,21 +176,25 @@ blocks pair one element with a required label, for use in modals.
 ```rust,noplaypen
 use slack_morphism::prelude::*;
 
-let approve = SlackBlockButtonElement::new("approve".into(), pt!("Approve"))
+let approve = SlackBlockButtonElement::new(pt!("Approve"))
+    .with_action_id("approve".into())
     .with_style(SlackBlockButtonStyle::Primary);
-let deny = SlackBlockButtonElement::new("deny".into(), pt!("Deny"))
+let deny = SlackBlockButtonElement::new(pt!("Deny"))
+    .with_action_id("deny".into())
     .with_style(SlackBlockButtonStyle::Danger);
 
 let actions: SlackBlock = SlackActionsBlock::new(slack_blocks![approve, deny]).into();
 
-let region_select = SlackBlockStaticSelectElement::new("region".into())
+let region_select = SlackBlockStaticSelectElement::new()
+    .with_action_id("region".into())
     .with_placeholder(pt!("Choose a region"))
     .with_options(vec![
         SlackBlockChoiceItem::new("US East".into(), "us-east-1".into()),
         SlackBlockChoiceItem::new("EU West".into(), "eu-west-1".into()),
     ]);
 
-let date_picker = SlackBlockDatePickerElement::new("deploy-date".into())
+let date_picker = SlackBlockDatePickerElement::new()
+    .with_action_id("deploy-date".into())
     .with_placeholder(pt!("Pick a date"));
 
 let date_input: SlackBlock =
@@ -339,7 +345,7 @@ let client = SlackClient::new(SlackClientHyperConnector::new()?);
 let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
 let session = client.open_session(&token);
 
-let name_input = SlackBlockPlainTextInputElement::new("name".into());
+let name_input = SlackBlockPlainTextInputElement::new().with_action_id("name".into());
 
 let modal = SlackModalView::new(
     "Deploy".into(),
@@ -379,10 +385,10 @@ detail beyond that. The usual causes:
   characters for a button label).
 - **More than 50 blocks in one message**, or more than 100 in a modal or
   home tab.
-- **A missing or duplicate `action_id`.** Every interactive element needs an
-  `action_id` unique within its view or message; the button, select, and
-  input constructors above all take it as their first argument for this
-  reason.
+- **A duplicate `action_id`.** An `action_id` must be unique within its block.
+  Slack accepts most interactive elements without one, but interaction payloads
+  identify the source element by it, so set it with `with_action_id` on every
+  element your app handles.
 
 When none of the above explains it, the fastest way to isolate a bad block is
 to paste the JSON from

@@ -172,10 +172,10 @@ impl SlackMessageTemplate for WelcomeMessageTemplateParams {
                     "Test Image".into(),
                 )
                 .with_title("Test Image".into()),
-                SlackActionsBlock::new(slack_blocks![SlackBlockButtonElement::new(
-                    "simple-message-button".into(),
-                    pt!("Simple button text")
-                )]),
+                SlackActionsBlock::new(slack_blocks![SlackBlockButtonElement::new(pt!(
+                    "Simple button text"
+                ))
+                .with_action_id("simple-message-button".into())]),
             ])
     }
 }
