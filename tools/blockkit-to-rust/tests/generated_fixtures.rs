@@ -213,6 +213,50 @@ fn slack_conversations_select_with_filter_exact() -> Result<(), Box<dyn std::err
 
 #[rustfmt::skip]
 #[test]
+fn slack_feedback_buttons_message_default() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let blocks: Vec<SlackBlock> = slack_blocks![
+        SlackContextActionsBlock::new(slack_blocks![
+            SlackBlockFeedbackButtonsElement::new(
+                SlackFeedbackButtonItem::new(pt!("Good"), "positive_feedback".into())
+                    .with_accessibility_label("Mark this response as good".into()),
+                SlackFeedbackButtonItem::new(pt!("Bad"), "negative_feedback".into())
+                    .with_accessibility_label("Mark this response as bad".into()),
+            )
+            .with_action_id("feedback_buttons_1".into()),
+        ]),
+    ];
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_feedback_buttons_message.json");
+    assert_same(&blocks, &parse_blocks(FIXTURE)?, Normalize::StripEmojiTrue)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
+fn slack_feedback_buttons_message_exact() -> Result<(), Box<dyn std::error::Error>> {
+    use slack_morphism::prelude::*;
+
+    let blocks: Vec<SlackBlock> = slack_blocks![
+        SlackContextActionsBlock::new(slack_blocks![
+            SlackBlockFeedbackButtonsElement::new(
+                SlackFeedbackButtonItem::new(pt!("Good"), "positive_feedback".into())
+                    .with_accessibility_label("Mark this response as good".into()),
+                SlackFeedbackButtonItem::new(pt!("Bad"), "negative_feedback".into())
+                    .with_accessibility_label("Mark this response as bad".into()),
+            )
+            .with_action_id("feedback_buttons_1".into()),
+        ]),
+    ];
+
+    const FIXTURE: &str = include_str!("../../../src/models/blocks/fixtures/slack_feedback_buttons_message.json");
+    assert_same(&blocks, &parse_blocks(FIXTURE)?, Normalize::Exact)?;
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[test]
 fn slack_home_view_default() -> Result<(), Box<dyn std::error::Error>> {
     use slack_morphism::prelude::*;
 

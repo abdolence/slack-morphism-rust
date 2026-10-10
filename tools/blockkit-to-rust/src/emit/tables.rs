@@ -313,20 +313,15 @@ pub fn emit_slack_carousel_block(v: &SlackCarouselBlock, ctx: &mut Ctx) -> Expr 
 
 pub fn emit_slack_feedback_button_item(v: &SlackFeedbackButtonItem, ctx: &mut Ctx) -> Expr {
     let SlackFeedbackButtonItem {
-        action_id,
-        value,
         text,
-        confirm,
+        value,
+        accessibility_label,
     } = v;
     let mut call = Call::new("SlackFeedbackButtonItem::new")
-        .arg(leaf::value_str(action_id.value()))
-        .arg(leaf::value_str(value))
-        .arg(leaf::plain_text_only(text, ctx));
-    if let Some(x) = confirm {
-        call = call.set(
-            "with_confirm",
-            elements::emit_slack_block_confirm_item(x, ctx),
-        );
+        .arg(leaf::plain_text_only(text, ctx))
+        .arg(leaf::value_str(value));
+    if let Some(x) = accessibility_label {
+        call = call.set("with_accessibility_label", leaf::value_str(x.value()));
     }
     call.into()
 }
@@ -337,12 +332,12 @@ pub fn emit_slack_block_feedback_buttons_element(
 ) -> Expr {
     let SlackBlockFeedbackButtonsElement {
         action_id,
-        positive,
-        negative,
+        positive_button,
+        negative_button,
     } = v;
     let mut call = Call::new("SlackBlockFeedbackButtonsElement::new")
-        .arg(emit_slack_feedback_button_item(positive, ctx))
-        .arg(emit_slack_feedback_button_item(negative, ctx));
+        .arg(emit_slack_feedback_button_item(positive_button, ctx))
+        .arg(emit_slack_feedback_button_item(negative_button, ctx));
     if let Some(x) = action_id {
         call = call.set("with_action_id", leaf::value_str(x.value()));
     }

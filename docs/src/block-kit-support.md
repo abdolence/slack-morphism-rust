@@ -386,7 +386,7 @@ detail beyond that. The usual causes:
 - **More than 50 blocks in one message**, or more than 100 in a modal or
   home tab.
 - **A duplicate `action_id`.** An `action_id` must be unique within its block.
-  Slack accepts interactive elements without one, but interaction payloads
+  Slack accepts most interactive elements without one, but interaction payloads
   identify the source element by it, so set it with `with_action_id` on every
   element your app handles.
 

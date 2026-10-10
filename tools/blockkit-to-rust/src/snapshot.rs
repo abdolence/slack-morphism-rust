@@ -40,6 +40,7 @@ pub const FIXTURE_KINDS: &[(&str, FixtureKind)] = &[
         "slack_data_visualization_pie_block.json",
         FixtureKind::Block,
     ),
+    ("slack_feedback_buttons_message.json", FixtureKind::Message),
     ("slack_home_view.json", FixtureKind::HomeView),
     ("slack_image_blocks.json", FixtureKind::Message),
     ("slack_plan_block.json", FixtureKind::Block),
@@ -193,7 +194,7 @@ mod tests {
             .collect();
         known.sort();
         assert_eq!(on_disk, known, "add the new fixture to FIXTURE_KINDS");
-        assert_eq!(on_disk.len(), 16);
+        assert_eq!(on_disk.len(), 17);
     }
 
     #[test]

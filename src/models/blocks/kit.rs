@@ -1830,18 +1830,17 @@ impl From<SlackCarouselBlock> for SlackBlock {
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackFeedbackButtonItem {
-    pub action_id: SlackActionId,
-    pub value: String,
     pub text: SlackBlockPlainTextOnly,
-    pub confirm: Option<SlackBlockConfirmItem>,
+    pub value: String,
+    pub accessibility_label: Option<SlackAccessibilityLabel>,
 }
 
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackBlockFeedbackButtonsElement {
     pub action_id: Option<SlackActionId>,
-    pub positive: SlackFeedbackButtonItem,
-    pub negative: SlackFeedbackButtonItem,
+    pub positive_button: SlackFeedbackButtonItem,
+    pub negative_button: SlackFeedbackButtonItem,
 }
 
 #[skip_serializing_none]
@@ -2894,6 +2893,23 @@ mod test {
             .elements
             .iter()
             .all(|element| matches!(element, SlackActionBlockElement::Button(_))));
+        Ok(())
+    }
+
+    #[test]
+    fn slack_feedback_buttons_example_is_a_typed_context_actions_block(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let message: serde_json::Value = serde_json::from_str(include_str!(
+            "./fixtures/slack_feedback_buttons_message.json"
+        ))?;
+        let block = round_trip(&message["blocks"][0].to_string())?;
+        let SlackBlock::ContextActions(context_actions) = block else {
+            panic!("Expected a ContextActions block, got {block:?}");
+        };
+        assert!(matches!(
+            context_actions.elements.as_slice(),
+            [SlackContextActionBlockElement::FeedbackButtons(_)]
+        ));
         Ok(())
     }
 
