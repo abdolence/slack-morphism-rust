@@ -67,6 +67,15 @@ before (`chrono::DateTime<chrono::Utc>` and `chrono::NaiveDate`) for an easier m
 Note that this feature is not additive: enabling it anywhere in a dependency graph changes the
 types for every crate in that graph, so it is intended as a temporary migration aid only.
 
+## Versioning
+
+Breaking changes in the models that come from changes on the Slack side are released as minor
+versions. For example, when Slack starts to accept a request without some field, that field
+becomes optional in the model and its constructors change in a minor release.
+
+Migration notes for such changes are available in the
+[release notes](https://github.com/abdolence/slack-morphism-rust/releases).
+
 ## Licence
 Apache Software License (ASL)
 
