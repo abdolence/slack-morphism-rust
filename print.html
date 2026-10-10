@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-fe6cec4a.js";
+            window.path_to_searchindex_js = "searchindex-63c70eaa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-132cf9d3.js"></script>
@@ -462,7 +462,9 @@ let section = SlackSectionBlock::new()
     .with_text(md!("*Deploy status*: all systems green"))
     .with_fields(vec![md!("*Region:*\nus-east-1"), md!("*Duration:*\n42s")])
     .with_accessory(
-        SlackBlockButtonElement::new("view-details".into(), pt!("Details")).into(),
+        SlackBlockButtonElement::new(pt!("Details"))
+            .with_action_id("view-details".into())
+            .into(),
     );
 
 let block: SlackBlock = section.into();</code></pre>
@@ -471,21 +473,25 @@ let block: SlackBlock = section.into();</code></pre>
 blocks pair one element with a required label, for use in modals.</p>
 <pre><code class="language-rust noplaypen">use slack_morphism::prelude::*;
 
-let approve = SlackBlockButtonElement::new("approve".into(), pt!("Approve"))
+let approve = SlackBlockButtonElement::new(pt!("Approve"))
+    .with_action_id("approve".into())
     .with_style(SlackBlockButtonStyle::Primary);
-let deny = SlackBlockButtonElement::new("deny".into(), pt!("Deny"))
+let deny = SlackBlockButtonElement::new(pt!("Deny"))
+    .with_action_id("deny".into())
     .with_style(SlackBlockButtonStyle::Danger);
 
 let actions: SlackBlock = SlackActionsBlock::new(slack_blocks![approve, deny]).into();
 
-let region_select = SlackBlockStaticSelectElement::new("region".into())
+let region_select = SlackBlockStaticSelectElement::new()
+    .with_action_id("region".into())
     .with_placeholder(pt!("Choose a region"))
     .with_options(vec![
         SlackBlockChoiceItem::new("US East".into(), "us-east-1".into()),
         SlackBlockChoiceItem::new("EU West".into(), "eu-west-1".into()),
     ]);
 
-let date_picker = SlackBlockDatePickerElement::new("deploy-date".into())
+let date_picker = SlackBlockDatePickerElement::new()
+    .with_action_id("deploy-date".into())
     .with_placeholder(pt!("Pick a date"));
 
 let date_input: SlackBlock =
@@ -610,7 +616,7 @@ a home tab view uses <code>views.publish</code> and a user id instead:</p>
 let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
 let session = client.open_session(&amp;token);
 
-let name_input = SlackBlockPlainTextInputElement::new("name".into());
+let name_input = SlackBlockPlainTextInputElement::new().with_action_id("name".into());
 
 let modal = SlackModalView::new(
     "Deploy".into(),
@@ -647,10 +653,10 @@ field.</li>
 characters for a button label).</li>
 <li><strong>More than 50 blocks in one message</strong>, or more than 100 in a modal or
 home tab.</li>
-<li><strong>A missing or duplicate <code>action_id</code>.</strong> Every interactive element needs an
-<code>action_id</code> unique within its view or message; the button, select, and
-input constructors above all take it as their first argument for this
-reason.</li>
+<li><strong>A duplicate <code>action_id</code>.</strong> An <code>action_id</code> must be unique within its block.
+Slack accepts most interactive elements without one, but interaction payloads
+identify the source element by it, so set it with <code>with_action_id</code> on every
+element your app handles.</li>
 </ul>
 <p>When none of the above explains it, the fastest way to isolate a bad block is
 to paste the JSON from
