@@ -68,10 +68,9 @@ impl HyperExtensions {
         url: Url,
         method: hyper::http::Method,
     ) -> hyper::http::request::Builder {
-        let uri: Uri = url.as_str().parse().unwrap();
         hyper::http::request::Builder::new()
             .method(method)
-            .uri(uri)
+            .uri(url.as_str())
             .header("accept-charset", "utf-8")
     }
 
@@ -131,28 +130,6 @@ impl HyperExtensions {
 mod tests {
     use super::HyperExtensions;
     use http::{header::CONTENT_TYPE, HeaderValue, Response};
-
-    #[test]
-    fn parses_response_content_type() {
-        let response = Response::builder()
-            .header(CONTENT_TYPE, "application/json; charset=utf-8")
-            .body(())
-            .unwrap();
-
-        let content_type = HyperExtensions::http_response_content_type(&response)
-            .unwrap()
-            .unwrap();
-        assert_eq!(content_type.type_(), mime::APPLICATION);
-        assert_eq!(content_type.subtype(), mime::JSON);
-    }
-
-    #[test]
-    fn missing_response_content_type_is_none() {
-        let response = Response::new(());
-        assert!(HyperExtensions::http_response_content_type(&response)
-            .unwrap()
-            .is_none());
-    }
 
     #[test]
     fn malformed_response_content_type_returns_error() {

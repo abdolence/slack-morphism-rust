@@ -52,12 +52,9 @@ impl<'de> Visitor<'de> for SlackEmojiRefVisitor {
     where
         E: serde::de::Error,
     {
-        if v.starts_with(SLACK_EMOJI_ALIAS_PREFIX) {
-            let parsed_value: Vec<_> = v.split(':').collect();
-            if parsed_value.len() == 2 {
-                return Ok(SlackEmojiRef::Alias(SlackEmojiName(
-                    parsed_value[1].to_string(),
-                )));
+        if let Some(name) = v.strip_prefix(SLACK_EMOJI_ALIAS_PREFIX) {
+            if !name.contains(':') {
+                return Ok(SlackEmojiRef::Alias(SlackEmojiName(name.to_string())));
             }
         }
 

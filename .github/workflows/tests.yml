@@ -22,6 +22,8 @@ jobs:
       - run: cargo clippy --all-features -- -Dwarnings && cargo test --all-features
       - run: cargo check --no-default-features --features hyper
       - run: cargo check --no-default-features --features axum
+      - run: cargo check --no-default-features --features hyper-base
+      - run: cargo check --no-default-features --features axum-base
   blockkit-to-rust:
     runs-on: ubuntu-latest
     steps:

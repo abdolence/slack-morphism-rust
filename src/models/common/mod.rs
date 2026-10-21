@@ -269,7 +269,10 @@ pub struct SlackWebSocketsUrl(pub Url);
 
 impl SlackWebSocketsUrl {
     pub fn to_debug_url(&self) -> Self {
-        Self(Url::parse(format!("{}&debug_reconnects=true", self.value()).as_str()).unwrap())
+        let mut url = self.value().clone();
+        url.query_pairs_mut()
+            .append_pair("debug_reconnects", "true");
+        Self(url)
     }
 }
 
@@ -393,6 +396,30 @@ mod test {
     #[test]
     fn test_slack_ts_to_date_time_invalid() {
         assert_eq!(SlackTs("garbage".to_string()).to_date_time_opt(), None);
+    }
+
+    #[test]
+    fn debug_url_keeps_existing_query() {
+        let url = SlackWebSocketsUrl(Url::parse("wss://wss.slack.com/link/?ticket=abc").unwrap());
+
+        assert_eq!(
+            url.to_debug_url(),
+            SlackWebSocketsUrl(
+                Url::parse("wss://wss.slack.com/link/?ticket=abc&debug_reconnects=true").unwrap()
+            )
+        );
+    }
+
+    #[test]
+    fn debug_url_adds_query_when_absent() {
+        let url = SlackWebSocketsUrl(Url::parse("wss://wss.slack.com/link/").unwrap());
+
+        assert_eq!(
+            url.to_debug_url(),
+            SlackWebSocketsUrl(
+                Url::parse("wss://wss.slack.com/link/?debug_reconnects=true").unwrap()
+            )
+        );
     }
 
     #[test]

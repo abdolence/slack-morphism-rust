@@ -91,8 +91,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
             }
         };
 
-        if !removed_clients.is_empty() {
-            let removed_client = &mut removed_clients[0];
+        if let Some(removed_client) = removed_clients.first_mut() {
             removed_client.shutdown_channel().await;
 
             // Reconnect
@@ -123,8 +122,7 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
     async fn start(&self) {
         let clients_read = self.active_clients.read().await;
         let mut clients_to_await = vec![];
-        for client_id_value in 0..clients_read.len() {
-            let client = &clients_read[client_id_value];
+        for (client_id_value, client) in clients_read.iter().enumerate() {
             clients_to_await.push(
                 client.start(
                     client_id_value as u64 * client.identity.config.initial_backoff_in_seconds,
@@ -154,21 +152,39 @@ impl<H: Send + Sync + Clone + Connect + 'static> SlackSocketModeClientsManager
         use signal_hook::iterator::exfiltrator::WithOrigin;
         use signal_hook_tokio::SignalsInfo;
 
-        let mut signals = SignalsInfo::<WithOrigin>::new(TERM_SIGNALS).unwrap();
-
-        if let Some(info) = signals.next().await {
-            debug!("Received a signal: {:?}. Terminating...", info);
+        match SignalsInfo::<WithOrigin>::new(TERM_SIGNALS) {
+            Ok(mut signals) => {
+                if let Some(info) = signals.next().await {
+                    debug!("Received a signal: {:?}. Terminating...", info);
+                }
+            }
+            Err(err) => {
+                error!(
+                    "Unable to register termination signal handlers, waiting for Ctrl-C only: {}",
+                    err
+                );
+                await_ctrl_c().await;
+            }
         }
     }
 
     #[cfg(windows)]
     async fn await_term_signals(&self) {
-        use ctrlc;
-        use std::sync::mpsc::channel;
-        let (tx, rx) = channel();
-        ctrlc::set_handler(move || tx.send(()).expect("Could not send signal on channel."))
-            .expect("Error setting Ctrl-C handler");
-        rx.recv().expect("Could not receive from channel.");
-        debug!("Received a signal to terminate...");
+        await_ctrl_c().await;
+    }
+}
+
+/// Returning from here shuts the listener down, so a failure to listen keeps
+/// the clients serving instead of stopping them right after they start.
+async fn await_ctrl_c() {
+    match tokio::signal::ctrl_c().await {
+        Ok(()) => debug!("Received a signal to terminate..."),
+        Err(err) => {
+            error!(
+                "Unable to listen for Ctrl-C, serving until the process is killed: {}",
+                err
+            );
+            std::future::pending::<()>().await;
+        }
     }
 }
