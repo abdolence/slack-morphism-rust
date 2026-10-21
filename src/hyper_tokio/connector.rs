@@ -124,7 +124,7 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         let http_res = self.hyper_connector.request(request).await?;
         let http_status = http_res.status();
         let http_headers = http_res.headers().clone();
-        let http_content_type = HyperExtensions::http_response_content_type(&http_res);
+        let http_content_type = HyperExtensions::http_response_content_type(&http_res)?;
         let http_body_str = HyperExtensions::http_body_to_string(http_res).await?;
         let http_content_is_json = http_content_type.iter().all(|response_mime| {
             response_mime.type_() == mime::APPLICATION && response_mime.subtype() == mime::JSON
