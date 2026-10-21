@@ -87,12 +87,11 @@ impl HyperExtensions {
         Ok(http_body_str)
     }
 
-    pub fn http_response_content_type<RS>(response: &Response<RS>) -> Option<Mime> {
-        let http_headers = response.headers();
-        http_headers.get(hyper::header::CONTENT_TYPE).map(|hv| {
-            let hvs = hv.to_str().unwrap();
-            hvs.parse::<Mime>().unwrap()
-        })
+    pub fn http_response_content_type<RS>(response: &Response<RS>) -> AnyStdResult<Option<Mime>> {
+        match response.headers().get(hyper::header::CONTENT_TYPE) {
+            Some(header) => Ok(Some(header.to_str()?.parse::<Mime>()?)),
+            None => Ok(None),
+        }
     }
 
     pub async fn decode_signed_response<B>(
@@ -125,5 +124,52 @@ impl HyperExtensions {
             }
             _ => Err(Box::new(SlackEventAbsentSignatureError::new())),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::HyperExtensions;
+    use http::{header::CONTENT_TYPE, HeaderValue, Response};
+
+    #[test]
+    fn parses_response_content_type() {
+        let response = Response::builder()
+            .header(CONTENT_TYPE, "application/json; charset=utf-8")
+            .body(())
+            .unwrap();
+
+        let content_type = HyperExtensions::http_response_content_type(&response)
+            .unwrap()
+            .unwrap();
+        assert_eq!(content_type.type_(), mime::APPLICATION);
+        assert_eq!(content_type.subtype(), mime::JSON);
+    }
+
+    #[test]
+    fn missing_response_content_type_is_none() {
+        let response = Response::new(());
+        assert!(HyperExtensions::http_response_content_type(&response)
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn malformed_response_content_type_returns_error() {
+        let response = Response::builder()
+            .header(CONTENT_TYPE, "not a mime")
+            .body(())
+            .unwrap();
+        assert!(HyperExtensions::http_response_content_type(&response).is_err());
+    }
+
+    #[test]
+    fn non_ascii_response_content_type_returns_error() {
+        let value = HeaderValue::from_bytes(&[0xff]).unwrap();
+        let response = Response::builder()
+            .header(CONTENT_TYPE, value)
+            .body(())
+            .unwrap();
+        assert!(HyperExtensions::http_response_content_type(&response).is_err());
     }
 }
