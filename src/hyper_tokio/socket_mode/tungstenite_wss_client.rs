@@ -6,7 +6,7 @@ use futures_util::{SinkExt, StreamExt};
 use rvstruct::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::SystemTime;
+use std::time::Instant;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::RwLock;
@@ -211,10 +211,10 @@ where
         let (mut writer, mut reader) = wss_stream.split();
 
         struct PongState {
-            time: SystemTime,
+            time: Instant,
         }
         let last_time_pong_received: Arc<RwLock<PongState>> = Arc::new(RwLock::new(PongState {
-            time: SystemTime::now(),
+            time: Instant::now(),
         }));
 
         {
@@ -268,10 +268,7 @@ where
                             let seen_pong_time_in_secs = {
                                 let last_pong = thread_last_time_pong_received.read().await;
 
-                                SystemTime::now()
-                                    .duration_since(last_pong.time)
-                                    .unwrap()
-                                    .as_secs()
+                                last_pong.time.elapsed().as_secs()
                             };
 
                             if seen_pong_time_in_secs
@@ -369,7 +366,7 @@ where
                                 &body
                             );
                             let mut last_pong = thread_last_time_pong_received.write().await;
-                            last_pong.time = SystemTime::now();
+                            last_pong.time = Instant::now();
                         }
                         Ok(tokio_tungstenite::tungstenite::Message::Binary(body)) => {
                             warn!(

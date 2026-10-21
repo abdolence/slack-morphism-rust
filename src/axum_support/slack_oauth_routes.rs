@@ -166,9 +166,15 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                         err_environment.client.clone(),
                         err_environment.user_state.clone(),
                     );
-                    HyperExtensions::hyper_redirect_to(&err_config.redirect_error_redirect_url)
-                        .unwrap()
-                        .into_response()
+                    match HyperExtensions::hyper_redirect_to(
+                        &err_config.redirect_error_redirect_url,
+                    ) {
+                        Ok(redirect) => redirect.into_response(),
+                        Err(err) => {
+                            error!("Slack OAuth error redirect URL is invalid: {}", err);
+                            http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                        }
+                    }
                 }
             })
             .boxed()
@@ -210,12 +216,43 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackEventsAxumListener<H> {
                     environment.client.clone(),
                     environment.user_state.clone(),
                 );
-                Response::builder()
-                    .status(http_status)
-                    .body(Body::empty())
-                    .unwrap()
+                http_status.into_response()
             }
             Ok(result) => result,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::SlackClient;
+    use hyper_util::client::legacy::connect::HttpConnector;
+
+    #[tokio::test]
+    async fn invalid_error_redirect_url_answers_with_server_error() {
+        let client = Arc::new(SlackClient::new(SlackClientHyperConnector::with_connector(
+            HttpConnector::new(),
+        )));
+        let listener = SlackEventsAxumListener::new(Arc::new(
+            SlackClientEventsListenerEnvironment::new(client),
+        ));
+        let config = SlackOAuthListenerConfig::new(
+            "client-id".into(),
+            "client-secret".into(),
+            "commands".into(),
+            "https://example.com".into(),
+        )
+        .with_redirect_error_redirect_url("https://example.com/\nerror".into());
+
+        let callback = listener.slack_oauth_callback(&config, |_, _, _| async {});
+        let response = callback(
+            Request::get("/auth/callback?state=unknown")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(response.status(), http::StatusCode::INTERNAL_SERVER_ERROR);
     }
 }

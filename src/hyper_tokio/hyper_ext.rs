@@ -68,10 +68,9 @@ impl HyperExtensions {
         url: Url,
         method: hyper::http::Method,
     ) -> hyper::http::request::Builder {
-        let uri: Uri = url.as_str().parse().unwrap();
         hyper::http::request::Builder::new()
             .method(method)
-            .uri(uri)
+            .uri(url.as_str())
             .header("accept-charset", "utf-8")
     }
 

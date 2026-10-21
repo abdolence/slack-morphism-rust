@@ -93,33 +93,34 @@ impl<H: 'static + Send + Sync + Connect + Clone> SlackClientEventsHyperListener<
                             .and_then(|event| async move {
                                 match event {
                                     Ok(command_event) => {
-                                        match command_service_fn(
+                                        let response_json = command_service_fn(
                                             command_event,
                                             sc.clone(),
                                             thread_user_state_storage.clone(),
                                         )
                                         .await
-                                        {
-                                            Ok(cresp) => match cresp.into() {
-                                                Some(cresp) => Response::builder()
-                                                    .status(StatusCode::OK)
-                                                    .header(
-                                                        "content-type",
-                                                        "application/json; charset=utf-8",
-                                                    )
-                                                    .body(
-                                                        Full::new(
-                                                            serde_json::to_string(&cresp)
-                                                                .unwrap()
-                                                                .into(),
-                                                        )
-                                                        .boxed(),
-                                                    ),
-                                                None => Response::builder()
-                                                    .status(StatusCode::OK)
-                                                    .body(Empty::new().boxed()),
-                                            }
-                                            .map_err(|e| e.into()),
+                                        .and_then(|cresp| {
+                                            Into::<Option<SlackCommandEventResponse>>::into(cresp)
+                                                .map(|cresp| {
+                                                    serde_json::to_string(&cresp).map_err(|err| {
+                                                        map_serde_error(err, None).into()
+                                                    })
+                                                })
+                                                .transpose()
+                                        });
+                                        match response_json {
+                                            Ok(Some(json)) => Response::builder()
+                                                .status(StatusCode::OK)
+                                                .header(
+                                                    "content-type",
+                                                    "application/json; charset=utf-8",
+                                                )
+                                                .body(Full::new(json.into()).boxed())
+                                                .map_err(|e| e.into()),
+                                            Ok(None) => Response::builder()
+                                                .status(StatusCode::OK)
+                                                .body(Empty::new().boxed())
+                                                .map_err(|e| e.into()),
                                             Err(err) => {
                                                 let status_code = thread_error_handler(
                                                     err,

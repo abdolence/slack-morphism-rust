@@ -63,12 +63,16 @@ impl<'de> Visitor<'de> for SlackIconImagesVisitor {
             Vec::with_capacity(access.size_hint().unwrap_or(0));
 
         while let Some(key) = access.next_key::<String>()? {
-            if key.starts_with(SLACK_ICON_JSON_PREFIX) {
-                let parsed_key: Vec<_> = key.split('_').collect();
-                if parsed_key.len() == 2 {
-                    let resolution: u32 = parsed_key[1].parse().unwrap();
+            let resolution = key
+                .strip_prefix(SLACK_ICON_JSON_PREFIX)
+                .and_then(|suffix| suffix.parse::<u32>().ok());
+            match resolution {
+                Some(resolution) => {
                     let value: String = access.next_value()?;
-                    resolutions.push((resolution, value).clone());
+                    resolutions.push((resolution, value));
+                }
+                None => {
+                    access.next_value::<serde::de::IgnoredAny>()?;
                 }
             }
         }
@@ -83,5 +87,39 @@ impl<'de> Deserialize<'de> for SlackIconImages {
         D: Deserializer<'de>,
     {
         deserializer.deserialize_map(SlackIconImagesVisitor::new())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn non_numeric_image_keys_are_skipped() {
+        let images: SlackIconImages = serde_json::from_str(
+            r#"{"image_36":"https://example.com/36.png","image_original":"https://example.com/original.png","image_default":true,"image_72":"https://example.com/72.png"}"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            images.resolutions,
+            vec![
+                (36, "https://example.com/36.png".to_string()),
+                (72, "https://example.com/72.png".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn unrelated_keys_are_skipped() {
+        let images: SlackIconImages = serde_json::from_str(
+            r#"{"emoji":":robot_face:","image_48":"https://example.com/48.png","deleted":false}"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            images.resolutions,
+            vec![(48, "https://example.com/48.png".to_string())]
+        );
     }
 }

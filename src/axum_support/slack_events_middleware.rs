@@ -24,7 +24,7 @@ where
     SCHC: SlackClientHttpConnector + Send + Sync,
     SE: SlackEventsExtractor + Clone,
 {
-    inner: Option<S>,
+    inner: S,
     environment: Arc<SlackClientEventsListenerEnvironment<SCHC>>,
     signature_verifier: Arc<SlackEventSignatureVerifier>,
     extractor: SE,
@@ -46,7 +46,7 @@ where
         extractor: SE,
     ) -> Self {
         Self {
-            inner: Some(service),
+            inner: service,
             environment,
             signature_verifier: Arc::new(SlackEventSignatureVerifier::new(secret)),
             extractor,
@@ -66,16 +66,14 @@ where
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Infallible>> {
-        if let Some(ref mut service) = self.inner.as_mut() {
-            service.poll_ready(cx)
-        } else {
-            Poll::Pending
-        }
+        self.inner.poll_ready(cx)
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let mut service = self.inner.take().unwrap();
-        self.inner = Some(service.clone());
+        // The clone left behind has not been polled ready; the instance that was
+        // made ready by `poll_ready` is the one that serves this request.
+        let ready_service = self.inner.clone();
+        let mut service = std::mem::replace(&mut self.inner, ready_service);
         let environment = self.environment.clone();
 
         let signature_verifier = self.signature_verifier.clone();
@@ -101,10 +99,7 @@ where
                             environment.client.clone(),
                             environment.user_state.clone(),
                         );
-                        Ok(Response::builder()
-                            .status(http_status)
-                            .body(Body::default())
-                            .unwrap())
+                        Ok(http_status.into_response())
                     } else {
                         *verified_request.body_mut() = Body::from(verified_body);
 
@@ -123,10 +118,7 @@ where
                                     environment.client.clone(),
                                     environment.user_state.clone(),
                                 );
-                                Ok(Response::builder()
-                                    .status(http_status)
-                                    .body(Body::default())
-                                    .unwrap())
+                                Ok(http_status.into_response())
                             }
                         }
                     }
@@ -138,10 +130,7 @@ where
                         environment.client.clone(),
                         environment.user_state.clone(),
                     );
-                    Ok(Response::builder()
-                        .status(http_status)
-                        .body(Body::default())
-                        .unwrap())
+                    Ok(http_status.into_response())
                 }
             }
         })
