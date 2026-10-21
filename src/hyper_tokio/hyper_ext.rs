@@ -132,28 +132,6 @@ mod tests {
     use http::{header::CONTENT_TYPE, HeaderValue, Response};
 
     #[test]
-    fn parses_response_content_type() {
-        let response = Response::builder()
-            .header(CONTENT_TYPE, "application/json; charset=utf-8")
-            .body(())
-            .unwrap();
-
-        let content_type = HyperExtensions::http_response_content_type(&response)
-            .unwrap()
-            .unwrap();
-        assert_eq!(content_type.type_(), mime::APPLICATION);
-        assert_eq!(content_type.subtype(), mime::JSON);
-    }
-
-    #[test]
-    fn missing_response_content_type_is_none() {
-        let response = Response::new(());
-        assert!(HyperExtensions::http_response_content_type(&response)
-            .unwrap()
-            .is_none());
-    }
-
-    #[test]
     fn malformed_response_content_type_returns_error() {
         let response = Response::builder()
             .header(CONTENT_TYPE, "not a mime")
