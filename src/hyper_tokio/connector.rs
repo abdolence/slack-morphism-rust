@@ -38,6 +38,7 @@ pub struct SlackClientHyperConnector<H: Send + Sync + Clone + connect::Connect> 
 pub type SlackClientHyperHttpsConnector =
     SlackClientHyperConnector<HttpsConnector<connect::HttpConnector>>;
 
+#[cfg(feature = "rustls-native-certs")]
 impl SlackClientHyperConnector<HttpsConnector<connect::HttpConnector>> {
     pub fn new() -> std::io::Result<Self> {
         let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
