@@ -124,7 +124,17 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
         let http_res = self.hyper_connector.request(request).await?;
         let http_status = http_res.status();
         let http_headers = http_res.headers().clone();
-        let http_content_type = HyperExtensions::http_response_content_type(&http_res)?;
+        // The content type only decides whether to decode the body as JSON, so a
+        // header that does not parse must not hide the status-based result.
+        let http_content_type = HyperExtensions::http_response_content_type(&http_res)
+            .unwrap_or_else(|err| {
+                warn!(
+                    content_type = ?http_headers.get(hyper::header::CONTENT_TYPE),
+                    "Ignoring unparseable response Content-Type: {}",
+                    err
+                );
+                None
+            });
         let http_body_str = HyperExtensions::http_body_to_string(http_res).await?;
         let http_content_is_json = http_content_type.iter().all(|response_mime| {
             response_mime.type_() == mime::APPLICATION && response_mime.subtype() == mime::JSON
@@ -492,5 +502,76 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHttpConnect
             Ok(response_body)
         }
         .boxed()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    const SPACED_JSON_CONTENT_TYPE: &str = "application/json ; charset=utf-8";
+
+    /// Serves `raw_response` to the first connection and returns the URL to request.
+    async fn serve_once(raw_response: String) -> Url {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut buffer = [0u8; 1024];
+            while !request.windows(4).any(|window| window == b"\r\n\r\n") {
+                let read = stream.read(&mut buffer).await.unwrap();
+                request.extend_from_slice(&buffer[..read]);
+            }
+            stream.write_all(raw_response.as_bytes()).await.unwrap();
+        });
+        Url::parse(&format!("http://{address}/api/test")).unwrap()
+    }
+
+    async fn get(url: Url) -> ClientResult<serde_json::Value> {
+        let connector = SlackClientHyperConnector::with_connector(connect::HttpConnector::new());
+        let span = Span::none();
+        connector
+            .http_get_uri(
+                url,
+                SlackClientApiCallContext {
+                    rate_control_params: None,
+                    token: None,
+                    tracing_span: &span,
+                    is_sensitive_url: false,
+                },
+            )
+            .await
+    }
+
+    #[tokio::test]
+    async fn unparseable_content_type_keeps_successful_response() {
+        let body = r#"{"ok":true}"#;
+        let url = serve_once(format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: {SPACED_JSON_CONTENT_TYPE}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            body.len()
+        ))
+        .await;
+
+        assert_eq!(get(url).await.unwrap(), serde_json::json!({ "ok": true }));
+    }
+
+    #[tokio::test]
+    async fn unparseable_content_type_keeps_rate_limit_error() {
+        let body = r#"{"ok":false,"error":"ratelimited"}"#;
+        let url = serve_once(format!(
+            "HTTP/1.1 429 Too Many Requests\r\nContent-Type: {SPACED_JSON_CONTENT_TYPE}\r\nRetry-After: 7\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            body.len()
+        ))
+        .await;
+
+        match get(url).await {
+            Err(SlackClientError::RateLimitError(err)) => {
+                assert_eq!(err.retry_after, Some(Duration::from_secs(7)));
+            }
+            other => panic!("expected a rate limit error, got {other:?}"),
+        }
     }
 }
