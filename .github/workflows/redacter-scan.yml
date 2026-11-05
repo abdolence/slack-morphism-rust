@@ -1,0 +1,29 @@
+name: redacter scan
+
+on:
+  push:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: abdolence/redacter-action@v1
+        id: redacter
+        with:
+          command: scan
+          categories: secrets
+          fail-on: never
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always() && steps.redacter.outputs.sarif-file != ''
+        with:
+          sarif_file: ${{ steps.redacter.outputs.sarif-file }}
+          category: redacter-scan
