@@ -57,7 +57,9 @@ use slack_morphism::prelude::*;
 # #[tokio::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 let client = SlackClient::new(SlackClientHyperConnector::new()?);
+# // redacter:allow-begin
 let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
+# // redacter:allow-end
 let session = client.open_session(&token);
 
 let blocks: Vec<SlackBlock> = slack_blocks![
@@ -342,7 +344,9 @@ use slack_morphism::prelude::*;
 # #[tokio::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 let client = SlackClient::new(SlackClientHyperConnector::new()?);
+# // redacter:allow-begin
 let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
+# // redacter:allow-end
 let session = client.open_session(&token);
 
 let name_input = SlackBlockPlainTextInputElement::new().with_action_id("name".into());
