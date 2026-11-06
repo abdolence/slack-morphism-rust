@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-63c70eaa.js";
+            window.path_to_searchindex_js = "searchindex-36d5c799.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-132cf9d3.js"></script>
@@ -378,8 +378,10 @@ text, wrapped in a <code>SlackMessageContent</code> and posted with
 <span class="boring">#[tokio::main]
 </span><span class="boring">async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 </span>let client = SlackClient::new(SlackClientHyperConnector::new()?);
-let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
-let session = client.open_session(&amp;token);
+<span class="boring">// redacter:allow-begin
+</span>let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
+<span class="boring">// redacter:allow-end
+</span>let session = client.open_session(&amp;token);
 
 let blocks: Vec&lt;SlackBlock&gt; = slack_blocks![
     SlackSectionBlock::new().with_text(md!("A message *with some bold text*.")),
@@ -613,8 +615,10 @@ a home tab view uses <code>views.publish</code> and a user id instead:</p>
 <span class="boring">#[tokio::main]
 </span><span class="boring">async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error + Send + Sync&gt;&gt; {
 </span>let client = SlackClient::new(SlackClientHyperConnector::new()?);
-let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
-let session = client.open_session(&amp;token);
+<span class="boring">// redacter:allow-begin
+</span>let token: SlackApiToken = SlackApiToken::new("xoxb-your-token".into());
+<span class="boring">// redacter:allow-end
+</span>let session = client.open_session(&amp;token);
 
 let name_input = SlackBlockPlainTextInputElement::new().with_action_id("name".into());
 
