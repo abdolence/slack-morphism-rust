@@ -600,6 +600,56 @@ mod test {
     }
 
     #[test]
+    fn test_slack_event_message_forwarded() {
+        let payload = include_str!("./fixtures/message_forwarded.json");
+        let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();
+        let SlackEventCallbackBody::Message(SlackMessageEvent { content, .. }) = &event.event
+        else {
+            panic!("Unexpected event type: {:?}", event.event);
+        };
+        let attachments = content.as_ref().unwrap().attachments.as_ref().unwrap();
+        assert_eq!(attachments.len(), 2);
+
+        let share = &attachments[0];
+        assert_eq!(share.is_share, Some(true));
+        assert_eq!(share.is_msg_unfurl, Some(false));
+        assert_eq!(share.author_name.as_deref(), Some("Jane Doe"));
+        assert_eq!(share.author_id, Some("UJANEXXXXXX".into()));
+        assert_eq!(share.channel_id, Some("C0GENXXXXXX".into()));
+        assert_eq!(share.channel_name.as_deref(), Some("general"));
+        assert_eq!(share.channel_team, Some("TXXXXXXXXXX".into()));
+        assert_eq!(share.ts, Some("1761832920.123456".into()));
+        assert_eq!(
+            share.from_url.as_ref().map(|u| u.as_str()),
+            Some("https://acme.slack.com/archives/C0GENXXXXXX/p1761832920123456?thread_ts=1761832000.000100&cid=C0GENXXXXXX")
+        );
+        assert_eq!(
+            share.files.as_ref().map(|f| f[0].id.clone()),
+            Some("FXXXXXXXXXX".into())
+        );
+        let message_blocks = share.message_blocks.as_ref().unwrap();
+        assert_eq!(message_blocks[0].channel, Some("C0GENXXXXXX".into()));
+        assert_eq!(message_blocks[0].ts, Some("1761832920.123456".into()));
+        let blocks = message_blocks[0]
+            .message
+            .as_ref()
+            .and_then(|m| m.blocks.as_ref())
+            .unwrap();
+        assert!(matches!(blocks[0], SlackBlock::RichText(_)));
+
+        // A legacy app attachment: integer ts, empty link.
+        let legacy = &attachments[1];
+        assert_eq!(legacy.ts, Some("1761832000".into()));
+        assert_eq!(legacy.title_link.as_deref(), Some(""));
+        assert_eq!(legacy.service_name.as_deref(), Some("ci-bot"));
+        assert_eq!(legacy.is_share, None);
+
+        let round_trip: SlackPushEventCallback =
+            serde_json::from_value(serde_json::to_value(&event).unwrap()).unwrap();
+        assert_eq!(round_trip, event);
+    }
+
+    #[test]
     fn test_slack_event_app_context_changed() {
         let payload = include_str!("./fixtures/app_context_changed.json");
         let event: SlackPushEventCallback = serde_json::from_str(payload).unwrap();

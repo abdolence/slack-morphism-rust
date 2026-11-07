@@ -1,0 +1,101 @@
+{
+  "token": "XXXXXXXXXXXXXXXXXXXXXXXX",
+  "team_id": "TXXXXXXXXXX",
+  "context_team_id": "TXXXXXXXXXX",
+  "context_enterprise_id": null,
+  "api_app_id": "AXXXXXXXXXX",
+  "event": {
+    "user": "UXXXXXXXXXX",
+    "type": "message",
+    "ts": "1761833100.000200",
+    "client_msg_id": "00000000-0000-0000-0000-000000000000",
+    "text": "can you check this?",
+    "team": "TXXXXXXXXXX",
+    "attachments": [
+      {
+        "ts": "1761832920.123456",
+        "channel_id": "C0GENXXXXXX",
+        "channel_team": "TXXXXXXXXXX",
+        "is_msg_unfurl": false,
+        "is_share": true,
+        "message_blocks": [
+          {
+            "team": "TXXXXXXXXXX",
+            "channel": "C0GENXXXXXX",
+            "ts": "1761832920.123456",
+            "message": {
+              "blocks": [
+                {
+                  "type": "rich_text",
+                  "block_id": "a1B2c",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        { "type": "text", "text": "deploy is rolling back, run " }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_preformatted",
+                      "elements": [
+                        { "type": "text", "text": "kubectl rollout undo deploy/api" }
+                      ],
+                      "border": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "id": 1,
+        "fallback": "[October 30th, 2026 2:02 PM] jane.doe: deploy is rolling back, run ```kubectl rollout undo deploy/api```",
+        "text": "deploy is rolling back, run ```kubectl rollout undo deploy/api```",
+        "author_id": "UJANEXXXXXX",
+        "author_name": "Jane Doe",
+        "author_link": "https://acme.slack.com/team/UJANEXXXXXX",
+        "author_icon": "https://avatars.slack-edge.com/2026-01-01/1_abc_48.png",
+        "author_subname": "Jane Doe",
+        "channel_name": "general",
+        "mrkdwn_in": ["text"],
+        "footer": "Thread in #general",
+        "from_url": "https://acme.slack.com/archives/C0GENXXXXXX/p1761832920123456?thread_ts=1761832000.000100&cid=C0GENXXXXXX",
+        "files": [
+          {
+            "id": "FXXXXXXXXXX",
+            "name": "rollback.log",
+            "mimetype": "text/plain",
+            "url_private": "https://files.slack.com/files-pri/TXXXXXXXXXX-FXXXXXXXXXX/rollback.log"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "fallback": "Build #42 passed",
+        "text": "Build #42 passed",
+        "ts": 1761832000,
+        "title_link": "",
+        "footer": "CI",
+        "service_name": "ci-bot"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "zZ9yY",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [{ "type": "text", "text": "can you check this?" }]
+          }
+        ]
+      }
+    ],
+    "channel": "DXXXXXXXXXX",
+    "event_ts": "1761833100.000200",
+    "channel_type": "im"
+  },
+  "type": "event_callback",
+  "event_id": "EvXXXXXXXXXX",
+  "event_time": 1761833100
+}
