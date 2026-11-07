@@ -173,10 +173,16 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
             StatusCode::OK | StatusCode::NO_CONTENT => {
                 serde_json::from_str("{}").map_err(|err| map_serde_error(err, Some("{}")))
             }
-            StatusCode::TOO_MANY_REQUESTS if http_content_is_json => {
-                let slack_message: SlackEnvelopeMessage =
-                    serde_json::from_str(http_body_str.as_str())
-                        .map_err(|err| map_serde_error(err, Some(http_body_str.as_str())))?;
+            StatusCode::TOO_MANY_REQUESTS => {
+                // When optional JSON metadata is malformed, preserve the HTTP rate limit.
+                let (code, warnings) = if http_content_is_json {
+                    match serde_json::from_str::<SlackEnvelopeMessage>(&http_body_str) {
+                        Ok(message) => (message.error, message.warnings),
+                        Err(_) => (None, None),
+                    }
+                } else {
+                    (None, None)
+                };
 
                 Err(SlackClientError::RateLimitError(
                     SlackRateLimitError::new()
@@ -186,21 +192,11 @@ impl<H: 'static + Send + Sync + Clone + connect::Connect> SlackClientHyperConnec
                                 .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
                                 .map(Duration::from_secs),
                         )
-                        .opt_code(slack_message.error)
-                        .opt_warnings(slack_message.warnings)
+                        .opt_code(code)
+                        .opt_warnings(warnings)
                         .with_http_response_body(http_body_str),
                 ))
             }
-            StatusCode::TOO_MANY_REQUESTS => Err(SlackClientError::RateLimitError(
-                SlackRateLimitError::new()
-                    .opt_retry_after(
-                        http_headers
-                            .get(hyper::header::RETRY_AFTER)
-                            .and_then(|ra| ra.to_str().ok().and_then(|s| s.parse().ok()))
-                            .map(Duration::from_secs),
-                    )
-                    .with_http_response_body(http_body_str),
-            )),
             _ => Err(SlackClientError::HttpError(
                 SlackClientHttpError::new(http_status).with_http_response_body(http_body_str),
             )),
@@ -571,8 +567,35 @@ mod tests {
         match get(url).await {
             Err(SlackClientError::RateLimitError(err)) => {
                 assert_eq!(err.retry_after, Some(Duration::from_secs(7)));
+                assert_eq!(err.code.as_deref(), Some("ratelimited"));
             }
             other => panic!("expected a rate limit error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn rate_limit_status_survives_empty_or_malformed_bodies() {
+        for (content_type, body) in [
+            ("", ""),
+            ("Content-Type: application/json\r\n", ""),
+            ("Content-Type: application/json\r\n", "{invalid"),
+            ("", "rate limited"),
+            ("Content-Type: text/plain\r\n", "rate limited"),
+        ] {
+            let url = serve_once(format!(
+                "HTTP/1.1 429 Too Many Requests\r\n{content_type}Retry-After: 17\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            ))
+            .await;
+
+            match get(url).await {
+                Err(SlackClientError::RateLimitError(err)) => {
+                    assert_eq!(err.retry_after, Some(Duration::from_secs(17)));
+                    assert_eq!(err.code, None);
+                    assert_eq!(err.http_response_body.as_deref(), Some(body));
+                }
+                other => panic!("expected a rate limit error, got {other:?}"),
+            }
         }
     }
 }
