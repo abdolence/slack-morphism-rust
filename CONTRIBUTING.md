@@ -1,76 +1,74 @@
 # Contributing
 
-Welcome! Please read this document to understand what you can do:
-* [Analyze Issues](#analyze-issues)
-* [Report an Issue](#report-an-issue)
-* [Contribute Code](#contribute-code)
+This document describes how you can help:
 
-## Analyze Issues
+* [Analyse issues](#analyse-issues)
+* [Report an issue](#report-an-issue)
+* [Contribute code](#contribute-code)
 
-Analyzing issue reports can be a lot of effort. Any help is welcome!
-Go to the GitHub issue tracker and find an open issue which needs additional work or a bugfix (e.g. issues labeled with "help wanted" or "bug").
-Additional work could include any further information, or a gist, or it might be a hint that helps understanding the issue.
+## Analyse issues
 
-## Report an Issue
+Analysing issue reports can take a lot of effort, and any help is welcome.
+Go to the GitHub issue tracker and find an open issue that needs additional work or a bug fix (for example, issues labelled "help wanted" or "bug").
+Additional work could include further information, a gist, or a hint that helps to understand the issue.
 
-If you find a bug - you are welcome to report it.
-You can go to the GitHub issue tracker to report the issue.
+## Report an issue
 
-### Quick Checklist for Bug Reports
+If you find a bug, you are welcome to report it in the GitHub issue tracker.
 
-Issue report checklist:
-* Real, current bug for the latest/supported version
-* No duplicate
-* Reproducible
-* Minimal example
+### Quick checklist for bug reports
+
+Check that the issue is:
+
+* a real, current bug in the latest or a supported version;
+* not a duplicate;
+* reproducible;
+* described with a minimal example.
 
 ### Issue handling process
 
-When an issue is reported, a committer will look at it and either confirm it as a real issue, close it if it is not an issue, or ask for more details.
-An issue that is about a real bug is closed as soon as the fix is committed.
+When an issue is reported, a committer looks at it and either confirms it as a real issue, closes it if it is not an issue, or asks for more details.
+An issue about a real bug is closed as soon as the fix is committed.
 
+### Reporting security issues
 
-### Reporting Security Issues
+If you find or suspect a security issue, act responsibly and do not report it in the public issue tracker.
+Report it privately as described in the [security policy](SECURITY.md), so that it can be fixed before it is exploited.
 
-If you find or suspect a security issue, please act responsibly and do not report it in the public issue tracker, but directly to us, so we can fix it before it can be exploited.
-For details please check our [Security policy](SECURITY.md).
+## Contribute code
 
-## Contribute Code
+You are welcome to contribute code to fix bugs or to implement new features.
 
-You are welcome to contribute code in order to fix bugs or to implement new features.
+There are two important things to know:
 
-There are three important things to know:
+1. Your contribution is licensed under the Apache License 2.0, see [Licence](#licence).
+2. **Not all proposed contributions can be accepted**. Some features may fit a third-party add-on better. The code must fit the overall direction of the project and improve it. The more effort you invest, the more important it is to clarify in advance whether the contribution fits: the best way is to open an issue to discuss the feature you plan to implement, and to make clear that you intend to contribute.
 
-1.  You must be aware of the Apache License (which describes contributions) and **agree to the Contributors License Agreement**. This is common practice in all major Open Source projects.
-    For company contributors special rules apply. See the respective section below for details.
-2.  **Not all proposed contributions can be accepted**. Some features may e.g. just fit a third-party add-on better. The code must fit the overall direction and really improve it. The more effort you invest, the better you should clarify in advance whether the contribution fits: the best way would be to just open an issue to discuss the feature you plan to implement (make it clear you intend to contribute).
+### Licence
 
-### Contributor License Agreement
-
-When you contribute (code, documentation, or anything else), you have to be aware that your contribution is covered by the same [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
-
+Every contribution (code, documentation, or anything else) is licensed under the same [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) as the rest of the repository, see `LICENSE`.
 This applies to all contributors, including those contributing on behalf of a company.
 
-### Contribution Content Guidelines
+### Contribution content guidelines
 
-These are some of the rules we try to follow:
+Contributions follow these rules:
 
--   Apply a clean coding style adapted to the surrounding code, even though we are aware the existing code is not fully clean
--   Use variable naming conventions like in the other files you are seeing
--   No println() - use logging service if needed
--   Comment your code where it gets non-trivial
--   Keep an eye on performance and memory consumption, properly destroy objects when not used anymore
--   Avoid incompatible changes if possible, especially do not modify the name or behavior of public API methods or properties
+- Apply a clean coding style adapted to the surrounding code, even though the existing code is not fully clean;
+- Use naming conventions like in the other files;
+- Use `tracing` for diagnostic output instead of `println!`;
+- Comment your code where it gets non-trivial;
+- Keep an eye on performance and memory consumption;
+- Avoid incompatible changes if possible, especially do not change the name or behaviour of public API items.
 
-### How to contribute - the Process
+### Contribution process
 
-1.  Make sure the change would be welcome (e.g. a bugfix or a useful feature); best do so by proposing it in a GitHub issue
-2.  Create a branch forking this repository and do your change
-3.  Commit and push your changes on that branch
-4.  In the commit message
-   - Describe the problem you fix with this change.
-   - Describe the effect that this change has from a user's point of view. App crashes and lockups are pretty convincing for example, but not all bugs are that obvious and should be mentioned in the text.
-   - Describe the technical details of what you changed. It is important to describe the change in a most understandable way so the reviewer is able to verify that the code is behaving as you intend it to.
-5.  Create a Pull Request
-6.  Once the change has been approved we will inform you in a comment
-7.  We will close the pull request, feel free to delete the now obsolete branch
+1. Make sure the change would be welcome (for example a bug fix or a useful feature); the best way is to propose it in a GitHub issue.
+2. Fork this repository, create a branch and make your change on it.
+3. Commit and push your changes on that branch.
+4. In the commit message:
+   - Describe the problem the change fixes.
+   - Describe the effect the change has from a user's point of view. Crashes and lockups are obvious effects; less obvious ones need describing in the text.
+   - Describe the technical details of what changed, in the most understandable way, so that the reviewer can verify that the code behaves as intended.
+5. Create a pull request.
+6. Once the change has been approved, a committer informs you in a comment.
+7. A committer closes the pull request. Feel free to delete the now obsolete branch.

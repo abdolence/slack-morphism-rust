@@ -1,16 +1,16 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Supported versions
 
 | Version  | Supported          |
-|----------| ------------------ |
-| 2.26.x + | :white_check_mark: |
-| < 2.26.0 | :x:                |
+|----------|--------------------|
+| 2.31.x + | :white_check_mark: |
+| < 2.31.0 | :x:                |
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-Please follow general guidlines defined here:
-https://cheatsheetseries.owasp.org/cheatsheets/Vulnerability_Disclosure_Cheat_Sheet.html
+Please follow the general guidelines of the [OWASP Vulnerability Disclosure Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Vulnerability_Disclosure_Cheat_Sheet.html).
 
 ## Contacts
-E-mail: me@abdolence.dev
+
+Email: [me@abdolence.dev](mailto:me@abdolence.dev)
