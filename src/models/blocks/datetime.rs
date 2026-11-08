@@ -47,7 +47,6 @@ fn fmt_slack_date_parts(
     )
 }
 
-#[cfg(not(feature = "obsolete-chrono"))]
 pub fn fmt_slack_date(
     date: &crate::SlackUtcDateTime,
     token_string: &str,
@@ -63,38 +62,6 @@ pub fn fmt_slack_date(
     )
 }
 
-#[cfg(feature = "obsolete-chrono")]
-pub fn fmt_slack_date<TZ: chrono::TimeZone>(
-    date: &chrono::DateTime<TZ>,
-    token_string: &str,
-    link: Option<&String>,
-) -> String
-where
-    <TZ as chrono::offset::TimeZone>::Offset: std::fmt::Display,
-{
-    fmt_slack_date_parts(
-        date.timestamp(),
-        date.to_rfc2822().as_str(),
-        token_string,
-        link,
-    )
-}
-
-#[cfg(feature = "obsolete-chrono")]
-impl<TZ: chrono::TimeZone> SlackTextFormat for chrono::DateTime<TZ>
-where
-    <TZ as chrono::offset::TimeZone>::Offset: std::fmt::Display,
-{
-    fn to_slack_format(&self) -> String {
-        fmt_slack_date(
-            self,
-            SlackDateTimeFormats::DatePretty.to_string().as_str(),
-            None,
-        )
-    }
-}
-
-#[cfg(not(feature = "obsolete-chrono"))]
 impl SlackTextFormat for jiff::Timestamp {
     fn to_slack_format(&self) -> String {
         fmt_slack_date(
@@ -105,7 +72,6 @@ impl SlackTextFormat for jiff::Timestamp {
     }
 }
 
-#[cfg(not(feature = "obsolete-chrono"))]
 impl SlackTextFormat for jiff::Zoned {
     fn to_slack_format(&self) -> String {
         let fallback = jiff::fmt::rfc2822::to_string(self).unwrap_or_else(|_| self.to_string());
@@ -123,8 +89,6 @@ mod test {
     use super::*;
     use crate::prelude::SlackUtcDateTime;
 
-    /// Both the jiff and the chrono backend render RFC 2822 identically here,
-    /// so the expected fallback is the same in both feature modes.
     const EXPECTED_FALLBACK: &str = "Wed, 1 Jan 2020 00:42:42 +0000";
 
     #[test]

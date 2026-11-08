@@ -62,11 +62,6 @@ Dates and times in the models are exposed through the type aliases `SlackUtcDate
 `SlackCivilDate`, which are backed by [jiff](https://github.com/BurntSushi/jiff)
 (`jiff::Timestamp` and `jiff::civil::Date`).
 
-The deprecated `obsolete-chrono` feature switches both aliases back to the chrono types used
-before (`chrono::DateTime<chrono::Utc>` and `chrono::NaiveDate`) for an easier migration.
-Note that this feature is not additive: enabling it anywhere in a dependency graph changes the
-types for every crate in that graph, so it is intended as a temporary migration aid only.
-
 ## Versioning
 
 Breaking changes in the models that come from changes on the Slack side are released as minor
