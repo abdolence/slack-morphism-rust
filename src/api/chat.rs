@@ -201,8 +201,7 @@ pub struct SlackApiChatDeleteResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatDeleteScheduledMessageRequest {
     pub channel: SlackChannelId,
-    #[serde(rename = "scheduled_message_id")]
-    pub scheduled_message: SlackScheduledMid,
+    pub scheduled_message_id: SlackScheduledMid,
     pub as_user: Option<bool>,
 }
 
