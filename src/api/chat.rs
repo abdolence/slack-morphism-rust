@@ -201,7 +201,7 @@ pub struct SlackApiChatDeleteResponse {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackApiChatDeleteScheduledMessageRequest {
     pub channel: SlackChannelId,
-    pub scheduled_message: SlackScheduledMid,
+    pub scheduled_message_id: SlackScheduledMid,
     pub as_user: Option<bool>,
 }
 
@@ -480,4 +480,26 @@ lazy_static! {
                 SlackApiRateControlLimit::new(1, std::time::Duration::from_secs(1))
             )
         );
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_slack_api_chat_delete_scheduled_message_request_uses_slack_field_name() {
+        let request = SlackApiChatDeleteScheduledMessageRequest::new(
+            SlackChannelId("C123456789".into()),
+            SlackScheduledMid("Q1234ABCD".into()),
+        );
+        let json = serde_json::to_value(&request).unwrap();
+        assert_eq!(
+            json,
+            serde_json::json!({"channel": "C123456789", "scheduled_message_id": "Q1234ABCD"})
+        );
+
+        let parsed: SlackApiChatDeleteScheduledMessageRequest =
+            serde_json::from_value(json).unwrap();
+        assert_eq!(parsed, request);
+    }
 }
