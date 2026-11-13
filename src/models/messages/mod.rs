@@ -150,9 +150,6 @@ pub struct SlackMessageAttachment {
     pub channel_id: Option<SlackChannelId>,
     pub channel_name: Option<String>,
     pub channel_team: Option<SlackTeamId>,
-    /// The original message's ts on shares/unfurls; legacy app attachments send an
-    /// integer Unix time here, which is kept as its decimal string.
-    #[serde(default, deserialize_with = "deserialize_attachment_ts")]
     pub ts: Option<SlackTs>,
     pub from_url: Option<SlackRelaxedUrl>,
     pub original_url: Option<SlackRelaxedUrl>,
@@ -161,24 +158,6 @@ pub struct SlackMessageAttachment {
     pub service_name: Option<String>,
     pub message_blocks: Option<Vec<SlackMessageAttachmentMessageBlock>>,
     pub files: Option<Vec<SlackFile>>,
-}
-
-fn deserialize_attachment_ts<'de, D>(deserializer: D) -> Result<Option<SlackTs>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum StringOrNumber {
-        String(String),
-        Number(serde_json::Number),
-    }
-    Ok(
-        Option::<StringOrNumber>::deserialize(deserializer)?.map(|v| match v {
-            StringOrNumber::String(s) => SlackTs(s),
-            StringOrNumber::Number(n) => SlackTs(n.to_string()),
-        }),
-    )
 }
 
 /// One `message_blocks` entry of a shared/unfurled message: where the original lives
