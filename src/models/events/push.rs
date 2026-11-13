@@ -620,7 +620,7 @@ mod test {
         assert_eq!(share.channel_team, Some("TXXXXXXXXXX".into()));
         assert_eq!(share.ts, Some("1761832920.123456".into()));
         assert_eq!(
-            share.from_url.as_ref().map(|u| u.as_str()),
+            share.from_url.as_ref().map(|u| u.value().as_str()),
             Some("https://acme.slack.com/archives/C0GENXXXXXX/p1761832920123456?thread_ts=1761832000.000100&cid=C0GENXXXXXX")
         );
         assert_eq!(
@@ -640,7 +640,7 @@ mod test {
         // A legacy app attachment: integer ts, empty link.
         let legacy = &attachments[1];
         assert_eq!(legacy.ts, Some("1761832000".into()));
-        assert_eq!(legacy.title_link.as_deref(), Some(""));
+        assert_eq!(legacy.title_link, Some(SlackRelaxedUrl("".into())));
         assert_eq!(legacy.service_name.as_deref(), Some("ci-bot"));
         assert_eq!(legacy.is_share, None);
 
