@@ -110,16 +110,7 @@ where
                                 debug!("Route service finished successfully for: {}", &request_uri);
                                 Ok(response)
                             }
-                            Err(err) => {
-                                debug!("A route service failed: {} with {}", &request_uri, err);
-
-                                let http_status = (environment.error_handler)(
-                                    Box::new(err),
-                                    environment.client.clone(),
-                                    environment.user_state.clone(),
-                                );
-                                Ok(http_status.into_response())
-                            }
+                            Err(err) => match err {},
                         }
                     }
                 }
