@@ -110,6 +110,8 @@ where
                                 debug!("Route service finished successfully for: {}", &request_uri);
                                 Ok(response)
                             }
+                            // `S::Error` is `Infallible`: route failures arrive as responses,
+                            // never as `Err`, so there is nothing to log or hand to the error handler.
                             Err(err) => match err {},
                         }
                     }
