@@ -134,10 +134,40 @@ pub struct SlackMessageAttachment {
     pub color: Option<String>,
     pub fallback: Option<String>,
     pub title: Option<String>,
+    pub title_link: Option<SlackRelaxedUrl>,
+    pub pretext: Option<String>,
     pub fields: Option<Vec<SlackMessageAttachmentFieldObject>>,
     pub mrkdwn_in: Option<Vec<String>>,
     pub text: Option<String>,
     pub blocks: Option<Vec<SlackBlock>>,
+    pub is_share: Option<bool>,
+    pub is_msg_unfurl: Option<bool>,
+    pub author_name: Option<String>,
+    pub author_id: Option<SlackUserId>,
+    pub author_subname: Option<String>,
+    pub author_link: Option<SlackRelaxedUrl>,
+    pub author_icon: Option<SlackRelaxedUrl>,
+    pub channel_id: Option<SlackChannelId>,
+    pub channel_name: Option<String>,
+    pub channel_team: Option<SlackTeamId>,
+    pub ts: Option<SlackTs>,
+    pub from_url: Option<SlackRelaxedUrl>,
+    pub original_url: Option<SlackRelaxedUrl>,
+    pub footer: Option<String>,
+    pub footer_icon: Option<SlackRelaxedUrl>,
+    pub service_name: Option<String>,
+    pub message_blocks: Option<Vec<SlackMessageAttachmentMessageBlock>>,
+    pub files: Option<Vec<SlackFile>>,
+}
+
+/// One `message_blocks` entry of a shared or unfurled message.
+#[skip_serializing_none]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
+pub struct SlackMessageAttachmentMessageBlock {
+    pub team: Option<SlackTeamId>,
+    #[serde(flatten)]
+    pub origin: SlackMessageOrigin,
+    pub message: Option<SlackMessageContent>,
 }
 
 // This model is not well typed since Slack message attachments are deprecated

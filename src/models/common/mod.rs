@@ -55,7 +55,25 @@ mod assistant;
 pub use assistant::*;
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Serialize, Deserialize, ValueStruct)]
+#[serde(from = "SlackTsWire")]
 pub struct SlackTs(pub String);
+
+/// Slack sends `ts` as a string, except legacy attachments, which send integer unix seconds.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum SlackTsWire {
+    Text(String),
+    UnixSeconds(i64),
+}
+
+impl From<SlackTsWire> for SlackTs {
+    fn from(wire: SlackTsWire) -> Self {
+        match wire {
+            SlackTsWire::Text(ts) => SlackTs(ts),
+            SlackTsWire::UnixSeconds(secs) => SlackTs(secs.to_string()),
+        }
+    }
+}
 
 impl SlackTs {
     /// Converts a Slack timestamp (`<seconds>.<microseconds>`) to an instant.
@@ -396,6 +414,23 @@ mod test {
     #[test]
     fn test_slack_ts_to_date_time_invalid() {
         assert_eq!(SlackTs("garbage".to_string()).to_date_time_opt(), None);
+    }
+
+    #[test]
+    fn test_slack_ts_wire_format() {
+        let ts = SlackTs("1577839362.000400".into());
+        assert_eq!(
+            serde_json::from_value::<SlackTs>(json!("1577839362.000400")).unwrap(),
+            ts
+        );
+        assert_eq!(
+            serde_json::from_value::<SlackTs>(json!(1577839362)).unwrap(),
+            SlackTs("1577839362".into())
+        );
+        assert_eq!(
+            serde_json::to_value(&ts).unwrap(),
+            json!("1577839362.000400")
+        );
     }
 
     #[test]
