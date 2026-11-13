@@ -160,21 +160,14 @@ pub struct SlackMessageAttachment {
     pub files: Option<Vec<SlackFile>>,
 }
 
-/// One `message_blocks` entry of a shared/unfurled message: where the original lives
-/// and its Block Kit content.
+/// One `message_blocks` entry of a shared or unfurled message.
 #[skip_serializing_none]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
 pub struct SlackMessageAttachmentMessageBlock {
     pub team: Option<SlackTeamId>,
-    pub channel: Option<SlackChannelId>,
-    pub ts: Option<SlackTs>,
-    pub message: Option<SlackMessageAttachmentMessageBlockMessage>,
-}
-
-#[skip_serializing_none]
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Builder)]
-pub struct SlackMessageAttachmentMessageBlockMessage {
-    pub blocks: Option<Vec<SlackBlock>>,
+    #[serde(flatten)]
+    pub origin: SlackMessageOrigin,
+    pub message: Option<SlackMessageContent>,
 }
 
 // This model is not well typed since Slack message attachments are deprecated

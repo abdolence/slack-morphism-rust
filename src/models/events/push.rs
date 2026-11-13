@@ -628,8 +628,8 @@ mod test {
             Some("FXXXXXXXXXX".into())
         );
         let message_blocks = share.message_blocks.as_ref().unwrap();
-        assert_eq!(message_blocks[0].channel, Some("C0GENXXXXXX".into()));
-        assert_eq!(message_blocks[0].ts, Some("1761832920.123456".into()));
+        assert_eq!(message_blocks[0].origin.channel, Some("C0GENXXXXXX".into()));
+        assert_eq!(message_blocks[0].origin.ts, "1761832920.123456".into());
         let blocks = message_blocks[0]
             .message
             .as_ref()
