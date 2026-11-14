@@ -22,8 +22,8 @@ path = "src/lib.rs"
 
 [features]
 default = []
-signature-verifier = ["dep:sha2", "dep:subtle", "dep:hmac"]
-hyper-base = ["dep:tokio", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:tokio-stream", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio", "signature-verifier"]
+signature-verifier = ["dep:sha2", "dep:subtle", "dep:hmac", "dep:hex"]
+hyper-base = ["dep:tokio", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:tokio-stream", "dep:tokio-tungstenite", "dep:signal-hook", "dep:signal-hook-tokio", "signature-verifier", "dep:async-recursion", "dep:base64", "dep:rand"]
 axum-base = ["hyper-base", "dep:axum", "dep:tower"]
 rustls-native-certs = ["tokio-tungstenite/rustls-native-certs", "tokio-tungstenite/rustls-tls-native-roots", "hyper-rustls/rustls-native-certs", "hyper-rustls/ring"]
 hyper = ["hyper-base", "rustls-native-certs"]
@@ -38,15 +38,15 @@ rsb_derive = "0.5"
 futures-executor = "0.3"
 futures-locks = "0.7"
 futures-util = "0.3"
-base64 = "0.23"
-hex = "0.4"
+base64 = { version = "0.23", optional = true }
+hex = { version = "0.4", optional = true }
 tracing = "0.1"
 lazy_static = "1.4"
 http = "1.1"
 async-trait = "0.1"
 bytes = "1"
-rand = "0.10"
-async-recursion = "1.0"
+rand = { version = "0.10", optional = true }
+async-recursion = { version = "1.0", optional = true }
 mime = "0.3"
 mime_guess = "2"
 jiff = { version = "0.2", default-features = false, features = ["std", "serde"] }
