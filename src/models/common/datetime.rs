@@ -43,7 +43,7 @@ pub(crate) fn unix_seconds(date_time: &SlackUtcDateTime) -> i64 {
 
 /// Formats an instant as an RFC 2822 date-time in UTC.
 pub(crate) fn to_rfc2822(date_time: &SlackUtcDateTime) -> String {
-    jiff::fmt::rfc2822::to_string(&date_time.to_zoned(jiff::tz::TimeZone::UTC))
+    jiff::fmt::rfc2822::to_string(&date_time.to_zoned_datetime(jiff::tz::TimeZone::UTC))
         .unwrap_or_else(|_| date_time.to_string())
 }
 

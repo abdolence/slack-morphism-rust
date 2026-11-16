@@ -72,7 +72,7 @@ impl SlackTextFormat for jiff::Timestamp {
     }
 }
 
-impl SlackTextFormat for jiff::Zoned {
+impl SlackTextFormat for jiff::ZonedDateTime {
     fn to_slack_format(&self) -> String {
         let fallback = jiff::fmt::rfc2822::to_string(self).unwrap_or_else(|_| self.to_string());
         fmt_slack_date_parts(
